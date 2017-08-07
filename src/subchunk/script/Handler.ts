@@ -112,7 +112,7 @@ export class Handler implements SplitSubchunk {
         this.ast.exitBlock();
         if (blockParent.constructor === AST.IfStatement) {
           let ifStatement = blockParent as AST.IfStatement;
-          if (ifStatement.type === "if_else" && exitedBlock === ifStatement.block1) {
+          if (ifStatement.type === AST.IfStatement.Type.if_else && exitedBlock === ifStatement.block1) {
             this.ast.enterBlock(ifStatement.block2);
           }
         }
@@ -346,7 +346,7 @@ export class Handler implements SplitSubchunk {
             translation = new AST.NextRepeatStatement();
             ast.addStatement(translation);
           } else if (nextBytecode.pos === ast.currentBlock.endPos) {
-            ifStatement.setType("if_else");
+            ifStatement.setType(AST.IfStatement.Type.if_else);
             ifStatement.block2.endPos = targetPos;
           }
         }
@@ -358,12 +358,12 @@ export class Handler implements SplitSubchunk {
         while (this.bytecodeArray[i].opcode !== "iftrue") i++;
         targetBytecode = this.bytecodeArray[i];
         let ifStatement = targetBytecode.translation as AST.IfStatement;
-        ifStatement.setType("repeat_while");
+        ifStatement.setType(AST.IfStatement.Type.repeat_while);
       },
       "iftrue": () => {
         let endPos = bytecode.pos + bytecode.obj
         let condition = stack.pop();
-        translation = new AST.IfStatement("if", condition);
+        translation = new AST.IfStatement(AST.IfStatement.Type.if, condition);
         translation.block1.endPos = endPos;
         ast.addStatement(translation);
         ast.enterBlock(translation.block1)

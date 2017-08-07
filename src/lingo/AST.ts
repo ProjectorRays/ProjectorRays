@@ -356,15 +356,23 @@ export class AssignmentStatement extends Node {
 
 /* IfStatement */
 
+enum IfType {
+  if,
+  if_else,
+  repeat_while
+}
+
 export class IfStatement extends Node {
-  constructor(public type: string = "if", public condition: Node, public block1: Block = null, public block2: Block = null) {
+  static Type = IfType;
+
+  constructor(public type: IfType = IfType.if, public condition: Node, public block1: Block = null, public block2: Block = null) {
     super();
     this.condition.parent = this;
     if (!this.block1) {
       this.block1 = new Block();
     }
     this.block1.parent = this;
-    if (!this.block2 && this.type === "if_else") {
+    if (!this.block2 && this.type === IfType.if) {
       block2 = new Block();
     }
     if (this.block2) {
@@ -373,28 +381,28 @@ export class IfStatement extends Node {
   }
 
   toString() {
-    if (this.type === "if") {
+    if (this.type === IfType.if) {
       return "if " + this.condition + " then" + this.block1 + "\nend if";
-    } else if (this.type === "if_else") {
+    } else if (this.type === IfType.if_else) {
       return "if " + this.condition + " then" + this.block1 + "\nelse" + this.block2 + "\nend if";
-    } else if (this.type === "repeat_while") {
+    } else if (this.type === IfType.repeat_while) {
       return "repeat while " + this.condition + this.block1 + "\nend repeat";
     }
   }
 
   toPseudocode() {
-    if (this.type === "if") {
+    if (this.type === IfType.if) {
       return "if " + this.condition + " then";
-    } else if (this.type === "if_else") {
+    } else if (this.type === IfType.if_else) {
       return "if " + this.condition + " then";
-    } else if (this.type === "repeat_while") {
+    } else if (this.type === IfType.repeat_while) {
       return "repeat while " + this.condition;
     }
   }
 
-  setType(type) {
+  setType(type: IfType) {
     this.type = type;
-    if (this.type === "if_else") {
+    if (this.type === IfType.if_else) {
       this.block2 = new Block();
       this.block2.parent = this;
     } else {
