@@ -110,4 +110,8 @@ export class Script implements Chunk {
       handler.translate();
     }
   }
+
+  toString() {
+    return this.handlers.map(handler => handler.ast.toString()).join("\n\n");
+  }
 }
