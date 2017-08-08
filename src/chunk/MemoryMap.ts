@@ -5,7 +5,7 @@ import {DataStream} from "../DataStream";
 /* MemoryMap */
 
 export class MemoryMap implements Chunk {
-  name = "mmap";
+  fourCC = "mmap";
 
   unknown0: number;
   unknown1: number;

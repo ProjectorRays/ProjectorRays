@@ -280,12 +280,11 @@ export class Handler implements SplitSubchunk {
       },
       "pushcons": () => {
         let literal = this.script.literals[bytecode.obj]
-        let type = lib.LiteralTypes[literal.type];
-        if (type === "string") {
+        if (literal.type === lib.LiteralType.string) {
           translation = new AST.StringLiteral(literal.value);
-        } else if (type === "int") {
+        } else if (literal.type === lib.LiteralType.int) {
           translation = new AST.IntLiteral(literal.value);
-        } else if (type === "float") {
+        } else if (literal.type === lib.LiteralType.float) {
           translation = new AST.FloatLiteral(literal.value);
         }
         stack.push(translation);

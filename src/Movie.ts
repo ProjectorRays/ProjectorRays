@@ -1,31 +1,31 @@
-import {
-  Chunk,
-  Meta,
-  InitialMap,
-  MemoryMap,
-  ScriptContext,
-  ScriptNames,
-  Script,
-  UnimplementedChunk
-} from "./chunk";
+import * as Chunk from "./chunk";
 import {InvalidDirectorFileError, PathTooNewError} from "./errors";
-import {DataStream} from "./DataStream"
+import {DataStream} from "./DataStream";
+import {Cast} from "./Cast";
 
 /* Movie */
 
 export class Movie {
-  chunkArrays: Map<string, Chunk[]>;
-  chunkMap: Chunk[];
-  _chunkBuffers: Map<Chunk, Buffer>;
+  chunkArrays: Map<string, Chunk.Chunk[]>;
+  chunkMap: Chunk.Chunk[];
+  _chunkBuffers: Map<Chunk.Chunk, Buffer>;
+
+  castMap: Cast[];
+  castMap1: Cast[];
+  castMap2: Cast[];
 
   read(buffer: Buffer) {
     this.chunkArrays = new Map();
     this.chunkMap = [];
     this._chunkBuffers = new Map();
+    this.castMap = [];
+    this.castMap1 = [];
+    this.castMap2 = [];
 
     var dataStream = new DataStream(buffer);
     dataStream.endianness = DataStream.BIG_ENDIAN; // we set this properly when we create the RIFX chunk
     this.lookupMmap(dataStream);
+    this.createCasts();
     this.linkScripts();
   }
 
@@ -34,19 +34,17 @@ export class Movie {
 
     // valid length is undefined because we have not yet reached mmap
     // however, it will be filled automatically in chunk's constructor
-    let meta: Meta = this.readChunk(dataStream, "RIFX");
+    let meta: Chunk.Meta = this.readChunk(dataStream, "RIFX");
     // we can only open DIR or DXR
     // we'll read Movie from dataStream because Movie is an exception to the normal rules
     if (meta.codec != "MV93") {
       throw new PathTooNewError("Codec " + meta.codec + " unsupported.");
     }
-    this.addChunk("RIFX", meta);
 
     // the next chunk should be imap
     // this HAS to be dataStream for the OFFSET check to be correct
     // we will continue to use it because in this implementation RIFX doesn't contain it
-    let imap: InitialMap = this.readChunk(dataStream, "imap", null, 12);
-    this.addChunk("imap", imap);
+    let imap: Chunk.InitialMap = this.readChunk(dataStream, "imap", null, 12);
 
     // sanitize mmaps
     /*
@@ -61,24 +59,30 @@ export class Movie {
 
     for (let memoryMapOffset of imap.memoryMapArray) {
       dataStream.seek(memoryMapOffset);
-      let mmap: MemoryMap = this.readChunk(dataStream, "mmap", null, memoryMapOffset);
+      let mmap: Chunk.MemoryMap = this.readChunk(dataStream, "mmap", null, memoryMapOffset);
       // add chunks in the mmap to the chunkArrays HERE
       // make sure to account for chunks with existing names, lengths and offsets
       for (let i = 0, l = mmap.mapArray.length; i < l; i++) {
         let mapEntry = mmap.mapArray[i];
-        if (mapEntry.name != "mmap") {
+        let chunk;
+        if (mapEntry.name === "RIFX") {
+          chunk = meta;
+        } else if (mapEntry.name === "imap") {
+          chunk = imap;
+        } else if (mapEntry.name === "mmap") {
+          chunk = mmap;
+        } else {
           dataStream.seek(mapEntry.offset);
-          let chunk = this.readChunk(dataStream, mapEntry.name, mapEntry.len, mapEntry.offset, mapEntry.padding, mapEntry.unknown0, mapEntry.link);
-          this.addChunk(mapEntry.name, chunk);
-          this.chunkMap[mapEntry.index] = chunk;
+          chunk = this.readChunk(dataStream, mapEntry.name, mapEntry.len, mapEntry.offset, mapEntry.padding, mapEntry.unknown0, mapEntry.link);
         }
+        this.addChunk(mapEntry.name, chunk);
+        this.chunkMap[mapEntry.index] = chunk;
       }
-      this.addChunk("mmap", mmap);
     }
   }
 
-  addChunk(name: string, chunk: Chunk) {
-    let chunkArray: Chunk[] = this.chunkArrays.get(name);
+  addChunk(name: string, chunk: Chunk.Chunk) {
+    let chunkArray: Chunk.Chunk[] = this.chunkArrays.get(name);
     if (!chunkArray) {
       chunkArray = [];
       this.chunkArrays.set(name, chunkArray);
@@ -86,15 +90,28 @@ export class Movie {
     chunkArray.push(chunk);
   }
 
+  createCasts() {
+    let castList = this.chunkArrays.get("MCsL")[0] as Chunk.CastList;
+    let castKey = this.chunkArrays.get("KEY*")[0] as Chunk.CastKey;
+    for (let entry of castList.entries) {
+      let cast = new Cast();
+      cast.readDataEntry(entry);
+      cast.readKey(castKey, this.chunkMap);
+      this.castMap[cast.id] = cast;
+      this.castMap1[cast.id1] = cast;
+      this.castMap2[cast.id2] = cast;
+    }
+  }
+
   linkScripts() {
-    let ctxArray = this.chunkArrays.get("LctX") as ScriptContext[];
+    let ctxArray = this.chunkArrays.get("LctX") as Chunk.ScriptContext[];
     if (ctxArray) {
       for (let context of ctxArray) {
-        let scriptNames = this.chunkMap[context.lnamSectionID] as ScriptNames;
+        let scriptNames = this.chunkMap[context.lnamSectionID] as Chunk.ScriptNames;
         context.scriptNames = scriptNames;
         for (let section of context.sectionMap) {
           if (section.sectionID > -1) {
-            let script = this.chunkMap[section.sectionID] as Script;
+            let script = this.chunkMap[section.sectionID] as Chunk.Script;
             script.context = context;
             script.readNames();
             script.translate();
@@ -159,35 +176,21 @@ export class Movie {
     let chunkBuffer = mainDataStream.readBytes(len);
     let chunkDataStream = new DataStream(chunkBuffer, mainDataStream.endianness);
 
-    let result;
-    switch (name) {
-      case "RIFX":
-        result = new Meta();
-        result.read(chunkDataStream);
-        break;
-      case "imap":
-        result = new InitialMap();
-        result.read(chunkDataStream);
-        break;
-      case "mmap":
-        result = new MemoryMap();
-        result.read(chunkDataStream);
-        break;
-      case "LctX":
-        result = new ScriptContext();
-        result.read(chunkDataStream);
-        break;
-      case "Lnam":
-        result = new ScriptNames();
-        result.read(chunkDataStream);
-        break;
-      case "Lscr":
-        result = new Script();
-        result.read(chunkDataStream);
-        break;
-      default:
-        result = new UnimplementedChunk(name);
-    }
+    const chunks = {
+      "RIFX": Chunk.Meta,
+      "imap": Chunk.InitialMap,
+      "mmap": Chunk.MemoryMap,
+      "LctX": Chunk.ScriptContext,
+      "Lnam": Chunk.ScriptNames,
+      "Lscr": Chunk.Script,
+      "MCsL": Chunk.CastList,
+      "KEY*": Chunk.CastKey,
+      "CAS*": Chunk.CastAssociations,
+      "CASt": Chunk.CastMember
+    };
+
+    let result = chunks[name] ? new chunks[name]() : new Chunk.Unimplemented(name);
+    result.read(chunkDataStream);
 
     this._chunkBuffers.set(result, chunkBuffer);
 

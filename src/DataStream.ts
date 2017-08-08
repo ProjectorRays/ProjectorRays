@@ -14,6 +14,14 @@ export class DataStream {
     this.position = pos;
   }
 
+  skip(n: number) {
+    this.position = this.position + n;
+  }
+
+  endOfFile() {
+    return this.position >= this.buffer.length;
+  }
+
   readBytes(length: number) {
     let result = this.buffer.slice(this.position, this.position + length);
     this.position += length;

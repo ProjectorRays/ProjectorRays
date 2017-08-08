@@ -1,8 +1,19 @@
-export const LiteralTypes = {
-  1: "string",
-  4: "int",
-  9: "float"
-};
+export enum LiteralType {
+  string = 1,
+  int = 4,
+  float = 9
+}
+
+export enum CastMemberType {
+  bitmap = 0x01,
+  filmLoop = 0x02,
+  palette = 0x04,
+  audio = 0x06,
+  button = 0x07,
+  vectorShape = 0x08,
+  script = 0x0b,
+  xtra = 0x0f
+}
 
 export const MoviePropertyNames00 = {
   0x00: "floatPrecision",

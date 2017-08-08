@@ -4,7 +4,7 @@ import {DataStream} from "../DataStream";
 /* InitialMap */
 
 export class InitialMap implements Chunk {
-  name = "imap";
+  fourCC = "imap";
 
   memoryMapCount: number;
   memoryMapArray: number[];

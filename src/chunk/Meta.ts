@@ -4,7 +4,7 @@ import {DataStream} from "../DataStream";
 /* MetaChunk */
 
 export class Meta implements Chunk {
-  name = "RIFX";
+  fourCC = "RIFX";
 
   codec: string;
 

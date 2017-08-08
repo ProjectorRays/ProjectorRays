@@ -7,7 +7,7 @@ import {DataStream} from "../DataStream";
 /* ScriptContext */
 
 export class ScriptContext implements Chunk {
-  name = "LctX";
+  fourCC = "LctX";
 
   unknown0: number;
   unknown1: number;

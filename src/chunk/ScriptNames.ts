@@ -4,7 +4,7 @@ import {DataStream} from "../DataStream";
 /* ScriptNames */
 
 export class ScriptNames implements Chunk {
-  name = "Lnam";
+  fourCC = "Lnam";
 
   unknown0: number;
   unknown1: number;

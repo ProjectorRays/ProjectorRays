@@ -20,7 +20,7 @@ const MAP_ENTRIES = [
 /* Script */
 
 export class Script implements Chunk {
-  name = "Lscr";
+  fourCC = "Lscr";
 
   totalLength: number;
   totalLength2: number;
