@@ -83,7 +83,6 @@ export class CastMember implements Chunk {
 
     if (this.type === CastMemberType.script) {
       this.scriptNumber = this.unknownData.readUInt16BE(14) - 1;
-      console.log(this.scriptNumber);
     }
   }
 
