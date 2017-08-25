@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "Shockwave decompiler",
   "main": "bin/index.js",
+  "scripts": {
+    "start": "node bin/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Earthquake-Project/ProjectorRays.git"
