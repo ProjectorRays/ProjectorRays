@@ -4,11 +4,11 @@ import {DataStream} from "../DataStream";
 /* MetaChunk */
 
 export class Meta implements Chunk {
-  fourCC = "RIFX";
+    fourCC = "RIFX";
 
-  codec: string;
+    codec: string;
 
-  read(dataStream: DataStream) {
-    this.codec = dataStream.readFourCC();
-  }
+    read(dataStream: DataStream) {
+        this.codec = dataStream.readFourCC();
+    }
 }

@@ -4,6 +4,6 @@ import {DataStream} from "../DataStream";
 /* Chunk */
 
 export interface Chunk {
-  fourCC: string;
-  read(dataStream: DataStream);
+    fourCC: string;
+    read(dataStream: DataStream);
 }

@@ -4,7 +4,7 @@ import {DataStream} from "../DataStream";
 /* Unimplemented */
 
 export class Unimplemented implements Chunk {
-  constructor(public fourCC: string) {}
+    constructor(public fourCC: string) {}
 
-  read(dataStream: DataStream) {}
+    read(dataStream: DataStream) {}
 }
