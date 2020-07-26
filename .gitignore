@@ -1,3 +1,5 @@
 .DS_STORE
-node_modules
-bin
+.vscode
+*.lingo
+
+/projectorrays
