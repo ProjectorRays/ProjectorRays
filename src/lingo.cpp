@@ -56,7 +56,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpEndRepeat,         "endrepeat" },
     { kOpJmpIfZ,            "jmpifz" },
     { kOpCallLocal,         "localcall" },
-    { kOpCall,              "call" },
+    { kOpCallExt,           "extcall" },
     { kOpCallObjOld,        "oldobjcall" },
     { kOp59XX,              "op59xx" },
     { kOp5BXX,              "op5Bxx" },

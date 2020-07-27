@@ -390,7 +390,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
             translation = std::make_shared<CallNode>(scr->handlers[bytecode.obj]->name, std::move(argList));
         }
         break;
-    case kOpCall:
+    case kOpCallExt:
         {
             auto argList = pop();
             if (argList->getValue()->type == kDatumArgListNoRet)

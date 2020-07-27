@@ -72,7 +72,7 @@ enum OpCode {
     kOpEndRepeat        = 0x54,
     kOpJmpIfZ           = 0x55,
     kOpCallLocal        = 0x56,
-    kOpCall             = 0x57,
+    kOpCallExt          = 0x57,
     kOpCallObjOld       = 0x58,
     kOp59XX             = 0x59,
     kOp5BXX             = 0x5b,
