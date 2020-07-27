@@ -45,6 +45,7 @@ public:
     double readDouble();
     double readAppleFloat80();
     std::string readString(size_t len);
+    std::string readPascalString();
 };
 
 }

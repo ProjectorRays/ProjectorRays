@@ -14,6 +14,7 @@ namespace ProjectorRays {
 struct Handler;
 struct LiteralStore;
 
+struct CastInfoChunk;
 struct ScriptContextChunk;
 
 struct Chunk {
@@ -71,14 +72,26 @@ enum CastMemberType {
 
 struct CastMemberChunk : Chunk {
     uint32_t type;
-    uint32_t specificDataOffset;
+    uint32_t infoLen;
     uint32_t specificDataLen;
-    uint32_t skipSize;
-    // unknownData;
+    std::shared_ptr<CastInfoChunk> info;
+
+    CastMemberChunk() : Chunk(FOURCC('C', 'A', 'S', 't')) {}
+    virtual ~CastMemberChunk() = default;
+    virtual void read(ReadStream &stream);
+};
+
+struct CastInfoChunk : Chunk {
+    uint32_t dataOffset;
+    uint32_t unk1;
+    uint32_t unk2;
+    uint32_t flags;
+    uint32_t scriptId;
+
     uint16_t offsetTableLen;
     std::vector<uint32_t> offsetTable;
     uint32_t finalDataLen;
-    uint32_t dataOffset;
+    uint32_t listOffset;
 
     std::string scriptSrcText;
     std::string name;
@@ -103,14 +116,12 @@ struct CastMemberChunk : Chunk {
     // cProp20;
     // imageCompression;
 
-    uint32_t scriptNumber;
-
-    CastMemberChunk() : Chunk(FOURCC('C', 'A', 'S', 't')) {}
-    virtual ~CastMemberChunk() = default;
+    CastInfoChunk() : Chunk(FOURCC('V', 'W', 'C', 'I')) {}
+    virtual ~CastInfoChunk() = default;
     virtual void read(ReadStream &stream);
-    std::string readStringProperty(ReadStream &stream, uint16_t index);
-    std::string readPrefixedStringProperty(ReadStream &stream, uint16_t index);
-    uint32_t readUint32Property(ReadStream &stream, uint16_t index);
+    std::string readCString(ReadStream &stream, uint16_t index);
+    std::string readPascalString(ReadStream &stream, uint16_t index);
+    uint32_t readUint32(ReadStream &stream, uint16_t index);
 };
 
 struct InitialMapChunk : Chunk {

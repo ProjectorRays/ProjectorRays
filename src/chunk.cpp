@@ -58,24 +58,41 @@ void CastMemberChunk::read(ReadStream &stream) {
     stream.endianness = kBigEndian;
 
     type = stream.readUint32();
-    specificDataOffset = stream.readUint32();
+    infoLen = stream.readUint32();
     specificDataLen = stream.readUint32();
-    skipSize = stream.readUint32();
-    // unknownData = stream.readBytes(skipSize - 4);
-    stream.skip(skipSize - 4);
+
+    // info
+    std::unique_ptr<ReadStream> infoStream = stream.readBytes(infoLen);
+    info = std::make_shared<CastInfoChunk>();
+    info->read(*infoStream);
+
+    // specific data
+    // TODO
+}
+
+/* CastInfoChunk */
+
+void CastInfoChunk::read(ReadStream &stream) {
+    dataOffset = stream.readUint32();
+    unk1 = stream.readUint32();
+    unk2 = stream.readUint32();
+    flags = stream.readUint32();
+    scriptId = stream.readUint32();
+
+    stream.seek(dataOffset);
     offsetTableLen = stream.readUint16();
     offsetTable.resize(offsetTableLen);
     for (auto &entry : offsetTable) {
         entry = stream.readUint32();
     }
     finalDataLen = stream.readUint32();
-    dataOffset = stream.pos();
+    listOffset = stream.pos();
 
-    scriptSrcText = readStringProperty(stream, 0);
-    name = readPrefixedStringProperty(stream, 1);
+    scriptSrcText = readCString(stream, 0);
+    name = readPascalString(stream, 1);
     // cProp02 = readProperty(stream, 2);
     // cProp03 = readProperty(stream, 3);
-    comment = readStringProperty(stream, 4);
+    comment = readCString(stream, 4);
     // cProp05 = readProperty(stream, 5);
     // cProp06 = readProperty(stream, 6);
     // cProp07 = readProperty(stream, 7);
@@ -87,45 +104,36 @@ void CastMemberChunk::read(ReadStream &stream) {
     // cProp13 = readProperty(stream, 13);
     // cProp14 = readProperty(stream, 14);
     // cProp15 = readProperty(stream, 15);
-    fileFormatID = readStringProperty(stream, 16);
-    created = readUint32Property(stream, 17);
-    modified = readUint32Property(stream, 18);
+    fileFormatID = readCString(stream, 16);
+    created = readUint32(stream, 17);
+    modified = readUint32(stream, 18);
     // cProp19 = readProperty(stream, 19);
     // cProp20 = readProperty(stream, 20);
     // imageCompression = readProperty(stream, 21);
-
-    // if (type === CastMemberType.script) {
-    //     scriptNumber = unknownData.readUInt16BE(14) - 1;
-    // }
 }
 
-std::string CastMemberChunk::readStringProperty(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen)
+std::string CastInfoChunk::readCString(ReadStream &stream, uint16_t index) {
+    if (index >= offsetTableLen - 1)
         return "";
 
-    auto offset = offsetTable[index];
-    auto nextOffset = index < offsetTableLen - 1 ? offsetTable[index + 1] : specificDataOffset;
-    auto length = nextOffset - offset;
-    stream.seek(dataOffset + offset);
+    auto length = offsetTable[index + 1] - offsetTable[index];
+    stream.seek(listOffset + offsetTable[index]);
     return stream.readString(length);
 }
 
-std::string CastMemberChunk::readPrefixedStringProperty(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen)
+std::string CastInfoChunk::readPascalString(ReadStream &stream, uint16_t index) {
+    if (index >= offsetTableLen - 1)
         return "";
 
-    auto offset = offsetTable[index];
-    stream.seek(dataOffset + offset);
-    auto length = stream.readUint8();
-    return stream.readString(length);
+    stream.seek(listOffset + offsetTable[index]);
+    return stream.readPascalString();
 }
 
-uint32_t CastMemberChunk::readUint32Property(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen)
+uint32_t CastInfoChunk::readUint32(ReadStream &stream, uint16_t index) {
+    if (index >= offsetTableLen - 1)
         return 0;
 
-    auto offset = offsetTable[index];
-    stream.seek(dataOffset + offset);
+    stream.seek(listOffset + offsetTable[index]);
     return stream.readUint32();
 }
 
