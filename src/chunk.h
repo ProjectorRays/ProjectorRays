@@ -13,14 +13,16 @@ namespace ProjectorRays {
 
 struct Handler;
 struct LiteralStore;
+struct Movie;
 
 struct CastInfoChunk;
 struct ScriptContextChunk;
+struct ScriptNamesChunk;
 
 struct Chunk {
-    uint32_t fourCC;
+    Movie *movie;
 
-    Chunk(uint32_t tag) : fourCC(tag) {}
+    Chunk(Movie *m) : movie(m) {}
     virtual ~Chunk() = default;
     virtual void read(ReadStream &stream) {}
 };
@@ -28,7 +30,7 @@ struct Chunk {
 struct CastAssociationsChunk : Chunk {
     std::vector<uint32_t> entries;
 
-    CastAssociationsChunk() : Chunk(FOURCC('C', 'A', 'S', '*')) {}
+    CastAssociationsChunk(Movie *m) : Chunk(m) {}
     virtual ~CastAssociationsChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -40,7 +42,7 @@ struct CastKeyChunk : Chunk {
     uint32_t unknown2;
     std::vector<CastKeyEntry> entries;
 
-    CastKeyChunk() : Chunk(FOURCC('K', 'E', 'Y', '*')) {}
+    CastKeyChunk(Movie *m) : Chunk(m) {}
     virtual ~CastKeyChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -54,7 +56,7 @@ struct CastListChunk : Chunk {
     uint32_t castEntriesLength;
     std::vector<CastDataEntry> entries;
 
-    CastListChunk() : Chunk(FOURCC('M', 'C', 's', 'L')) {}
+    CastListChunk(Movie *m) : Chunk(m) {}
     virtual ~CastListChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -76,7 +78,7 @@ struct CastMemberChunk : Chunk {
     uint32_t specificDataLen;
     std::shared_ptr<CastInfoChunk> info;
 
-    CastMemberChunk() : Chunk(FOURCC('C', 'A', 'S', 't')) {}
+    CastMemberChunk(Movie *m) : Chunk(m) {}
     virtual ~CastMemberChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -116,7 +118,7 @@ struct CastInfoChunk : Chunk {
     // cProp20;
     // imageCompression;
 
-    CastInfoChunk() : Chunk(FOURCC('V', 'W', 'C', 'I')) {}
+    CastInfoChunk(Movie *m) : Chunk(m) {}
     virtual ~CastInfoChunk() = default;
     virtual void read(ReadStream &stream);
     std::string readCString(ReadStream &stream, uint16_t index);
@@ -128,7 +130,7 @@ struct InitialMapChunk : Chunk {
     uint32_t memoryMapCount;
     uint32_t memoryMapOffset;
 
-    InitialMapChunk() : Chunk(FOURCC('i', 'm', 'a', 'p')) {}
+    InitialMapChunk(Movie *m) : Chunk(m) {}
     virtual ~InitialMapChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -143,7 +145,7 @@ struct MemoryMapChunk : Chunk {
     int32_t freePointer;
     std::vector<MemoryMapEntry> mapArray;
 
-    MemoryMapChunk() : Chunk(FOURCC('m', 'm', 'a', 'p')) {}
+    MemoryMapChunk(Movie *m) : Chunk(m) {}
     virtual ~MemoryMapChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -151,12 +153,12 @@ struct MemoryMapChunk : Chunk {
 struct MetaChunk : Chunk {
     uint32_t codec;
 
-    MetaChunk() : Chunk(FOURCC('R', 'I', 'F', 'X')) {}
+    MetaChunk(Movie *m) : Chunk(m) {}
     virtual ~MetaChunk() = default;
     virtual void read(ReadStream &stream);
 };
 
-struct ScriptChunk : Chunk, std::enable_shared_from_this<ScriptChunk> {
+struct ScriptChunk : Chunk {
     uint32_t totalLength;
     uint32_t totalLength2;
     uint16_t headerLength;
@@ -186,7 +188,7 @@ struct ScriptChunk : Chunk, std::enable_shared_from_this<ScriptChunk> {
     std::vector<LiteralStore> literals;
     std::weak_ptr<ScriptContextChunk> context;
 
-    ScriptChunk() : Chunk(FOURCC('L', 's', 'c', 'r')) {}
+    ScriptChunk(Movie *m) : Chunk(m) {}
     virtual ~ScriptChunk() = default;
     virtual void read(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
@@ -210,10 +212,11 @@ struct ScriptContextChunk : Chunk {
     uint16_t flags;
     int16_t freePointer;
 
+    std::shared_ptr<ScriptNamesChunk> lnam;
     std::vector<ScriptContextMapEntry> sectionMap;
     std::vector<std::shared_ptr<ScriptChunk>> scripts;
 
-    ScriptContextChunk() : Chunk(FOURCC('L', 'c', 't', 'X')) {}
+    ScriptContextChunk(Movie *m) : Chunk(m) {}
     virtual ~ScriptContextChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -227,7 +230,7 @@ struct ScriptNamesChunk : Chunk {
     uint16_t namesCount;
     std::vector<std::string> names;
 
-    ScriptNamesChunk() : Chunk(FOURCC('L', 'n', 'a', 'm')) {}
+    ScriptNamesChunk(Movie *m) : Chunk(m) {}
     virtual ~ScriptNamesChunk() = default;
     virtual void read(ReadStream &stream);
 };

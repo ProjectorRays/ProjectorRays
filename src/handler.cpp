@@ -1,6 +1,6 @@
 #include "chunk.h"
 #include "lingo.h"
-#include "lingo.h"
+#include "movie.h"
 #include "stream.h"
 
 namespace ProjectorRays {
@@ -92,10 +92,6 @@ std::shared_ptr<Node> Handler::pop() {
 }
 
 void Handler::translate(const std::vector<std::string> &names) {
-    std::shared_ptr<ScriptChunk> scr = script.lock();
-    if (!scr)
-        return;
-
     stack.clear();
     ast = std::make_unique<AST>(name, argumentNames);
     for (size_t i = 0; i < bytecodeArray.size(); i++) {
@@ -118,11 +114,11 @@ void Handler::translate(const std::vector<std::string> &names) {
                 }
             }
         }
-        translateBytecode(bytecode, i, scr, names);
+        translateBytecode(bytecode, i, names);
     }
 }
 
-void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::shared_ptr<ScriptChunk> &scr, const std::vector<std::string> &names) {
+void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vector<std::string> &names) {
     std::shared_ptr<Node> comment = nullptr;
     std::shared_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
@@ -293,7 +289,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
         }
         break;
     case kOpPushCons:
-        translation = std::make_shared<LiteralNode>(scr->literals[bytecode.obj].value);
+        translation = std::make_shared<LiteralNode>(script->literals[bytecode.obj].value);
         break;
     case kOpPushSymb:
         {
@@ -387,7 +383,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
             auto argList = pop();
             if (argList->getValue()->type == kDatumArgListNoRet)
                 stmt = true;
-            translation = std::make_shared<CallNode>(scr->handlers[bytecode.obj]->name, std::move(argList));
+            translation = std::make_shared<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
         }
         break;
     case kOpCallExt:

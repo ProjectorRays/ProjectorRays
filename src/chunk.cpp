@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include "lingo.h"
+#include "movie.h"
 #include "stream.h"
 #include "subchunk.h"
 
@@ -63,7 +64,7 @@ void CastMemberChunk::read(ReadStream &stream) {
 
     // info
     std::unique_ptr<ReadStream> infoStream = stream.readBytes(infoLen);
-    info = std::make_shared<CastInfoChunk>();
+    info = std::make_shared<CastInfoChunk>(movie);
     info->read(*infoStream);
 
     // specific data
@@ -207,7 +208,7 @@ void ScriptChunk::read(ReadStream &stream) {
     stream.seek(handlersOffset);
     handlers.resize(handlersCount);
     for (auto &handler : handlers) {
-        handler = std::make_unique<Handler>(weak_from_this());
+        handler = std::make_unique<Handler>(this);
         handler->readRecord(stream);
     }
     for (const auto &handler : handlers) {
@@ -291,6 +292,20 @@ void ScriptContextChunk::read(ReadStream &stream) {
     sectionMap.resize(entryCount);
     for (auto &entry : sectionMap) {
         entry.read(stream);
+    }
+
+    lnam = std::static_pointer_cast<ScriptNamesChunk>(movie->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
+    for (size_t j = 0; j < sectionMap.size(); j++) {
+        auto section = sectionMap[j];
+        if (section.sectionID > -1) {
+            auto script = std::dynamic_pointer_cast<ScriptChunk>(movie->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
+            script->readNames(lnam->names);
+            scripts.push_back(script);
+        }
+    }
+
+    for (auto &script : scripts) {
+        script->translate(lnam->names);
     }
 }
 

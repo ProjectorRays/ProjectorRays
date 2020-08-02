@@ -11,19 +11,29 @@
 namespace ProjectorRays {
 
 struct Chunk;
-struct Cast;
+// struct Cast;
 struct ReadStream;
 
 struct Movie {
-    std::map<uint32_t, std::vector<std::shared_ptr<Chunk>>> chunkArrays;
-    std::map<uint32_t, std::shared_ptr<Chunk>> chunkMap;
-    std::map<uint32_t, std::shared_ptr<Cast>> castMap;
+    ReadStream *stream;
+    std::shared_ptr<MetaChunk> meta;
+    std::shared_ptr<InitialMapChunk> imap;
+    std::shared_ptr<MemoryMapChunk> mmap;
 
-    void read(ReadStream &stream);
-    void lookupMmap(ReadStream &stream);
+    bool capitalX;
+
+    std::map<uint32_t, std::shared_ptr<Chunk>> chunkMap;
+    // std::map<uint32_t, std::shared_ptr<Cast>> castMap;
+    std::vector<std::shared_ptr<ScriptContextChunk>> scriptContexts;
+
+    Movie() : capitalX(false) {}
+
+    void read(ReadStream *s);
+    void lookupMmap();
     // void createCasts();
-    void linkScripts();
-    std::shared_ptr<Chunk> readChunk(ReadStream &stream, uint32_t fourCC, uint32_t len = UINT32_MAX);
+    void readScripts();
+    std::shared_ptr<Chunk> getChunk(uint32_t fourCC, uint32_t offset);
+    std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
 };
 
 }

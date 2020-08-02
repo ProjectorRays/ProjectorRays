@@ -40,11 +40,10 @@ int main(int argc, char *argv[]) {
     auto buf = readFile(argv[1]);
     auto stream = std::make_unique<ReadStream>(buf);
     auto movie = std::make_unique<Movie>();
-    movie->read(*stream);
+    movie->read(stream.get());
 
-    auto &lctxArray = movie->chunkArrays[FOURCC('L', 'c', 't', 'X')];
-    for (size_t i = 0; i < lctxArray.size(); i++) {
-        auto lctx = std::static_pointer_cast<ScriptContextChunk>(lctxArray[i]);
+    for (size_t i = 0; i < movie->scriptContexts.size(); i++) {
+        auto lctx = movie->scriptContexts[i];
         for (size_t j = 0; j < lctx->scripts.size(); j++) {
             auto script = lctx->scripts[j];
             auto fileName = "script-" + std::to_string(i) + "-" + std::to_string(j) + ".lingo";

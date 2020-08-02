@@ -217,7 +217,7 @@ struct Handler {
     std::vector<uint16_t> argumentNameIDs;
     std::vector<uint16_t> localNameIDs;
 
-    std::weak_ptr<ScriptChunk> script;
+    ScriptChunk *script;
     std::vector<Bytecode> bytecodeArray;
     std::map<uint32_t, size_t> bytecodePosMap;
     std::vector<std::string> argumentNames;
@@ -227,8 +227,8 @@ struct Handler {
     std::vector<std::shared_ptr<Node>> stack;
     std::unique_ptr<AST> ast;
 
-    Handler(std::weak_ptr<ScriptChunk> s) {
-        script = std::move(s);
+    Handler(ScriptChunk *s) {
+        script = s;
     }
 
     void readRecord(ReadStream &stream);
@@ -237,7 +237,7 @@ struct Handler {
     void readNames(const std::vector<std::string> &names);
     std::shared_ptr<Node> pop();
     void translate(const std::vector<std::string> &names);
-    void translateBytecode(Bytecode &bytecode, size_t pos, const std::shared_ptr<ScriptChunk> &scr, const std::vector<std::string> &names);
+    void translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
 };
 
 /* Bytecode */

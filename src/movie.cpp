@@ -12,19 +12,20 @@ namespace ProjectorRays {
 
 /* Movie */
 
-void Movie::read(ReadStream &stream) {
-    stream.endianness = kBigEndian; // we set this properly when we create the RIFX chunk
-    lookupMmap(stream);
+void Movie::read(ReadStream *s) {
+    stream = s;
+    stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
+    lookupMmap();
     // createCasts();
-    linkScripts();
+    readScripts();
 }
 
-void Movie::lookupMmap(ReadStream &stream) {
+void Movie::lookupMmap() {
     // at the beginning of the file, we need to break some of the typical rules. We don't know names, lengths and offsets yet.
 
     // valid length is undefined because we have not yet reached mmap
     // however, it will be filled automatically in chunk's constructor
-    auto meta = std::static_pointer_cast<MetaChunk>(readChunk(stream, FOURCC('R', 'I', 'F', 'X')));
+    meta = std::static_pointer_cast<MetaChunk>(readChunk(FOURCC('R', 'I', 'F', 'X')));
     // we can only open DIR or DXR
     // we'll read Movie from stream because Movie is an exception to the normal rules
     if (meta->codec != FOURCC('M', 'V', '9', '3')) {
@@ -32,31 +33,10 @@ void Movie::lookupMmap(ReadStream &stream) {
     }
 
     // the next chunk should be imap
-    auto imap = std::static_pointer_cast<InitialMapChunk>(readChunk(stream, FOURCC('i', 'm', 'a', 'p')));
+    imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
 
-    stream.seek(imap->memoryMapOffset);
-    auto mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(stream, FOURCC('m', 'm', 'a', 'p')));
-    // add chunks in the mmap to the chunkArrays HERE
-    for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
-        auto mapEntry = mmap->mapArray[i];
-
-        if (mapEntry.fourCC == FOURCC('f', 'r', 'e', 'e') || mapEntry.fourCC == FOURCC('j', 'u', 'n', 'k'))
-            continue;
-
-        std::shared_ptr<Chunk> chunk;
-        if (mapEntry.fourCC == FOURCC('R', 'I', 'F', 'X')) {
-            chunk = meta;
-        } else if (mapEntry.fourCC == FOURCC('i', 'm', 'a', 'p')) {
-            chunk = imap;
-        } else if (mapEntry.fourCC == FOURCC('m', 'm', 'a', 'p')) {
-            chunk = mmap;
-        } else {
-            stream.seek(mapEntry.offset);
-            chunk = readChunk(stream, mapEntry.fourCC, mapEntry.len);
-        }
-        chunkArrays[mapEntry.fourCC].push_back(chunk);
-        chunkMap[i] = chunk;
-    }
+    stream->seek(imap->memoryMapOffset);
+    mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
 }
 
 // void Movie::createCasts() {
@@ -70,39 +50,59 @@ void Movie::lookupMmap(ReadStream &stream) {
 //     }
 // }
 
-void Movie::linkScripts() {
-    auto ctxArray = chunkArrays[FOURCC('L', 'c', 't', 'X')];
-    for (size_t i = 0; i < ctxArray.size(); i ++) {
-        auto context = std::dynamic_pointer_cast<ScriptContextChunk>(ctxArray[i]);
-        auto scriptNames = std::dynamic_pointer_cast<ScriptNamesChunk>(chunkMap[context->lnamSectionID]);
-        for (size_t j = 0; j < context->sectionMap.size(); j++) {
-            auto section = context->sectionMap[j];
-            if (section.sectionID > -1) {
-                auto script = std::dynamic_pointer_cast<ScriptChunk>(chunkMap[section.sectionID]);
-                script->readNames(scriptNames->names);
-                script->translate(scriptNames->names);
-                context->scripts.push_back(script);
-            }
-        }
+void Movie::readScripts() {
+    for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
+        auto mapEntry = mmap->mapArray[i];
+
+        if (mapEntry.fourCC != FOURCC('L', 'c', 't', 'x') && mapEntry.fourCC != FOURCC('L', 'c', 't', 'X'))
+            continue;
+
+        if (mapEntry.fourCC == FOURCC('L', 'c', 't', 'X'))
+            capitalX = true;
+
+        auto context = std::dynamic_pointer_cast<ScriptContextChunk>(getChunk(mapEntry.fourCC, i));
+        scriptContexts.push_back(std::move(context));
     }
 }
 
-std::shared_ptr<Chunk> Movie::readChunk(ReadStream &stream, uint32_t fourCC, uint32_t len) {
-    auto offset = stream.pos();
+std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, uint32_t id) {
+    if (chunkMap.find(id) != chunkMap.end())
+        return chunkMap[id];
+
+    auto &mapEntry = mmap->mapArray[id];
+
+    std::shared_ptr<Chunk> chunk;
+    if (mapEntry.fourCC == FOURCC('R', 'I', 'F', 'X')) {
+        chunk = meta;
+    } else if (mapEntry.fourCC == FOURCC('i', 'm', 'a', 'p')) {
+        chunk = imap;
+    } else if (mapEntry.fourCC == FOURCC('m', 'm', 'a', 'p')) {
+        chunk = mmap;
+    } else {
+        stream->seek(mapEntry.offset);
+        chunk = readChunk(mapEntry.fourCC, mapEntry.len);
+    }
+    chunkMap[id] = chunk;
+
+    return chunk;
+}
+
+std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
+    auto offset = stream->pos();
 
     // check if this is the chunk we are expecting
-    auto validFourCC = stream.readUint32();
+    auto validFourCC = stream->readUint32();
     if (fourCC == FOURCC('R', 'I', 'F', 'X')) {
         //if (validName.substring(0, 2) == "MZ") {
             // handle Projector HERE
         //}
         if (validFourCC == FOURCC('X', 'F', 'I', 'R')) {
-            stream.endianness = kLittleEndian;
+            stream->endianness = kLittleEndian;
             validFourCC = FOURCC('R', 'I', 'F', 'X');
         }
     }
     // check if it has the length the mmap table specifies
-    auto validLen = stream.readUint32();
+    auto validLen = stream->readUint32();
 
     // use the valid length if mmap hasn't been read yet
     if (len == UINT32_MAX) {
@@ -138,42 +138,43 @@ std::shared_ptr<Chunk> Movie::readChunk(ReadStream &stream, uint32_t fourCC, uin
     }
 
     // copy the contents of the chunk to a new DataStream (minus name/length as that's not what offsets are usually relative to)
-    auto chunkStream = stream.readBytes(len);
+    auto chunkStream = stream->readBytes(len);
 
     std::shared_ptr<Chunk> res;
     switch (fourCC) {
     case FOURCC('R', 'I', 'F', 'X'):
-        res = std::make_shared<MetaChunk>();
+        res = std::make_shared<MetaChunk>(this);
         break;
     case FOURCC('i', 'm', 'a', 'p'):
-        res = std::make_shared<InitialMapChunk>();
+        res = std::make_shared<InitialMapChunk>(this);
         break;
     case FOURCC('m', 'm', 'a', 'p'):
-        res = std::make_shared<MemoryMapChunk>();
+        res = std::make_shared<MemoryMapChunk>(this);
         break;
+    case FOURCC('L', 'c', 't', 'x'):
     case FOURCC('L', 'c', 't', 'X'):
-        res = std::make_shared<ScriptContextChunk>();
+        res = std::make_shared<ScriptContextChunk>(this);
         break;
     case FOURCC('L', 'n', 'a', 'm'):
-        res = std::make_shared<ScriptNamesChunk>();
+        res = std::make_shared<ScriptNamesChunk>(this);
         break;
     case FOURCC('L', 's', 'c', 'r'):
-        res = std::make_shared<ScriptChunk>();
+        res = std::make_shared<ScriptChunk>(this);
         break;
-    case FOURCC('M', 'C', 's', 'L'):
-        res = std::make_shared<CastListChunk>();
-        break;
-    case FOURCC('K', 'E', 'Y', '*'):
-        res = std::make_shared<CastKeyChunk>();
-        break;
-    case FOURCC('C', 'A', 'S', '*'):
-        res = std::make_shared<CastAssociationsChunk>();
-        break;
-    case FOURCC('C', 'A', 'S', 't'):
-        res = std::make_shared<CastMemberChunk>();
-        break;
+    // case FOURCC('M', 'C', 's', 'L'):
+    //     res = std::make_shared<CastListChunk>(this);
+    //     break;
+    // case FOURCC('K', 'E', 'Y', '*'):
+    //     res = std::make_shared<CastKeyChunk>(this);
+    //     break;
+    // case FOURCC('C', 'A', 'S', '*'):
+    //     res = std::make_shared<CastAssociationsChunk>(this);
+    //     break;
+    // case FOURCC('C', 'A', 'S', 't'):
+    //     res = std::make_shared<CastMemberChunk>(this);
+    //     break;
     default:
-        res = std::make_shared<Chunk>(fourCC);
+        res = std::make_shared<Chunk>(this);
     }
 
     res->read(*chunkStream);
