@@ -21,6 +21,8 @@ struct Node;
 struct ReadStream;
 struct ScriptChunk;
 
+typedef unsigned int uint;
+
 enum OpCode {
     // single-byte
     kOpRet              = 0x01,
@@ -213,7 +215,7 @@ struct Handler {
     uint16_t lineCount;
     uint32_t lineOffset;
     uint32_t stackHeight;
-    
+
     std::vector<uint16_t> argumentNameIDs;
     std::vector<uint16_t> localNameIDs;
 
