@@ -290,24 +290,24 @@ void AST::addStatement(std::shared_ptr<Node> statement) {
     currentBlock->addChild(std::move(statement));
 }
 
-void AST::enterBlock(std::shared_ptr<BlockNode> block) {
-    currentBlock = std::move(block);
+void AST::enterBlock(BlockNode *block) {
+    currentBlock = block;
 }
 
 void AST::exitBlock() {
-    auto parent = currentBlock->parent.lock(); // handler
+    auto parent = currentBlock->parent; // handler
     if (!parent) {
         currentBlock = nullptr;
         return;
     }
 
-    auto grandparent = parent->parent.lock(); // block
+    auto grandparent = parent->parent; // block
     if (!grandparent) {
         currentBlock = nullptr;
         return;
     }
 
-    auto newBlock = std::dynamic_pointer_cast<BlockNode>(grandparent);
+    auto newBlock = static_cast<BlockNode *>(grandparent);
     if (!newBlock) {
         currentBlock = nullptr;
         return;
@@ -317,8 +317,6 @@ void AST::exitBlock() {
 }
 
 /* Node */
-
-void Node::connect() {}
 
 std::string Node::toString() {
     return "";
@@ -361,15 +359,11 @@ std::string BlockNode::toString() {
 }
 
 void BlockNode::addChild(std::shared_ptr<Node> child) {
-    child->parent = weak_from_this();
+    child->parent = this;
     children.push_back(std::move(child));
 }
 
 /* HandlerNode */
-
-void HandlerNode::connect() {
-    block->parent = weak_from_this();
-}
 
 std::string HandlerNode::toString() {
     std::string res = "on " + name + "(";
@@ -390,19 +384,11 @@ std::string ExitStmtNode::toString() {
 
 /* InverseOpNode */
 
-void InverseOpNode::connect() {
-    operand->parent = weak_from_this();
-}
-
 std::string InverseOpNode::toString() {
     return "-" + operand->toString();
 }
 
 /* NotOpNode */
-
-void NotOpNode::connect() {
-    operand->parent = weak_from_this();
-}
 
 std::string NotOpNode::toString() {
     return "not " + operand->toString();
@@ -410,23 +396,12 @@ std::string NotOpNode::toString() {
 
 /* BinaryOpNode */
 
-void BinaryOpNode::connect() {
-    left->parent = weak_from_this();
-    right->parent = weak_from_this();
-}
-
 std::string BinaryOpNode::toString() {
     auto opString = Lingo::getName(Lingo::binaryOpNames, opcode);
     return left->toString() + " " +  opString + " " + right->toString();
 }
 
 /* StringSplitExprNode */
-
-void StringSplitExprNode::connect() {
-    first->parent = weak_from_this();
-    last->parent = weak_from_this();
-    string->parent = weak_from_this();
-}
 
 std::string StringSplitExprNode::toString() {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
@@ -440,12 +415,6 @@ std::string StringSplitExprNode::toString() {
 
 /* StringHiliteStmtNode */
 
-void StringHiliteStmtNode::connect() {
-    first->parent = weak_from_this();
-    last->parent = weak_from_this();
-    string->parent = weak_from_this();
-}
-
 std::string StringHiliteStmtNode::toString() {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
     auto res = string->toString() + "." + typeString + "[" + first->toString();
@@ -458,30 +427,17 @@ std::string StringHiliteStmtNode::toString() {
 
 /* SpriteIntersectsExprNode */
 
-void SpriteIntersectsExprNode::connect() {
-    firstSprite->parent = weak_from_this();
-    secondSprite->parent = weak_from_this();
-}
-
 std::string SpriteIntersectsExprNode::toString() {
     return "sprite(" + firstSprite->toString() + ").intersects(" + secondSprite->toString() + ")";
 }
 
 /* SpriteWithinExprNode */
 
-void SpriteWithinExprNode::connect() {
-    firstSprite->parent = weak_from_this();
-    secondSprite->parent = weak_from_this();
-}
-
 std::string SpriteWithinExprNode::toString() {
     return "sprite(" + firstSprite->toString() + ").within(" + secondSprite->toString() + ")";
 }
 
 /* FieldExprNode */
-void FieldExprNode::connect() {
-    fieldID->parent = weak_from_this();
-}
 
 std::string FieldExprNode::toString() {
     return "field(" + fieldID->toString() + ")";
@@ -495,22 +451,11 @@ std::string VarNode::toString() {
 
 /* AssignmentStmtNode */
 
-void AssignmentStmtNode::connect() {
-    variable->parent = weak_from_this();
-    value->parent = weak_from_this();
-}
-
 std::string AssignmentStmtNode::toString() {
     return variable->toString() + " = " + value->toString();
 }
 
 /* IfStmtNode */
-
-void IfStmtNode::connect() {
-    condition->parent = weak_from_this();
-    block1->parent = weak_from_this();
-    block2->parent = weak_from_this();
-}
 
 std::string IfStmtNode::toString() {
     switch (ifType) {
@@ -526,20 +471,11 @@ std::string IfStmtNode::toString() {
 
 /* CallNode */
 
-void CallNode::connect() {
-    argList->parent = weak_from_this();
-}
-
 std::string CallNode::toString() {
     return name + "(" + argList->toString() + ")";
 }
 
 /* ObjCallNode */
-
-void ObjCallNode::connect() {
-    obj->parent = weak_from_this();
-    argList->parent = weak_from_this();
-}
 
 std::string ObjCallNode::toString() {
     return obj->toString() + "." + name + "(" + argList->toString() + ")";
@@ -553,20 +489,12 @@ std::string TheExprNode::toString() {
 
 /* LastStringChunkExprNode */
 
-void LastStringChunkExprNode::connect() {
-    string->parent = weak_from_this();
-}
-
 std::string LastStringChunkExprNode::toString() {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
     return "the last " + typeString + " in " + string->toString();
 }
 
 /* StringChunkCountExprNode */
-
-void StringChunkCountExprNode::connect() {
-    string->parent = weak_from_this();
-}
 
 std::string StringChunkCountExprNode::toString() {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
@@ -575,21 +503,12 @@ std::string StringChunkCountExprNode::toString() {
 
 /* MenuPropExprNode */
 
-void MenuPropExprNode::connect() {
-    menuID->parent = weak_from_this();
-}
-
 std::string MenuPropExprNode::toString() {
     auto propString = Lingo::getName(Lingo::menuPropertyNames, prop);
     return "menu(" + menuID->toString() + ")." + propString;
 }
 
 /* MenuItemPropExprNode */
-
-void MenuItemPropExprNode::connect() {
-    menuID->parent = weak_from_this();
-    itemID->parent = weak_from_this();
-}
 
 std::string MenuItemPropExprNode::toString() {
     auto propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
@@ -598,20 +517,12 @@ std::string MenuItemPropExprNode::toString() {
 
 /* SoundPropExprNode */
 
-void SoundPropExprNode::connect() {
-    soundID->parent = weak_from_this();
-}
-
 std::string SoundPropExprNode::toString() {
     auto propString = Lingo::getName(Lingo::soundPropertyNames, prop);
     return "sound(" + soundID->toString() + ")." + propString;
 }
 
 /* SpritePropExprNode */
-
-void SpritePropExprNode::connect() {
-    spriteID->parent = weak_from_this();
-}
 
 std::string SpritePropExprNode::toString() {
     auto propString = Lingo::getName(Lingo::spritePropertyNames, prop);
@@ -620,19 +531,11 @@ std::string SpritePropExprNode::toString() {
 
 /* CastPropExprNode */
 
-void CastPropExprNode::connect() {
-    castID->parent = weak_from_this();
-}
-
 std::string CastPropExprNode::toString() {
     return "cast(" + castID->toString() + ")." + prop;
 }
 
 /* FieldPropExprNode */
-
-void FieldPropExprNode::connect() {
-    fieldID->parent = weak_from_this();
-}
 
 std::string FieldPropExprNode::toString() {
     auto propString = Lingo::getName(Lingo::fieldPropertyNames, prop);
@@ -640,10 +543,6 @@ std::string FieldPropExprNode::toString() {
 }
 
 /* ObjPropExprNode */
-
-void ObjPropExprNode::connect() {
-    obj->parent = weak_from_this();
-}
 
 std::string ObjPropExprNode::toString() {
     return obj->toString() + "." + prop;

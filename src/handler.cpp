@@ -105,15 +105,15 @@ void Handler::translate(const std::vector<std::string> &names) {
             // exit last block if at end
             while (pos == ast->currentBlock->endPos) {
                 auto exitedBlock = ast->currentBlock;
-                auto blockParent = ast->currentBlock->parent.lock();
+                auto blockParent = ast->currentBlock->parent;
                 ast->exitBlock();
                 if (!blockParent)
                     continue;
 
                 if (blockParent->type == kIfStmtNode) {
-                    auto ifStatement = std::static_pointer_cast<IfStmtNode>(blockParent);
-                    if (ifStatement->ifType == kIfElse && exitedBlock == ifStatement->block1) {
-                        ast->enterBlock(ifStatement->block2);
+                    auto ifStatement = static_cast<IfStmtNode *>(blockParent);
+                    if (ifStatement->ifType == kIfElse && exitedBlock == ifStatement->block1.get()) {
+                        ast->enterBlock(ifStatement->block2.get());
                     }
                 }
             }
@@ -125,7 +125,7 @@ void Handler::translate(const std::vector<std::string> &names) {
 void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::shared_ptr<ScriptChunk> &scr, const std::vector<std::string> &names) {
     std::shared_ptr<Node> comment = nullptr;
     std::shared_ptr<Node> translation = nullptr;
-    std::shared_ptr<BlockNode> nextBlock = nullptr;
+    BlockNode *nextBlock = nullptr;
     bool stmt = false;
 
     switch (bytecode.opcode) {
@@ -342,7 +342,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
             auto &nextBytecode = bytecodeArray[index + 1];
             auto &targetBytecode = bytecodeArray[bytecodePosMap[targetPos]];
             auto &targetPrevBytecode = bytecodeArray[index - 1];
-            auto blockParent = ast->currentBlock->parent.lock();
+            auto blockParent = ast->currentBlock->parent;
 
             if (blockParent && blockParent->type == kIfStmtNode) {
                 if (nextBytecode.pos == ast->currentBlock->endPos && targetPrevBytecode.opcode == kOpEndRepeat) {
@@ -352,7 +352,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
                     stmt = true;
                     translation = std::make_shared<NextRepeatStmtNode>();
                 } else if (nextBytecode.pos == ast->currentBlock->endPos) {
-                    auto ifStmt = std::static_pointer_cast<IfStmtNode>(blockParent);
+                    auto ifStmt = static_cast<IfStmtNode *>(blockParent);
                     ifStmt->ifType = kIfElse;
                     ifStmt->block2->endPos = targetPos;
                     return; // if statement amended, nothing to push
@@ -379,7 +379,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
             auto ifStmt = std::make_shared<IfStmtNode>(std::move(condition));
             ifStmt->block1->endPos = endPos;
             translation = ifStmt;
-            nextBlock = ifStmt->block1;
+            nextBlock = ifStmt->block1.get();
         }
         break;
     case kOpCallLocal:
@@ -646,7 +646,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::sha
     if (!translation)
         translation = std::make_shared<ErrorNode>();
 
-    translation->connect();
     bytecode.translation = translation;
     if (stmt) {
         ast->addStatement(std::move(translation));

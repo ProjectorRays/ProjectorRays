@@ -256,11 +256,10 @@ struct Bytecode {
 
 struct Node {
     NodeType type;
-    std::weak_ptr<Node> parent;
+    Node *parent;
 
-    Node(NodeType t) : type(t) {}
+    Node(NodeType t) : type(t), parent(nullptr) {}
     virtual ~Node() = default;
-    virtual void connect();
     virtual std::string toString();
     virtual std::shared_ptr<Datum> getValue();
 };
@@ -298,7 +297,7 @@ struct LiteralNode : Node {
 
 /* BlockNode */
 
-struct BlockNode : Node, std::enable_shared_from_this<BlockNode> {
+struct BlockNode : Node {
     std::vector<std::shared_ptr<Node>> children;
     int endPos;
 
@@ -310,7 +309,7 @@ struct BlockNode : Node, std::enable_shared_from_this<BlockNode> {
 
 /* HandlerNode */
 
-struct HandlerNode : Node, std::enable_shared_from_this<HandlerNode> {
+struct HandlerNode : Node {
     std::string name;
     std::vector<std::string> args;
     std::shared_ptr<BlockNode> block;
@@ -318,9 +317,9 @@ struct HandlerNode : Node, std::enable_shared_from_this<HandlerNode> {
     HandlerNode(std::string n, std::vector<std::string> a)
         : Node(kHandlerNode), name(n), args(a) {
         block = std::make_shared<BlockNode>();
+        block->parent = this;
     }
     virtual ~HandlerNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
@@ -334,33 +333,33 @@ struct ExitStmtNode : Node {
 
 /* InverseOpNode */
 
-struct InverseOpNode : Node, std::enable_shared_from_this<InverseOpNode> {
+struct InverseOpNode : Node {
     std::shared_ptr<Node> operand;
 
     InverseOpNode(std::shared_ptr<Node> o) : Node(kInverseOpNode) {
         operand = std::move(o);
+        operand->parent = this;
     }
     virtual ~InverseOpNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* NotOpNode */
 
-struct NotOpNode : Node, std::enable_shared_from_this<NotOpNode> {
+struct NotOpNode : Node {
     std::shared_ptr<Node> operand;
 
     NotOpNode(std::shared_ptr<Node> o) : Node(kNotOpNode) {
         operand = std::move(o);
+        operand->parent = this;
     }
     virtual ~NotOpNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* BinaryOpNode */
 
-struct BinaryOpNode : Node, std::enable_shared_from_this<BinaryOpNode> {
+struct BinaryOpNode : Node {
     OpCode opcode;
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
@@ -368,16 +367,17 @@ struct BinaryOpNode : Node, std::enable_shared_from_this<BinaryOpNode> {
     BinaryOpNode(OpCode op, std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         : Node(kBinaryOpNode), opcode(op) {
         left = std::move(a);
+        left->parent = this;
         right = std::move(b);
+        right->parent = this;
     }
     virtual ~BinaryOpNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* StringSplitExprNode */
 
-struct StringSplitExprNode : Node, std::enable_shared_from_this<StringSplitExprNode> {
+struct StringSplitExprNode : Node {
     ChunkType type;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> last;
@@ -386,17 +386,19 @@ struct StringSplitExprNode : Node, std::enable_shared_from_this<StringSplitExprN
     StringSplitExprNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
         : Node(kStringSplitExprNode), type(t) {
         first = std::move(a);
+        first->parent = this;
         last = std::move(b);
+        last->parent = this;
         string = std::move(s);
+        string->parent = this;
     }
     virtual ~StringSplitExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* StringHiliteStmtNode */
 
-struct StringHiliteStmtNode : Node, std::enable_shared_from_this<StringHiliteStmtNode> {
+struct StringHiliteStmtNode : Node {
     ChunkType type;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> last;
@@ -405,56 +407,60 @@ struct StringHiliteStmtNode : Node, std::enable_shared_from_this<StringHiliteStm
     StringHiliteStmtNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
         : Node(kStringHiliteStmtNode), type(t) {
         first = std::move(a);
+        first->parent = this;
         last = std::move(b);
+        last->parent = this;
         string = std::move(s);
+        string->parent = this;
     }
     virtual ~StringHiliteStmtNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* SpriteIntersectsExprNode */
 
-struct SpriteIntersectsExprNode : Node, std::enable_shared_from_this<SpriteIntersectsExprNode> {
+struct SpriteIntersectsExprNode : Node {
     std::shared_ptr<Node> firstSprite;
     std::shared_ptr<Node> secondSprite;
 
     SpriteIntersectsExprNode(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         : Node(kSpriteIntersectsExprNode) {
         firstSprite = std::move(a);
+        firstSprite->parent = this;
         secondSprite = std::move(b);
+        secondSprite->parent = this;
     }
     virtual ~SpriteIntersectsExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* SpriteWithinExprNode */
 
-struct SpriteWithinExprNode : Node, std::enable_shared_from_this<SpriteWithinExprNode> {
+struct SpriteWithinExprNode : Node {
     std::shared_ptr<Node> firstSprite;
     std::shared_ptr<Node> secondSprite;
 
     SpriteWithinExprNode(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         : Node(kSpriteWithinExprNode) {
         firstSprite = std::move(a);
+        firstSprite->parent = this;
         secondSprite = std::move(b);
+        secondSprite->parent = this;
     }
     virtual ~SpriteWithinExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* FieldExprNode */
 
-struct FieldExprNode : Node, std::enable_shared_from_this<FieldExprNode> {
+struct FieldExprNode : Node {
     std::shared_ptr<Node> fieldID;
 
     FieldExprNode(std::shared_ptr<Node> f) : Node(kFieldExprNode) {
         fieldID = std::move(f);
+        fieldID->parent = this;
     }
     virtual ~FieldExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
@@ -470,24 +476,25 @@ struct VarNode: Node {
 
 /* AssignmentStmtNode */
 
-struct AssignmentStmtNode : Node, std::enable_shared_from_this<AssignmentStmtNode> {
+struct AssignmentStmtNode : Node {
     std::shared_ptr<Node> variable;
     std::shared_ptr<Node> value;
 
     AssignmentStmtNode(std::shared_ptr<Node> var, std::shared_ptr<Node> val)
         : Node(kAssignmentStmtNode) {
         variable = std::move(var);
+        variable->parent = this;
         value = std::move(val);
+        value->parent = this;
     }
 
     virtual ~AssignmentStmtNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* IfStmtNode */
 
-struct IfStmtNode : Node, std::enable_shared_from_this<IfStmtNode> {
+struct IfStmtNode : Node {
     IfType ifType;
     std::shared_ptr<Node> condition;
     std::shared_ptr<BlockNode> block1;
@@ -495,32 +502,34 @@ struct IfStmtNode : Node, std::enable_shared_from_this<IfStmtNode> {
 
     IfStmtNode(std::shared_ptr<Node> c) : Node(kIfStmtNode), ifType(kIf) {
         condition = std::move(c);
+        condition->parent = this;
         block1 = std::make_shared<BlockNode>();
+        block1->parent = this;
         block2 = std::make_shared<BlockNode>();
+        block2->parent = this;
     }
     virtual ~IfStmtNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* CallNode */
 
-struct CallNode : Node, std::enable_shared_from_this<CallNode> {
+struct CallNode : Node {
     std::string name;
     std::shared_ptr<Node> argList;
 
     CallNode(std::string n, std::shared_ptr<Node> a) : Node(kCallNode) {
         name = n;
         argList = std::move(a);
+        argList->parent = this;
     }
     virtual ~CallNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* ObjCallNode */
 
-struct ObjCallNode : Node, std::enable_shared_from_this<ObjCallNode> {
+struct ObjCallNode : Node {
     std::shared_ptr<Node> obj;
     std::string name;
     std::shared_ptr<Node> argList;
@@ -528,11 +537,12 @@ struct ObjCallNode : Node, std::enable_shared_from_this<ObjCallNode> {
     ObjCallNode(std::shared_ptr<Node> o, std::string n, std::shared_ptr<Node> a)
         : Node(kObjCallNode) {
         obj = std::move(o);
+        obj->parent = this;
         name = n;
         argList = std::move(a);
+        argList->parent = this;
     }
     virtual ~ObjCallNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
@@ -548,52 +558,52 @@ struct TheExprNode : Node {
 
 /* LastStringChunkExprNode */
 
-struct LastStringChunkExprNode : Node, std::enable_shared_from_this<LastStringChunkExprNode> {
+struct LastStringChunkExprNode : Node {
     ChunkType type;
     std::shared_ptr<Node> string;
 
     LastStringChunkExprNode(ChunkType t, std::shared_ptr<Node> s)
         : Node(kLastStringChunkExprNode), type(t) {
         string = std::move(s);
+        string->parent = this;
     }
     virtual ~LastStringChunkExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* StringChunkCountExprNode */
 
-struct StringChunkCountExprNode : Node, std::enable_shared_from_this<StringChunkCountExprNode> {
+struct StringChunkCountExprNode : Node {
     ChunkType type;
     std::shared_ptr<Node> string;
 
     StringChunkCountExprNode(ChunkType t, std::shared_ptr<Node> s)
         : Node(kStringChunkCountExprNode), type(t) {
         string = std::move(s);
+        string->parent = this;
     }
     virtual ~StringChunkCountExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* MenuPropExprNode */
 
-struct MenuPropExprNode : Node, std::enable_shared_from_this<MenuPropExprNode> {
+struct MenuPropExprNode : Node {
     std::shared_ptr<Node> menuID;
     uint prop;
 
     MenuPropExprNode(std::shared_ptr<Node> m, uint p)
         : Node(kMenuPropExprNode), prop(p) {
         menuID = std::move(m);
+        menuID->parent = this;
     }
     virtual ~MenuPropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* MenuItemPropExprNode */
 
-struct MenuItemPropExprNode : Node, std::enable_shared_from_this<MenuItemPropExprNode> {
+struct MenuItemPropExprNode : Node {
     std::shared_ptr<Node> menuID;
     std::shared_ptr<Node> itemID;
     uint prop;
@@ -601,85 +611,86 @@ struct MenuItemPropExprNode : Node, std::enable_shared_from_this<MenuItemPropExp
     MenuItemPropExprNode(std::shared_ptr<Node> m, std::shared_ptr<Node> i, uint p)
         : Node(kMenuItemPropExprNode), prop(p) {
         menuID = std::move(m);
+        menuID->parent = this;
         itemID = std::move(i);
+        itemID->parent = this;
     }
     virtual ~MenuItemPropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* SoundPropExprNode */
 
-struct SoundPropExprNode : Node, std::enable_shared_from_this<SoundPropExprNode> {
+struct SoundPropExprNode : Node {
     std::shared_ptr<Node> soundID;
     uint prop;
 
     SoundPropExprNode(std::shared_ptr<Node> s, uint p)
         : Node(kSoundPropExprNode), prop(p) {
         soundID = std::move(s);
+        soundID->parent = this;
     }
     virtual ~SoundPropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* SpritePropExprNode */
 
-struct SpritePropExprNode : Node, std::enable_shared_from_this<SpritePropExprNode> {
+struct SpritePropExprNode : Node {
     std::shared_ptr<Node> spriteID;
     uint prop;
 
     SpritePropExprNode(std::shared_ptr<Node> s, uint p)
         : Node(kSpritePropExprNode), prop(p) {
         spriteID = std::move(s);
+        spriteID->parent = this;
     }
     virtual ~SpritePropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* CastPropExprNode */
 
-struct CastPropExprNode : Node, std::enable_shared_from_this<CastPropExprNode> {
+struct CastPropExprNode : Node {
     std::shared_ptr<Node> castID;
     std::string prop;
 
     CastPropExprNode(std::shared_ptr<Node> c, std::string p)
         : Node(kCastPropExprNode), prop(p) {
         castID = std::move(c);
+        castID->parent = this;
     }
     virtual ~CastPropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* FieldPropExprNode */
 
-struct FieldPropExprNode : Node, std::enable_shared_from_this<FieldPropExprNode> {
+struct FieldPropExprNode : Node {
     std::shared_ptr<Node> fieldID;
     uint prop;
 
     FieldPropExprNode(std::shared_ptr<Node> f, uint p)
         : Node(kFieldPropExprNode), prop(p) {
         fieldID = std::move(f);
+        fieldID->parent = this;
     }
     virtual ~FieldPropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
 /* ObjPropExprNode */
 
-struct ObjPropExprNode : Node, std::enable_shared_from_this<ObjPropExprNode> {
+struct ObjPropExprNode : Node {
     std::shared_ptr<Node> obj;
     std::string prop;
 
     ObjPropExprNode(std::shared_ptr<Node> o, std::string p)
         : Node(kObjPropExprNode), prop(p) {
         obj = std::move(o);
+        obj->parent = this;
     }
     virtual ~ObjPropExprNode() = default;
-    virtual void connect();
     virtual std::string toString();
 };
 
@@ -703,16 +714,16 @@ struct NextRepeatStmtNode : Node {
 
 struct AST {
     std::shared_ptr<HandlerNode> root;
-    std::shared_ptr<BlockNode> currentBlock;
+    BlockNode *currentBlock;
 
     AST(std::string name, std::vector<std::string> args) {
         root = std::make_shared<HandlerNode>(name, args);
-        currentBlock = root->block;
+        currentBlock = root->block.get();
     }
 
     std::string toString();
     void addStatement(std::shared_ptr<Node> statement);
-    void enterBlock(std::shared_ptr<BlockNode> block);
+    void enterBlock(BlockNode *block);
     void exitBlock();
 };
 
