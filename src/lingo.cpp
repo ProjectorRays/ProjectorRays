@@ -266,10 +266,10 @@ std::string Datum::toString() {
             if (l.size() == 0) {
                 res += ":";
             } else {
-                for (size_t i = 0; i < l.size(); i++) {
+                for (size_t i = 0; i < l.size(); i += 2) {
                     if (i > 0)
                         res += ", ";
-                    res += l[i]->toString();
+                    res += l[i]->toString() + ": " + l[i + 1]->toString();
                 }
             }
             res += "]";
