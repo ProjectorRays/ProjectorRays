@@ -23,7 +23,8 @@ void Handler::readRecord(ReadStream &stream) {
     lineCount = stream.readUint16();
     lineOffset = stream.readUint32();
     // yet to implement
-    stackHeight = stream.readUint32();
+    if (script->movie->capitalX)
+        stackHeight = stream.readUint32();
 }
 
 void Handler::readData(ReadStream &stream) {
