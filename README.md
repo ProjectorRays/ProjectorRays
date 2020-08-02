@@ -1,18 +1,15 @@
 # ProjectorRays
 
-## What is this?
-
-ProjectorRays is an experimental Lingo decompiler for Shockwave movies, written in TypeScript. Right now it can take a `.dir` file and spit out the individual chunks and some guessed Lingo.
-
-ProjectorRays is used as a testing ground for AfterShock, which will be a full-fledged Shockwave decompiler and editor written in a less terrible language.
+ProjectorRays is an experimental Lingo decompiler for Macromedia Director/Shockwave movies.
 
 ## How do I use it?
 
-Probably don't. There's a good chance something won't work quite right, and our focus is going to switch to AfterShock very soon, so there's no guarantee it will be fixed.
+The only dependency besides the standard library is Boost. Once you have this, run `make` and then `./projectorrays [path to .dir file]`
 
-If you can help fix bugs, you can compile it by running
-```
-npm install
-gulp
-```
-and use it with `npm start <path_to_dir_file>`
+ProjectorRays will output `.lingo` files with guessed source code in the current working directory.
+
+Once the project is more stable, a pre-built GUI application will be available.
+
+## License
+
+ProjectorRays is dual-licensed under the Apache License 2.0 and the MIT License.
