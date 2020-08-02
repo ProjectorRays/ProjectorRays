@@ -290,8 +290,11 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         }
         break;
     case kOpPushCons:
-        translation = std::make_shared<LiteralNode>(script->literals[bytecode.obj].value);
-        break;
+        {
+            auto literalId = script->movie->capitalX ? bytecode.obj : bytecode.obj / 6;
+            translation = std::make_shared<LiteralNode>(script->literals[literalId].value);
+            break;
+        }
     case kOpPushSymb:
         {
             auto sym = std::make_shared<Datum>(kDatumSymbol, names[bytecode.obj]);
