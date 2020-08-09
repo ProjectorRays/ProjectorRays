@@ -314,7 +314,7 @@ void ScriptContextChunk::read(ReadStream &stream) {
     for (size_t j = 0; j < sectionMap.size(); j++) {
         auto section = sectionMap[j];
         if (section.sectionID > -1) {
-            auto script = std::dynamic_pointer_cast<ScriptChunk>(movie->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
+            auto script = std::static_pointer_cast<ScriptChunk>(movie->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
             script->readNames(lnam->names);
             scripts.push_back(script);
         }

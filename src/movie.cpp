@@ -47,7 +47,7 @@ bool Movie::readConfig() {
         if (mapEntry.fourCC != FOURCC('V', 'W', 'C', 'F') && mapEntry.fourCC != FOURCC('D', 'R', 'C', 'F'))
             continue;
         
-        auto config = std::dynamic_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
+        auto config = std::static_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
         version = humanVersion(config->directorVersion);
         std::cout << "Director version: " + std::to_string(version) + "\n";
 
@@ -79,7 +79,7 @@ void Movie::readScripts() {
         if (mapEntry.fourCC == FOURCC('L', 'c', 't', 'X'))
             capitalX = true;
 
-        auto context = std::dynamic_pointer_cast<ScriptContextChunk>(getChunk(mapEntry.fourCC, i));
+        auto context = std::static_pointer_cast<ScriptContextChunk>(getChunk(mapEntry.fourCC, i));
         scriptContexts.push_back(std::move(context));
     }
 }
