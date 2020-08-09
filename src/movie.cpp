@@ -16,6 +16,7 @@ void Movie::read(ReadStream *s) {
     stream = s;
     stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
     lookupMmap();
+    readConfig();
     // createCasts();
     readScripts();
 }
@@ -37,6 +38,24 @@ void Movie::lookupMmap() {
 
     stream->seek(imap->memoryMapOffset);
     mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
+}
+
+bool Movie::readConfig() {
+    for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
+        auto mapEntry = mmap->mapArray[i];
+
+        if (mapEntry.fourCC != FOURCC('V', 'W', 'C', 'F') && mapEntry.fourCC != FOURCC('D', 'R', 'C', 'F'))
+            continue;
+        
+        auto config = std::dynamic_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
+        version = config->directorVersion;
+        std::cout << "Director version: " + std::to_string(version) + "\n";
+
+        return true;
+    }
+
+    std::cout << "No config chunk!\n";
+    return false;
 }
 
 // void Movie::createCasts() {
@@ -160,6 +179,10 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
         break;
     case FOURCC('L', 's', 'c', 'r'):
         res = std::make_shared<ScriptChunk>(this);
+        break;
+    case FOURCC('V', 'W', 'C', 'F'):
+    case FOURCC('D', 'R', 'C', 'F'):
+        res = std::make_shared<ConfigChunk>(this);
         break;
     // case FOURCC('M', 'C', 's', 'L'):
     //     res = std::make_shared<CastListChunk>(this);

@@ -77,4 +77,13 @@ void LiteralStore::readData(ReadStream &stream, uint32_t startOffset) {
     }
 }
 
+/* Rectangle */
+
+void Rectangle::read(ReadStream &stream) {
+    top = stream.readUint16();
+    left = stream.readUint16();
+    bottom = stream.readUint16();
+    right = stream.readUint16();
+}
+
 }

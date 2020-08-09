@@ -67,6 +67,15 @@ struct LiteralStore {
     void readData(ReadStream &stream, uint32_t startOffset);
 };
 
+struct Rectangle {
+    uint16_t top;
+    uint16_t left;
+    uint16_t bottom;
+    uint16_t right;
+
+    void read(ReadStream &stream);
+};
+
 }
 
 #endif

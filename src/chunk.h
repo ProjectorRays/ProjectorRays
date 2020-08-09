@@ -126,6 +126,19 @@ struct CastInfoChunk : Chunk {
     uint32_t readUint32(ReadStream &stream, uint16_t index);
 };
 
+struct ConfigChunk : Chunk {
+    uint16_t len;
+    uint16_t fileVersion;
+    Rectangle movieRect;
+    uint16_t castArrayStart;
+    uint16_t castArrayEnd;
+    uint16_t directorVersion;
+
+    ConfigChunk(Movie *m) : Chunk(m) {}
+    virtual ~ConfigChunk() = default;
+    virtual void read(ReadStream &stream);
+};
+
 struct InitialMapChunk : Chunk {
     uint32_t memoryMapCount;
     uint32_t memoryMapOffset;

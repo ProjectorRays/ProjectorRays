@@ -138,6 +138,22 @@ uint32_t CastInfoChunk::readUint32(ReadStream &stream, uint16_t index) {
     return stream.readUint32();
 }
 
+/* ConfigChunk */
+
+void ConfigChunk::read(ReadStream &stream) {
+    stream.endianness = kBigEndian;
+
+    len = stream.readUint16();
+    fileVersion = stream.readUint16();
+    movieRect.read(stream);
+
+    castArrayStart = stream.readUint16();
+    castArrayEnd = stream.readUint16();
+
+    stream.seek(36);
+    directorVersion = stream.readUint16();
+}
+
 /* InitialMapChunk */
 
 void InitialMapChunk::read(ReadStream &stream) {
