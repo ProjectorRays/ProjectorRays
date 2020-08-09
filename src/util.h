@@ -10,6 +10,7 @@ namespace ProjectorRays {
 
 std::string fourCCToString(uint32_t fourcc);
 std::string indent(std::string str);
+int humanVersion(int ver);
 
 }
 

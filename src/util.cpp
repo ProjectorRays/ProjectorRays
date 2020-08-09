@@ -23,4 +23,36 @@ std::string indent(std::string str) {
     return res;
 }
 
+int humanVersion(int ver) {
+    if (ver >= 0x79F)
+        return 1201;
+    if (ver >= 0x783)
+        return 1200;
+    if (ver >= 0x782)
+        return 1150;
+    if (ver >= 0x781)
+        return 1100;
+    if (ver >= 0x73B)
+        return 1000;
+    if (ver >= 0x6A4)
+        return 850;
+    if (ver >= 0x582)
+        return 800;
+    if (ver >= 0x4C8)
+        return 700;
+    if (ver >= 0x4C2)
+        return 600;
+    if (ver >= 0x4B1)
+        return 500;
+    if (ver >= 0x45D)
+        return 404;
+    if (ver >= 0x45B)
+        return 400;
+    if (ver >= 0x405)
+        return 310;
+    if (ver >= 0x404)
+        return 300;
+    return 200;
+}
+
 }

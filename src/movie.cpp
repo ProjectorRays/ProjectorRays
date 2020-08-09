@@ -48,7 +48,7 @@ bool Movie::readConfig() {
             continue;
         
         auto config = std::dynamic_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
-        version = config->directorVersion;
+        version = humanVersion(config->directorVersion);
         std::cout << "Director version: " + std::to_string(version) + "\n";
 
         return true;
