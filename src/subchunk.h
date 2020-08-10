@@ -13,14 +13,6 @@ namespace ProjectorRays {
 struct Datum;
 struct ReadStream;
 
-struct CastKeyEntry {
-    uint32_t sectionID;
-    uint32_t castID;
-    uint32_t fourCC;
-
-    void read(ReadStream &stream);
-};
-
 struct CastListEntry {
     std::string name;
     std::string filePath;
@@ -54,6 +46,14 @@ enum LiteralType {
     kLiteralString  = 1,
     kLiteralInt     = 4,
     kLiteralFloat   = 9
+};
+
+struct KeyTableEntry {
+    int32_t sectionID;
+    int32_t castID;
+    uint32_t fourCC;
+
+    void read(ReadStream &stream);
 };
 
 struct LiteralStore {

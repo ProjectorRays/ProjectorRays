@@ -16,6 +16,7 @@ void Movie::read(ReadStream *s) {
     stream = s;
     stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
     lookupMmap();
+    readKeyTable();
     readConfig();
     readCasts();
     readScripts();
@@ -38,6 +39,21 @@ void Movie::lookupMmap() {
 
     stream->seek(imap->memoryMapOffset);
     mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
+}
+
+bool Movie::readKeyTable() {
+    for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
+        auto mapEntry = mmap->mapArray[i];
+
+        if (mapEntry.fourCC != FOURCC('K', 'E', 'Y', '*'))
+            continue;
+        
+        keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(mapEntry.fourCC, i));
+        return true;
+    }
+
+    std::cout << "No key chunk!\n";
+    return false;
 }
 
 bool Movie::readConfig() {
@@ -187,6 +203,9 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     case FOURCC('m', 'm', 'a', 'p'):
         res = std::make_shared<MemoryMapChunk>(this);
         break;
+    case FOURCC('K', 'E', 'Y', '*'):
+        res = std::make_shared<KeyTableChunk>(this);
+        break;
     case FOURCC('L', 'c', 't', 'x'):
     case FOURCC('L', 'c', 't', 'X'):
         res = std::make_shared<ScriptContextChunk>(this);
@@ -204,9 +223,6 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     case FOURCC('M', 'C', 's', 'L'):
         res = std::make_shared<CastListChunk>(this);
         break;
-    // case FOURCC('K', 'E', 'Y', '*'):
-    //     res = std::make_shared<CastKeyChunk>(this);
-    //     break;
     // case FOURCC('C', 'A', 'S', '*'):
     //     res = std::make_shared<CastAssociationsChunk>(this);
     //     break;

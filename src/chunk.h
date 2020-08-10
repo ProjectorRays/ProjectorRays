@@ -52,18 +52,6 @@ struct CastAssociationsChunk : Chunk {
     virtual void read(ReadStream &stream);
 };
 
-struct CastKeyChunk : Chunk {
-    uint16_t unknown0;
-    uint16_t unknown1;
-    uint32_t entryCount;
-    uint32_t unknown2;
-    std::vector<CastKeyEntry> entries;
-
-    CastKeyChunk(Movie *m) : Chunk(m) {}
-    virtual ~CastKeyChunk() = default;
-    virtual void read(ReadStream &stream);
-};
-
 struct CastListChunk : ListChunk {
     uint16_t unk0;
     uint16_t castCount;
@@ -151,6 +139,18 @@ struct InitialMapChunk : Chunk {
 
     InitialMapChunk(Movie *m) : Chunk(m) {}
     virtual ~InitialMapChunk() = default;
+    virtual void read(ReadStream &stream);
+};
+
+struct KeyTableChunk : Chunk {
+    uint16_t unknown0;
+    uint16_t unknown1;
+    uint32_t entryCount;
+    uint32_t unknown2;
+    std::vector<KeyTableEntry> entries;
+
+    KeyTableChunk(Movie *m) : Chunk(m) {}
+    virtual ~KeyTableChunk() = default;
     virtual void read(ReadStream &stream);
 };
 

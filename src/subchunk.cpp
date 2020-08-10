@@ -4,14 +4,6 @@
 
 namespace ProjectorRays {
 
-/* CastKeyEntry */
-
-void CastKeyEntry::read(ReadStream &stream) {
-    sectionID = stream.readUint32();
-    castID = stream.readUint32();
-    fourCC = stream.readUint32();
-}
-
 /* MemoryMapEntry */
 
 void MemoryMapEntry::read(ReadStream &stream) {
@@ -30,6 +22,14 @@ void ScriptContextMapEntry::read(ReadStream &stream) {
     sectionID = stream.readInt32();
     unknown1 = stream.readUint16();
     unknown2 = stream.readUint16();
+}
+
+/* KeyTableEntry */
+
+void KeyTableEntry::read(ReadStream &stream) {
+    sectionID = stream.readInt32();
+    castID = stream.readInt32();
+    fourCC = stream.readUint32();
 }
 
 /* LiteralStore */

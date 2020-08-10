@@ -19,6 +19,7 @@ struct Movie {
     std::shared_ptr<MetaChunk> meta;
     std::shared_ptr<InitialMapChunk> imap;
     std::shared_ptr<MemoryMapChunk> mmap;
+    std::shared_ptr<KeyTableChunk> keyTable;
 
     int version;
     bool capitalX;
@@ -31,6 +32,7 @@ struct Movie {
 
     void read(ReadStream *s);
     void lookupMmap();
+    bool readKeyTable();
     bool readConfig();
     bool readCasts();
     void readScripts();

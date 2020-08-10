@@ -18,23 +18,6 @@ void CastAssociationsChunk::read(ReadStream &stream) {
     }
 }
 
-/* CastKeyChunk */
-
-void CastKeyChunk::read(ReadStream &stream) {
-    unknown0 = stream.readUint16();
-    unknown1 = stream.readUint16();
-    entryCount = stream.readUint32();
-    unknown2 = stream.readUint32();
-
-    entries.resize(entryCount);
-    for (auto &entry : entries) {
-        entry.read(stream);
-        // if (entry.sectionID > 0) {
-        //     entries.push(entry);
-        // }
-    }
-}
-
 /* CastListChunk */
 
 void CastListChunk::read(ReadStream &stream) {
@@ -140,6 +123,21 @@ void InitialMapChunk::read(ReadStream &stream) {
     memoryMapCount = stream.readUint32();
     memoryMapOffset = stream.readUint32();
 }
+
+/* KeyTableChunk */
+
+void KeyTableChunk::read(ReadStream &stream) {
+    unknown0 = stream.readUint16();
+    unknown1 = stream.readUint16();
+    entryCount = stream.readUint32();
+    unknown2 = stream.readUint32();
+
+    entries.resize(entryCount);
+    for (auto &entry : entries) {
+        entry.read(stream);
+    }
+}
+
 
 /* ListChunk */
 
