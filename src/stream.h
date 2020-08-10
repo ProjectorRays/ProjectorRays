@@ -32,6 +32,7 @@ public:
     void seek(size_t p);
     void skip(size_t p);
     bool eof();
+    bool pastEOF();
 
     std::unique_ptr<ReadStream> readBytes(size_t len);
     uint8_t readUint8();

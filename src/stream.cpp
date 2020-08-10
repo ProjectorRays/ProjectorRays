@@ -18,6 +18,10 @@ void ReadStream::skip(size_t len) {
 }
 
 bool ReadStream::eof() {
+    return  _pos >= _len || _offset + _pos >= _buf->size();
+}
+
+bool ReadStream::pastEOF() {
     return  _pos > _len || _offset + _pos > _buf->size();
 }
 
@@ -30,7 +34,7 @@ std::unique_ptr<ReadStream> ReadStream::readBytes(size_t len) {
 uint8_t ReadStream::readUint8() {
     size_t p = _offset + _pos;
     _pos += 1;
-    if (eof())
+    if (pastEOF())
         return 0;
 
     return _buf->data()[p];
@@ -43,7 +47,7 @@ int8_t ReadStream::readInt8() {
 uint16_t ReadStream::readUint16() {
     size_t p = _offset + _pos;
     _pos += 2;
-    if (eof())
+    if (pastEOF())
         return 0;
 
     return endianness
@@ -58,7 +62,7 @@ int16_t ReadStream::readInt16() {
 uint32_t ReadStream::readUint24() {
     size_t p = _offset + _pos;
     _pos += 3;
-    if (eof())
+    if (pastEOF())
         return 0;
 
     return endianness
@@ -69,7 +73,7 @@ uint32_t ReadStream::readUint24() {
 int32_t ReadStream::readInt24() {
     size_t p = _offset + _pos;
     _pos += 3;
-    if (eof())
+    if (pastEOF())
         return 0;
 
     return endianness
@@ -80,7 +84,7 @@ int32_t ReadStream::readInt24() {
 uint32_t ReadStream::readUint32() {
     size_t p = _offset + _pos;
     _pos += 4;
-    if (eof())
+    if (pastEOF())
         return 0;
 
     return endianness
@@ -95,7 +99,7 @@ int32_t ReadStream::readInt32() {
 double ReadStream::readDouble() {
     size_t p = _offset + _pos;
     _pos += 4;
-    if (eof())
+    if (pastEOF())
         return 0;
     
     uint64_t f64bin = endianness
@@ -115,7 +119,7 @@ double ReadStream::readAppleFloat80() {
 
     size_t p = _offset + _pos;
     _pos += 10;
-    if (eof())
+    if (pastEOF())
         return 0.0;
 
     uint16_t exponent = boost::endian::load_big_u16(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
@@ -144,7 +148,7 @@ double ReadStream::readAppleFloat80() {
 std::string ReadStream::readString(size_t len) {
     size_t p = _offset + _pos;
     _pos += len;
-    if (eof())
+    if (pastEOF())
         return "";
 
     char *str = new char[len + 1];
