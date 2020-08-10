@@ -27,6 +27,23 @@ struct Chunk {
     virtual void read(ReadStream &stream) {}
 };
 
+struct ListChunk : Chunk {
+    uint32_t dataOffset;
+    uint16_t offsetTableLen;
+    std::vector<uint32_t> offsetTable;
+    uint32_t finalDataLen;
+    uint32_t listOffset;
+
+    ListChunk(Movie *m) : Chunk(m) {}
+    virtual void read(ReadStream &stream);
+    void readOffsetTable(ReadStream &stream);
+    std::unique_ptr<ReadStream> readBytes(ReadStream &stream, uint16_t index);
+    std::string readCString(ReadStream &stream, uint16_t index);
+    std::string readPascalString(ReadStream &stream, uint16_t index);
+    uint16_t readUint16(ReadStream &stream, uint16_t index);
+    uint32_t readUint32(ReadStream &stream, uint16_t index);
+};
+
 struct CastAssociationsChunk : Chunk {
     std::vector<uint32_t> entries;
 
@@ -47,16 +64,14 @@ struct CastKeyChunk : Chunk {
     virtual void read(ReadStream &stream);
 };
 
-struct CastListChunk : Chunk {
-    uint32_t unknown0;
-    uint32_t castCount;
-    uint16_t unknown1;
-    uint32_t arraySize;
-    // offsetTable;
-    uint32_t castEntriesLength;
-    std::vector<CastDataEntry> entries;
+struct CastListChunk : ListChunk {
+    uint16_t unk0;
+    uint16_t castCount;
+    uint16_t itemsPerCast;
+    uint16_t unk1;
+    std::vector<CastListEntry> entries;
 
-    CastListChunk(Movie *m) : Chunk(m) {}
+    CastListChunk(Movie *m) : ListChunk(m) {}
     virtual ~CastListChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -83,17 +98,11 @@ struct CastMemberChunk : Chunk {
     virtual void read(ReadStream &stream);
 };
 
-struct CastInfoChunk : Chunk {
-    uint32_t dataOffset;
+struct CastInfoChunk : ListChunk {
     uint32_t unk1;
     uint32_t unk2;
     uint32_t flags;
     uint32_t scriptId;
-
-    uint16_t offsetTableLen;
-    std::vector<uint32_t> offsetTable;
-    uint32_t finalDataLen;
-    uint32_t listOffset;
 
     std::string scriptSrcText;
     std::string name;
@@ -118,12 +127,9 @@ struct CastInfoChunk : Chunk {
     // cProp20;
     // imageCompression;
 
-    CastInfoChunk(Movie *m) : Chunk(m) {}
+    CastInfoChunk(Movie *m) : ListChunk(m) {}
     virtual ~CastInfoChunk() = default;
     virtual void read(ReadStream &stream);
-    std::string readCString(ReadStream &stream, uint16_t index);
-    std::string readPascalString(ReadStream &stream, uint16_t index);
-    uint32_t readUint32(ReadStream &stream, uint16_t index);
 };
 
 struct ConfigChunk : Chunk {

@@ -12,22 +12,6 @@ void CastKeyEntry::read(ReadStream &stream) {
     fourCC = stream.readUint32();
 }
 
-/* CastDataEntry */
-
-void CastDataEntry::read(ReadStream &stream) {
-    auto nameLength = stream.readUint8();
-    name = stream.readString(nameLength);
-
-    auto filePathLength = stream.readUint8();
-    filePath = stream.readString(filePathLength);
-
-    preloadSettings = stream.readUint16();
-
-    storageType = stream.readUint16();
-    membersCount = stream.readUint16();
-    id = stream.readUint32();
-}
-
 /* MemoryMapEntry */
 
 void MemoryMapEntry::read(ReadStream &stream) {

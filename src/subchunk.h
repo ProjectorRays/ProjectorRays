@@ -21,15 +21,13 @@ struct CastKeyEntry {
     void read(ReadStream &stream);
 };
 
-struct CastDataEntry {
+struct CastListEntry {
     std::string name;
     std::string filePath;
     uint16_t preloadSettings;
-    uint16_t storageType;
-    uint16_t membersCount;
+    uint16_t minMember;
+    uint16_t maxMember;
     uint32_t id;
-
-    void read(ReadStream &stream);
 };
 
 struct MemoryMapEntry {

@@ -17,7 +17,7 @@ void Movie::read(ReadStream *s) {
     stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
     lookupMmap();
     readConfig();
-    // createCasts();
+    readCasts();
     readScripts();
 }
 
@@ -58,16 +58,33 @@ bool Movie::readConfig() {
     return false;
 }
 
-// void Movie::createCasts() {
-//     let castList = this.chunkArrays.get("MCsL")[0] as Chunk.CastList;
-//     let castKey = this.chunkArrays.get("KEY*")[0] as Chunk.CastKey;
-//     for (let entry of castList.entries) {
-//         let cast = new Cast();
-//         cast.readDataEntry(entry);
-//         cast.readKey(castKey, this.chunkMap);
-//         this.castMap[cast.id] = cast;
-//     }
-// }
+bool Movie::readCasts() {
+    if (version >= 500) {
+        for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
+            auto mapEntry = mmap->mapArray[i];
+
+            if (mapEntry.fourCC != FOURCC('M', 'C', 's', 'L'))
+                continue;
+
+            auto castList = std::static_pointer_cast<CastListChunk>(getChunk(mapEntry.fourCC, i));
+            // let castKey = this.chunkArrays.get("KEY*")[0] as Chunk.CastKey;
+            for (const auto &entry : castList->entries) {
+                std::cout << "Cast: " + entry.filePath + "\n";
+                // let cast = new Cast();
+                // cast.readDataEntry(entry);
+                // cast.readKey(castKey, this.chunkMap);
+                // this.castMap[cast.id] = cast;
+            }
+
+            return true;
+        }
+
+        std::cout << "No cast list!\n";
+        return false;
+    }
+
+    return false;
+}
 
 void Movie::readScripts() {
     for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
@@ -184,9 +201,9 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     case FOURCC('D', 'R', 'C', 'F'):
         res = std::make_shared<ConfigChunk>(this);
         break;
-    // case FOURCC('M', 'C', 's', 'L'):
-    //     res = std::make_shared<CastListChunk>(this);
-    //     break;
+    case FOURCC('M', 'C', 's', 'L'):
+        res = std::make_shared<CastListChunk>(this);
+        break;
     // case FOURCC('K', 'E', 'Y', '*'):
     //     res = std::make_shared<CastKeyChunk>(this);
     //     break;

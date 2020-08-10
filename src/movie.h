@@ -32,7 +32,7 @@ struct Movie {
     void read(ReadStream *s);
     void lookupMmap();
     bool readConfig();
-    // void createCasts();
+    bool readCasts();
     void readScripts();
     std::shared_ptr<Chunk> getChunk(uint32_t fourCC, uint32_t offset);
     std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
