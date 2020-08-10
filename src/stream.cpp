@@ -9,6 +9,10 @@ size_t ReadStream::pos() {
     return _pos;
 }
 
+size_t ReadStream::len() {
+    return _len;
+}
+
 void ReadStream::seek(size_t pos) {
     _pos = pos;
 }

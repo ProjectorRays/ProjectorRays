@@ -34,16 +34,16 @@ void CastListChunk::read(ReadStream &stream) {
     entries.resize(castCount);
     for (int i = 0; i < castCount; i++) {
         if (itemsPerCast >= 1)
-            entries[i].name = readPascalString(stream, i * itemsPerCast);
+            entries[i].name = readPascalString(stream, i * itemsPerCast + 1);
         if (itemsPerCast >= 2)
-            entries[i].filePath = readPascalString(stream, i * itemsPerCast + 1);
+            entries[i].filePath = readPascalString(stream, i * itemsPerCast + 2);
         if (itemsPerCast >= 3)
-            entries[i].preloadSettings = readUint16(stream, i * itemsPerCast + 2);
+            entries[i].preloadSettings = readUint16(stream, i * itemsPerCast + 3);
         if (itemsPerCast >= 4) {
-            auto item = readBytes(stream, i * itemsPerCast + 3);
+            auto item = readBytes(stream, i * itemsPerCast + 4);
             entries[i].minMember = item->readUint16();
             entries[i].maxMember = item->readUint16();
-            entries[i].id = item->readUint32();
+            entries[i].id = item->readInt32();
         }
     }
 }
@@ -149,16 +149,17 @@ void ListChunk::read(ReadStream &stream) {
 void ListChunk::readOffsetTable(ReadStream &stream) {
     stream.seek(dataOffset);
     offsetTableLen = stream.readUint16();
-    offsetTable.resize(offsetTableLen);
-    for (auto &entry : offsetTable) {
-        entry = stream.readUint32();
+    offsetTable.resize(offsetTableLen + 1);
+    for (uint16_t i = 0; i < offsetTableLen; i++) {
+        offsetTable[i] = stream.readUint32();
     }
+    offsetTable[offsetTableLen] = stream.len();
     finalDataLen = stream.readUint32();
     listOffset = stream.pos();
 }
 
 std::unique_ptr<ReadStream> ListChunk::readBytes(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen - 1)
+    if (index >= offsetTableLen)
         return nullptr;
 
     auto length = offsetTable[index + 1] - offsetTable[index];
@@ -167,7 +168,7 @@ std::unique_ptr<ReadStream> ListChunk::readBytes(ReadStream &stream, uint16_t in
 }
 
 std::string ListChunk::readCString(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen - 1)
+    if (index >= offsetTableLen)
         return "";
 
     auto length = offsetTable[index + 1] - offsetTable[index];
@@ -176,7 +177,7 @@ std::string ListChunk::readCString(ReadStream &stream, uint16_t index) {
 }
 
 std::string ListChunk::readPascalString(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen - 1)
+    if (index >= offsetTableLen)
         return "";
 
     stream.seek(listOffset + offsetTable[index]);
@@ -184,7 +185,7 @@ std::string ListChunk::readPascalString(ReadStream &stream, uint16_t index) {
 }
 
 uint16_t ListChunk::readUint16(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen - 1)
+    if (index >= offsetTableLen)
         return 0;
 
     stream.seek(listOffset + offsetTable[index]);
@@ -192,7 +193,7 @@ uint16_t ListChunk::readUint16(ReadStream &stream, uint16_t index) {
 }
 
 uint32_t ListChunk::readUint32(ReadStream &stream, uint16_t index) {
-    if (index >= offsetTableLen - 1)
+    if (index >= offsetTableLen)
         return 0;
 
     stream.seek(listOffset + offsetTable[index]);

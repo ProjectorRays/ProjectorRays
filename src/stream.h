@@ -29,6 +29,7 @@ public:
         : _buf(b), endianness(e), _offset(o), _len(l), _pos(0) {}
 
     size_t pos();
+    size_t len();
     void seek(size_t p);
     void skip(size_t p);
     bool eof();
