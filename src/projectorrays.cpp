@@ -42,12 +42,22 @@ int main(int argc, char *argv[]) {
     auto movie = std::make_unique<Movie>();
     movie->read(stream.get());
 
-    for (size_t i = 0; i < movie->scriptContexts.size(); i++) {
-        auto lctx = movie->scriptContexts[i];
-        for (size_t j = 0; j < lctx->scripts.size(); j++) {
-            auto script = lctx->scripts[j];
-            auto fileName = "script-" + std::to_string(i) + "-" + std::to_string(j) + ".lingo";
-            writeFile(fileName, script->toString());
+    for (const auto &cast : movie->casts) {
+        for (auto it = cast->lctx->scripts.begin(); it != cast->lctx->scripts.end(); ++it) {
+            std::string scriptType;
+            std::string id;
+            CastMemberChunk *member = it->second->member;
+            if (member) {
+                scriptType = "CastScript";
+                id = member->info->name.empty()
+                    ? std::to_string(member->id)
+                    : member->info->name;
+            } else {
+                scriptType = "UnknownScript";
+                id = std::to_string(it->first);
+            }
+            std::string fileName = "Cast " + cast->name + " " + scriptType + " " + id + ".lingo";
+            writeFile(fileName, it->second->toString());
         }
     }
 

@@ -19,7 +19,7 @@ struct CastListEntry {
     uint16_t preloadSettings;
     uint16_t minMember;
     uint16_t maxMember;
-    uint32_t id;
+    int32_t id;
 };
 
 struct MemoryMapEntry {

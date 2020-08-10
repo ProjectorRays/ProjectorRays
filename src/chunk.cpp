@@ -6,14 +6,36 @@
 
 namespace ProjectorRays {
 
-/* CastAssociationsChunk */
+/* CastChunk */
 
-void CastAssociationsChunk::read(ReadStream &stream) {
+void CastChunk::read(ReadStream &stream) {
     stream.endianness = kBigEndian;
     while (!stream.eof()) {
-        auto id = stream.readUint32();
-        if (id > 0) {
-            entries.push_back(id);
+        auto id = stream.readInt32();
+        memberIDs.push_back(id);
+    }
+}
+
+void CastChunk::populate(std::string castName, int32_t id, uint16_t minMember) {
+    name = castName;
+
+    for (const auto &entry : movie->keyTable->entries) {
+        if (entry.castID == id && (entry.fourCC == FOURCC('L', 'c', 't', 'x') || entry.fourCC == FOURCC('L', 'c', 't', 'X'))) {
+            lctx = std::static_pointer_cast<ScriptContextChunk>(movie->getChunk(entry.fourCC, entry.sectionID));
+            break;
+        }
+    }
+
+    for (size_t i = 0; i < memberIDs.size(); i++) {
+        int32_t sectionID = memberIDs[i];
+        if (sectionID > 0) {
+            auto member = std::static_pointer_cast<CastMemberChunk>(movie->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
+            member->id = i + minMember;
+            if (lctx && (lctx->scripts.find(member->info->scriptId) != lctx->scripts.end())) {
+                member->script = lctx->scripts[member->info->scriptId].get();
+                member->script->member = member.get();
+            }
+            members[member->id] = std::move(member);
         }
     }
 }
@@ -110,8 +132,8 @@ void ConfigChunk::read(ReadStream &stream) {
     fileVersion = stream.readUint16();
     movieRect.read(stream);
 
-    castArrayStart = stream.readUint16();
-    castArrayEnd = stream.readUint16();
+    minMember = stream.readUint16();
+    maxMember = stream.readUint16();
 
     stream.seek(36);
     directorVersion = stream.readUint16();
@@ -350,17 +372,17 @@ void ScriptContextChunk::read(ReadStream &stream) {
     }
 
     lnam = std::static_pointer_cast<ScriptNamesChunk>(movie->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
-    for (size_t j = 0; j < sectionMap.size(); j++) {
-        auto section = sectionMap[j];
+    for (uint32_t i = 1; i <= entryCount; i++) {
+        auto section = sectionMap[i - 1];
         if (section.sectionID > -1) {
             auto script = std::static_pointer_cast<ScriptChunk>(movie->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
             script->readNames(lnam->names);
-            scripts.push_back(script);
+            scripts[i] = script;
         }
     }
 
-    for (auto &script : scripts) {
-        script->translate(lnam->names);
+    for (auto it = scripts.begin(); it != scripts.end(); ++it) {
+        it->second->translate(lnam->names);
     }
 }
 

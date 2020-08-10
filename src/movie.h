@@ -20,13 +20,13 @@ struct Movie {
     std::shared_ptr<InitialMapChunk> imap;
     std::shared_ptr<MemoryMapChunk> mmap;
     std::shared_ptr<KeyTableChunk> keyTable;
+    std::shared_ptr<ConfigChunk> config;
 
     int version;
     bool capitalX;
 
-    std::map<uint32_t, std::shared_ptr<Chunk>> chunkMap;
-    // std::map<uint32_t, std::shared_ptr<Cast>> castMap;
-    std::vector<std::shared_ptr<ScriptContextChunk>> scriptContexts;
+    std::map<int32_t, std::shared_ptr<Chunk>> chunkMap;
+    std::vector<std::shared_ptr<CastChunk>> casts;
 
     Movie() : version(0), capitalX(false) {}
 
@@ -35,8 +35,7 @@ struct Movie {
     bool readKeyTable();
     bool readConfig();
     bool readCasts();
-    void readScripts();
-    std::shared_ptr<Chunk> getChunk(uint32_t fourCC, uint32_t offset);
+    std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t offset);
     std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
 };
 

@@ -19,7 +19,6 @@ void Movie::read(ReadStream *s) {
     readKeyTable();
     readConfig();
     readCasts();
-    readScripts();
 }
 
 void Movie::lookupMmap() {
@@ -63,7 +62,7 @@ bool Movie::readConfig() {
         if (mapEntry.fourCC != FOURCC('V', 'W', 'C', 'F') && mapEntry.fourCC != FOURCC('D', 'R', 'C', 'F'))
             continue;
         
-        auto config = std::static_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
+        config = std::static_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
         version = humanVersion(config->directorVersion);
         std::cout << "Director version: " + std::to_string(version) + "\n";
 
@@ -83,13 +82,20 @@ bool Movie::readCasts() {
                 continue;
 
             auto castList = std::static_pointer_cast<CastListChunk>(getChunk(mapEntry.fourCC, i));
-            // let castKey = this.chunkArrays.get("KEY*")[0] as Chunk.CastKey;
-            for (const auto &entry : castList->entries) {
-                std::cout << "Cast: " + entry.filePath + "\n";
-                // let cast = new Cast();
-                // cast.readDataEntry(entry);
-                // cast.readKey(castKey, this.chunkMap);
-                // this.castMap[cast.id] = cast;
+            for (const auto &castEntry : castList->entries) {
+                std::cout << "Cast: " + castEntry.name + "\n";
+                int32_t sectionID = -1;
+                for (const auto &keyEntry : keyTable->entries) {
+                    if (keyEntry.castID == castEntry.id && keyEntry.fourCC == FOURCC('C', 'A', 'S', '*')) {
+                        sectionID = keyEntry.sectionID;
+                        break;
+                    }
+                }
+                if (sectionID > 0) {
+                    auto cast = std::static_pointer_cast<CastChunk>(getChunk(FOURCC('C', 'A', 'S', '*'), sectionID));
+                    cast->populate(castEntry.name, castEntry.id, castEntry.minMember);
+                    casts.push_back(std::move(cast));
+                }
             }
 
             return true;
@@ -97,31 +103,38 @@ bool Movie::readCasts() {
 
         std::cout << "No cast list!\n";
         return false;
+    } else {
+        for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
+            auto mapEntry = mmap->mapArray[i];
+
+            if (mapEntry.fourCC != FOURCC('C', 'A', 'S', '*'))
+                continue;
+
+            auto cast = std::static_pointer_cast<CastChunk>(getChunk(FOURCC('C', 'A', 'S', '*'), i));
+            cast->populate("Internal", 1024, config->minMember);
+            casts.push_back(std::move(cast));
+
+            return true;
+        }
+
+        std::cout << "No cast!\n";
+        return false;
     }
 
     return false;
 }
 
-void Movie::readScripts() {
-    for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
-        auto mapEntry = mmap->mapArray[i];
-
-        if (mapEntry.fourCC != FOURCC('L', 'c', 't', 'x') && mapEntry.fourCC != FOURCC('L', 'c', 't', 'X'))
-            continue;
-
-        if (mapEntry.fourCC == FOURCC('L', 'c', 't', 'X'))
-            capitalX = true;
-
-        auto context = std::static_pointer_cast<ScriptContextChunk>(getChunk(mapEntry.fourCC, i));
-        scriptContexts.push_back(std::move(context));
-    }
-}
-
-std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, uint32_t id) {
+std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
     if (chunkMap.find(id) != chunkMap.end())
         return chunkMap[id];
 
     auto &mapEntry = mmap->mapArray[id];
+    if (fourCC != mapEntry.fourCC) {
+        throw std::runtime_error(
+            "Expected chunk " + std::to_string(id) + " to be '" + fourCCToString(fourCC)
+            + "', but is actually '" + fourCCToString(mapEntry.fourCC) + "'"
+        );
+    }
 
     std::shared_ptr<Chunk> chunk;
     if (mapEntry.fourCC == FOURCC('R', 'I', 'F', 'X')) {
@@ -132,7 +145,7 @@ std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, uint32_t id) {
         chunk = mmap;
     } else {
         stream->seek(mapEntry.offset);
-        chunk = readChunk(mapEntry.fourCC, mapEntry.len);
+        chunk = readChunk(fourCC, mapEntry.len);
     }
     chunkMap[id] = chunk;
 
@@ -203,11 +216,19 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     case FOURCC('m', 'm', 'a', 'p'):
         res = std::make_shared<MemoryMapChunk>(this);
         break;
+    case FOURCC('C', 'A', 'S', '*'):
+        res = std::make_shared<CastChunk>(this);
+        break;
+    case FOURCC('C', 'A', 'S', 't'):
+        res = std::make_shared<CastMemberChunk>(this);
+        break;
     case FOURCC('K', 'E', 'Y', '*'):
         res = std::make_shared<KeyTableChunk>(this);
         break;
-    case FOURCC('L', 'c', 't', 'x'):
     case FOURCC('L', 'c', 't', 'X'):
+        capitalX = true;
+        // fall through
+    case FOURCC('L', 'c', 't', 'x'):
         res = std::make_shared<ScriptContextChunk>(this);
         break;
     case FOURCC('L', 'n', 'a', 'm'):
@@ -223,12 +244,6 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     case FOURCC('M', 'C', 's', 'L'):
         res = std::make_shared<CastListChunk>(this);
         break;
-    // case FOURCC('C', 'A', 'S', '*'):
-    //     res = std::make_shared<CastAssociationsChunk>(this);
-    //     break;
-    // case FOURCC('C', 'A', 'S', 't'):
-    //     res = std::make_shared<CastMemberChunk>(this);
-    //     break;
     default:
         res = std::make_shared<Chunk>(this);
     }

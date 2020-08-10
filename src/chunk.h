@@ -2,6 +2,7 @@
 #define CHUNK_H
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,6 +17,8 @@ struct LiteralStore;
 struct Movie;
 
 struct CastInfoChunk;
+struct CastMemberChunk;
+struct ScriptChunk;
 struct ScriptContextChunk;
 struct ScriptNamesChunk;
 
@@ -44,12 +47,16 @@ struct ListChunk : Chunk {
     uint32_t readUint32(ReadStream &stream, uint16_t index);
 };
 
-struct CastAssociationsChunk : Chunk {
-    std::vector<uint32_t> entries;
+struct CastChunk : Chunk {
+    std::vector<int32_t> memberIDs;
+    std::string name;
+    std::map<uint16_t, std::shared_ptr<CastMemberChunk>> members;
+    std::shared_ptr<ScriptContextChunk> lctx;
 
-    CastAssociationsChunk(Movie *m) : Chunk(m) {}
-    virtual ~CastAssociationsChunk() = default;
+    CastChunk(Movie *m) : Chunk(m) {}
+    virtual ~CastChunk() = default;
     virtual void read(ReadStream &stream);
+    void populate(std::string castName, int32_t id, uint16_t minMember);
 };
 
 struct CastListChunk : ListChunk {
@@ -81,7 +88,10 @@ struct CastMemberChunk : Chunk {
     uint32_t specificDataLen;
     std::shared_ptr<CastInfoChunk> info;
 
-    CastMemberChunk(Movie *m) : Chunk(m) {}
+    uint16_t id;
+    ScriptChunk *script;
+
+    CastMemberChunk(Movie *m) : Chunk(m), id(0), script(nullptr) {}
     virtual ~CastMemberChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -124,8 +134,8 @@ struct ConfigChunk : Chunk {
     uint16_t len;
     uint16_t fileVersion;
     Rectangle movieRect;
-    uint16_t castArrayStart;
-    uint16_t castArrayEnd;
+    uint16_t minMember;
+    uint16_t maxMember;
     uint16_t directorVersion;
 
     ConfigChunk(Movie *m) : Chunk(m) {}
@@ -207,7 +217,9 @@ struct ScriptChunk : Chunk {
     std::vector<LiteralStore> literals;
     std::weak_ptr<ScriptContextChunk> context;
 
-    ScriptChunk(Movie *m) : Chunk(m) {}
+    CastMemberChunk *member;
+
+    ScriptChunk(Movie *m) : Chunk(m), member(nullptr) {}
     virtual ~ScriptChunk() = default;
     virtual void read(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
@@ -233,7 +245,7 @@ struct ScriptContextChunk : Chunk {
 
     std::shared_ptr<ScriptNamesChunk> lnam;
     std::vector<ScriptContextMapEntry> sectionMap;
-    std::vector<std::shared_ptr<ScriptChunk>> scripts;
+    std::map<uint32_t, std::shared_ptr<ScriptChunk>> scripts;
 
     ScriptContextChunk(Movie *m) : Chunk(m) {}
     virtual ~ScriptContextChunk() = default;
