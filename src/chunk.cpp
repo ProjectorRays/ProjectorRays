@@ -90,7 +90,7 @@ void CastMemberChunk::read(ReadStream &stream) {
     } else {
         type = 0;
         specificDataLen = stream.readUint16();
-		infoLen = stream.readUint32();
+        infoLen = stream.readUint32();
 
         // specific data
         stream.skip(specificDataLen);
