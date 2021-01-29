@@ -8,7 +8,7 @@ namespace ProjectorRays {
 /* Handler */
 
 void Handler::readRecord(ReadStream &stream) {
-    nameID = stream.readUint16();
+    nameID = stream.readInt16();
     vectorPos = stream.readUint16();
     compiledLen = stream.readUint32();
     compiledOffset = stream.readUint32();
@@ -57,9 +57,9 @@ void Handler::readData(ReadStream &stream) {
     localNameIDs = readVarnamesTable(stream, localsCount, localsOffset);
 }
 
-std::vector<uint16_t> Handler::readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset) {
+std::vector<int16_t> Handler::readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset) {
     stream.seek(offset);
-    std::vector<uint16_t> nameIDs;
+    std::vector<int16_t> nameIDs;
     nameIDs.resize(count);
     for (size_t i = 0; i < count; i++) {
         nameIDs[i] = stream.readUint16();
@@ -68,15 +68,15 @@ std::vector<uint16_t> Handler::readVarnamesTable(ReadStream &stream, uint16_t co
 }
 
 void Handler::readNames(const std::vector<std::string> &names) {
-    name = names[nameID];
+    name = (0 <= nameID && (unsigned)nameID < names.size()) ? names[nameID] : "UNKNOWN";
     for (auto nameID : argumentNameIDs) {
-        if (0 <= nameID && nameID < names.size())
+        if (0 <= nameID && (unsigned)nameID < names.size())
             argumentNames.push_back(names[nameID]);
         else
             argumentNames.push_back("UNKNOWN");
     }
     for (auto nameID : localNameIDs) {
-        if (0 <= nameID && nameID < names.size())
+        if (0 <= nameID && (unsigned)nameID < names.size())
             localNames.push_back(names[nameID]);
         else
             localNames.push_back("UNKNOWN");

@@ -200,7 +200,7 @@ struct Datum {
 /* Handler */
 
 struct Handler {
-    uint16_t nameID;
+    int16_t nameID;
     uint16_t vectorPos;
     uint32_t compiledLen;
     uint32_t compiledOffset;
@@ -216,8 +216,8 @@ struct Handler {
     uint32_t lineOffset;
     uint32_t stackHeight;
 
-    std::vector<uint16_t> argumentNameIDs;
-    std::vector<uint16_t> localNameIDs;
+    std::vector<int16_t> argumentNameIDs;
+    std::vector<int16_t> localNameIDs;
 
     ScriptChunk *script;
     std::vector<Bytecode> bytecodeArray;
@@ -235,7 +235,7 @@ struct Handler {
 
     void readRecord(ReadStream &stream);
     void readData(ReadStream &stream);
-    std::vector<uint16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
+    std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
     void readNames(const std::vector<std::string> &names);
     std::shared_ptr<Node> pop();
     void translate(const std::vector<std::string> &names);
@@ -247,10 +247,10 @@ struct Handler {
 struct Bytecode {
     OpCode opcode;
     uint32_t obj;
-    size_t pos;
+    int32_t pos;
     std::shared_ptr<Node> translation;
 
-    Bytecode(OpCode op, uint32_t o, size_t p)
+    Bytecode(OpCode op, uint32_t o, int32_t p)
         : opcode(op), obj(o), pos(p) {}
 };
 
@@ -301,7 +301,7 @@ struct LiteralNode : Node {
 
 struct BlockNode : Node {
     std::vector<std::shared_ptr<Node>> children;
-    int endPos;
+    int32_t endPos;
 
     BlockNode() : Node(kBlockNode), endPos(-1) {}
     virtual ~BlockNode() = default;

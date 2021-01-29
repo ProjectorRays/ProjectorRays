@@ -327,13 +327,13 @@ std::vector<int16_t> ScriptChunk::readVarnamesTable(ReadStream &stream, uint16_t
 
 void ScriptChunk::readNames(const std::vector<std::string> &names) {
     for (auto nameID : propertyNameIDs) {
-        if (0 <= nameID && nameID < names.size())
+        if (0 <= nameID && (unsigned)nameID < names.size())
             propertyNames.push_back(names[nameID]);
         else
             propertyNames.push_back("UNKNOWN");
     }
     for (auto nameID : globalNameIDs) {
-        if (0 <= nameID && nameID < names.size())
+        if (0 <= nameID && (unsigned)nameID < names.size())
             globalNames.push_back(names[nameID]);
         else
             globalNames.push_back("UNKNOWN");
