@@ -626,7 +626,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 stmt = true;
             auto &rawList = argList->getValue()->l;
             auto obj = std::move(rawList.front());
-            rawList.erase(rawList.begin(), rawList.begin() + 1);
+            rawList.erase(rawList.begin());
             translation = std::make_unique<ObjCallNode>(std::move(obj), names[bytecode.obj], std::move(argList));
         }
         break;
