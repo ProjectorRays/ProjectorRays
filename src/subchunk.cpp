@@ -10,9 +10,9 @@ void MemoryMapEntry::read(ReadStream &stream) {
     fourCC = stream.readUint32();
     len = stream.readUint32();
     offset = stream.readUint32();
-    padding = stream.readInt16();
+    flags = stream.readInt16();
     unknown0 = stream.readInt16();
-    link = stream.readInt32();
+    next = stream.readInt32();
 }
 
 /* ScriptContextMapEntry */

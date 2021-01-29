@@ -239,25 +239,16 @@ uint32_t ListChunk::readUint32(ReadStream &stream, uint16_t index) {
 /* MemoryMapChunk */
 
 void MemoryMapChunk::read(ReadStream &stream) {
-    unknown0 = stream.readUint16();
-    unknown1 = stream.readUint16();
-    // possible one of the unknown mmap entries determines why an unused item is there?
-    // it also seems code comments can be inserted after mmap after chunkCount is over, it may warrant investigation
+    headerLength = stream.readUint16();
+    entryLength = stream.readUint16();
     chunkCountMax = stream.readInt32();
     chunkCountUsed = stream.readInt32();
-    junkPointer = stream.readInt32();
-    unknown2 = stream.readInt32();
-    freePointer = stream.readInt32();
+    junkHead = stream.readInt32();
+    junkHead2 = stream.readInt32();
+    freeHead = stream.readInt32();
     mapArray.resize(chunkCountUsed);
-    // seems chunkCountUsed is used here, so what is chunkCount for?
-    // EDIT: chunkCountMax is maximum allowed chunks before new mmap created!
     for (auto &entry : mapArray) {
-        // don't actually generate new chunk objects here, just read in data
         entry.read(stream);
-        // we don't care about free or junk chunks
-        // if (entry.name !== "free" && entry.name !== "junk") {
-        //     mapArray.push(entry);
-        // }
     }
 }
 

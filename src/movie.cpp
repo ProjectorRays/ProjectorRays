@@ -174,16 +174,6 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
         len = validLen;
     }
 
-    // padding can't be checked, so let's give it a default value if we don't yet know it
-    // if (padding == null) {
-    //     // padding is usually zero
-    //     if (name !== "free" && name !== "junk") {
-    //         padding = 0;
-    //     } else {
-    //         padding = 12;
-    //     }
-    // }
-
     // validate chunk
     if (fourCC != validFourCC || len != validLen) {
         throw std::runtime_error(

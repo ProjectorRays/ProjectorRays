@@ -26,9 +26,9 @@ struct MemoryMapEntry {
     uint32_t fourCC;
     uint32_t len;
     uint32_t offset;
-    int16_t padding;
+    uint16_t flags;
     int16_t unknown0;
-    int32_t link;
+    int32_t next;
 
     void read(ReadStream &stream);
 };

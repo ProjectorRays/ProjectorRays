@@ -165,13 +165,13 @@ struct KeyTableChunk : Chunk {
 };
 
 struct MemoryMapChunk : Chunk {
-    uint16_t unknown0;
-    uint16_t unknown1;
+    uint16_t headerLength; // should be 24
+    uint16_t entryLength; // should be 20
     int32_t chunkCountMax;
     int32_t chunkCountUsed;
-    int32_t junkPointer;
-    int32_t unknown2;
-    int32_t freePointer;
+    int32_t junkHead;
+    int32_t junkHead2;
+    int32_t freeHead;
     std::vector<MemoryMapEntry> mapArray;
 
     MemoryMapChunk(Movie *m) : Chunk(m) {}
