@@ -28,7 +28,7 @@ struct Movie {
     std::map<int32_t, std::shared_ptr<Chunk>> chunkMap;
     std::vector<std::shared_ptr<CastChunk>> casts;
 
-    Movie() : version(0), capitalX(false) {}
+    Movie() : stream(nullptr), version(0), capitalX(false) {}
 
     void read(ReadStream *s);
     void lookupMmap();
