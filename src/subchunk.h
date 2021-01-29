@@ -24,8 +24,8 @@ struct CastListEntry {
 
 struct MemoryMapEntry {
     uint32_t fourCC;
-    uint32_t len;
-    uint32_t offset;
+    int32_t len;
+    int32_t offset;
     uint16_t flags;
     int16_t unknown0;
     int32_t next;

@@ -15,39 +15,52 @@ namespace ProjectorRays {
 void Movie::read(ReadStream *s) {
     stream = s;
     stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
-    lookupMmap();
+    readMemoryMap();
     readKeyTable();
     readConfig();
     readCasts();
 }
 
-void Movie::lookupMmap() {
+void Movie::readMemoryMap() {
     // at the beginning of the file, we need to break some of the typical rules. We don't know names, lengths and offsets yet.
 
-    // valid length is undefined because we have not yet reached mmap
-    // however, it will be filled automatically in chunk's constructor
-    meta = std::static_pointer_cast<MetaChunk>(readChunk(FOURCC('R', 'I', 'F', 'X')));
-    // we can only open DIR or DXR
-    // we'll read Movie from stream because Movie is an exception to the normal rules
+    // Meta
+    std::shared_ptr<MetaChunk> meta = std::static_pointer_cast<MetaChunk>(readChunk(FOURCC('R', 'I', 'F', 'X')));
+
     if (meta->codec != FOURCC('M', 'V', '9', '3')) {
         throw std::runtime_error("Codec unsupported: " + fourCCToString(meta->codec));
     }
 
-    // the next chunk should be imap
-    imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
+    // Initial map
+    std::shared_ptr<InitialMapChunk> imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
 
+    // Memory map
     stream->seek(imap->memoryMapOffset);
-    mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
-}
+    std::shared_ptr<MemoryMapChunk> mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
 
-bool Movie::readKeyTable() {
     for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
         auto mapEntry = mmap->mapArray[i];
 
-        if (mapEntry.fourCC != FOURCC('K', 'E', 'Y', '*'))
+        if (mapEntry.fourCC == FOURCC('f', 'r', 'e', 'e') || mapEntry.fourCC == FOURCC('j', 'u', 'n', 'k'))
             continue;
         
-        keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(mapEntry.fourCC, i));
+        ChunkInfo info;
+        info.id = i;
+        info.fourCC = mapEntry.fourCC;
+        info.len = mapEntry.len;
+        info.uncompressedLen = mapEntry.len;
+        info.offset = mapEntry.offset;
+        info.compressionType = 0;
+        chunkInfo[i] = info;
+
+        chunkIDsByFourCC[mapEntry.fourCC].push_back(i);
+    }
+}
+
+bool Movie::readKeyTable() {
+    auto info = getFirstChunkInfo(FOURCC('K', 'E', 'Y', '*'));
+    if (info) {
+        keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(info->fourCC, info->id));
         return true;
     }
 
@@ -56,13 +69,12 @@ bool Movie::readKeyTable() {
 }
 
 bool Movie::readConfig() {
-    for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
-        auto mapEntry = mmap->mapArray[i];
+    auto info = getFirstChunkInfo(FOURCC('V', 'W', 'C', 'F'));
+    if (!info)
+        info = getFirstChunkInfo(FOURCC('D', 'R', 'C', 'F'));
 
-        if (mapEntry.fourCC != FOURCC('V', 'W', 'C', 'F') && mapEntry.fourCC != FOURCC('D', 'R', 'C', 'F'))
-            continue;
-        
-        config = std::static_pointer_cast<ConfigChunk>(getChunk(mapEntry.fourCC, i));
+    if (info) {
+        config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
         version = humanVersion(config->directorVersion);
         std::cout << "Director version: " + std::to_string(version) + "\n";
 
@@ -75,13 +87,9 @@ bool Movie::readConfig() {
 
 bool Movie::readCasts() {
     if (version >= 500) {
-        for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
-            auto mapEntry = mmap->mapArray[i];
-
-            if (mapEntry.fourCC != FOURCC('M', 'C', 's', 'L'))
-                continue;
-
-            auto castList = std::static_pointer_cast<CastListChunk>(getChunk(mapEntry.fourCC, i));
+        auto info = getFirstChunkInfo(FOURCC('M', 'C', 's', 'L'));
+        if (info) {
+            auto castList = std::static_pointer_cast<CastListChunk>(getChunk(info->fourCC, info->id));
             for (const auto &castEntry : castList->entries) {
                 std::cout << "Cast: " + castEntry.name + "\n";
                 int32_t sectionID = -1;
@@ -104,13 +112,9 @@ bool Movie::readCasts() {
         std::cout << "No cast list!\n";
         return false;
     } else {
-        for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
-            auto mapEntry = mmap->mapArray[i];
-
-            if (mapEntry.fourCC != FOURCC('C', 'A', 'S', '*'))
-                continue;
-
-            auto cast = std::static_pointer_cast<CastChunk>(getChunk(FOURCC('C', 'A', 'S', '*'), i));
+        auto info = getFirstChunkInfo(FOURCC('C', 'A', 'S', '*'));
+        if (info) {
+            auto cast = std::static_pointer_cast<CastChunk>(getChunk(info->fourCC, info->id));
             cast->populate("Internal", 1024, config->minMember);
             casts.push_back(std::move(cast));
 
@@ -124,30 +128,37 @@ bool Movie::readCasts() {
     return false;
 }
 
-std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
-    if (chunkMap.find(id) != chunkMap.end())
-        return chunkMap[id];
+const ChunkInfo *Movie::getFirstChunkInfo(uint32_t fourCC) {
+    auto &chunkIDs = chunkIDsByFourCC[fourCC];
+    if (chunkIDs.size() > 0) {
+        return &chunkInfo[chunkIDs[0]];
+    }
+    return nullptr;
+}
 
-    auto &mapEntry = mmap->mapArray[id];
-    if (fourCC != mapEntry.fourCC) {
+std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
+    if (deserializedChunks.find(id) != deserializedChunks.end())
+        return deserializedChunks[id];
+
+    if (chunkInfo.find(id) == chunkInfo.end())
+        throw std::runtime_error("Could not find chunk " + std::to_string(id));
+
+    auto &info = chunkInfo[id];
+    if (fourCC != info.fourCC) {
         throw std::runtime_error(
             "Expected chunk " + std::to_string(id) + " to be '" + fourCCToString(fourCC)
-            + "', but is actually '" + fourCCToString(mapEntry.fourCC) + "'"
+            + "', but is actually '" + fourCCToString(info.fourCC) + "'"
         );
     }
 
-    std::shared_ptr<Chunk> chunk;
-    if (mapEntry.fourCC == FOURCC('R', 'I', 'F', 'X')) {
-        chunk = meta;
-    } else if (mapEntry.fourCC == FOURCC('i', 'm', 'a', 'p')) {
-        chunk = imap;
-    } else if (mapEntry.fourCC == FOURCC('m', 'm', 'a', 'p')) {
-        chunk = mmap;
-    } else {
-        stream->seek(mapEntry.offset);
-        chunk = readChunk(fourCC, mapEntry.len);
+    stream->seek(info.offset);
+    std::shared_ptr<Chunk> chunk = readChunk(fourCC, info.len);
+
+    // don't cache the deserialized map chunks
+    // we'll just generate a new one if we need to save
+    if (fourCC != FOURCC('R', 'I', 'F', 'X') && fourCC != FOURCC('i', 'm', 'a', 'p') && fourCC != FOURCC('m', 'm', 'a', 'p')) {
+        deserializedChunks[id] = chunk;
     }
-    chunkMap[id] = chunk;
 
     return chunk;
 }
