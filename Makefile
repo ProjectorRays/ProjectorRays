@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++17
+CXXFLAGS=-std=c++17 -Wall -Wextra
 
 OBJS = \
 	src/chunk.o \
