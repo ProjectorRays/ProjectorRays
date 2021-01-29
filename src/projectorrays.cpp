@@ -33,7 +33,7 @@ void writeFile(std::string fileName, std::string contents) {
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        std::cout << "usage: " << argv[0] << " [filename]\n";
+        std::cout << "usage: " << argv[0] << " FILE\n";
         return 1;
     }
 
