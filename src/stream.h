@@ -26,7 +26,7 @@ public:
     Endianness endianness;
 
     ReadStream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
-        : _buf(b), endianness(e), _offset(o), _len(l), _pos(0) {}
+        : _buf(b), _offset(o), _len(l), _pos(0), endianness(e) {}
 
     size_t pos();
     size_t len();
