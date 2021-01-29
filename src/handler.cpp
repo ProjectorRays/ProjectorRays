@@ -270,7 +270,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto argCount = bytecode.obj;
             std::vector<std::shared_ptr<Node>> args;
             while (argCount) {
-                args.insert(args.begin(), std::move(pop()));
+                args.insert(args.begin(), pop());
                 argCount--;
             }
             auto argList = std::make_shared<Datum>(kDatumArgListNoRet, args);
@@ -282,7 +282,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto argCount = bytecode.obj;
             std::vector<std::shared_ptr<Node>> args;
             while (argCount) {
-                args.insert(args.begin(), std::move(pop()));
+                args.insert(args.begin(), pop());
                 argCount--;
             }
             auto argList = std::make_shared<Datum>(kDatumArgList, args);
@@ -317,7 +317,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             stmt = true;
             auto var = std::make_shared<VarNode>(names[bytecode.obj]);
             auto value = pop();
-            translation = std::make_shared<AssignmentStmtNode>(std::move(var), value);
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetParam:
@@ -325,7 +325,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             stmt = true;
             auto var = std::make_shared<VarNode>(argumentNames[bytecode.obj]);
             auto value = pop();
-            translation = std::make_shared<AssignmentStmtNode>(std::move(var), value);
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetLocal:
@@ -333,7 +333,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             stmt = true;
             auto var = std::make_shared<VarNode>(localNames[bytecode.obj]);
             auto value = pop();
-            translation = std::make_shared<AssignmentStmtNode>(std::move(var), value);
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpJmp:
