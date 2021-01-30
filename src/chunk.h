@@ -179,14 +179,6 @@ struct MemoryMapChunk : Chunk {
     virtual void read(ReadStream &stream);
 };
 
-struct MetaChunk : Chunk {
-    uint32_t codec;
-
-    MetaChunk(Movie *m) : Chunk(m) {}
-    virtual ~MetaChunk() = default;
-    virtual void read(ReadStream &stream);
-};
-
 struct ScriptChunk : Chunk {
     uint32_t totalLength;
     uint32_t totalLength2;

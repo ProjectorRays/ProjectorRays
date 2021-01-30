@@ -34,6 +34,8 @@ public:
 
     int version;
     bool capitalX;
+    uint32_t codec;
+    bool afterburned;
 
     std::map<uint32_t, std::vector<int32_t>> chunkIDsByFourCC;
     std::map<int32_t, ChunkInfo> chunkInfo;
@@ -41,7 +43,7 @@ public:
 
     std::vector<std::shared_ptr<CastChunk>> casts;
 
-    Movie() : stream(nullptr), version(0), capitalX(false) {}
+    Movie() : stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
 
     void read(ReadStream *s);
     void readMemoryMap();

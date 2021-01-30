@@ -15,22 +15,32 @@ namespace ProjectorRays {
 void Movie::read(ReadStream *s) {
     stream = s;
     stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
-    readMemoryMap();
+
+    // Meta
+    auto metaFourCC = stream->readUint32();
+    if (metaFourCC == FOURCC('X', 'F', 'I', 'R')) {
+        stream->endianness = kLittleEndian;
+    }
+    stream->readInt32(); // meta length
+    codec = stream->readUint32();
+
+    // Codec-dependent map
+    if (codec == FOURCC('M', 'V', '9', '3')) {
+        readMemoryMap();
+    } else if (codec == FOURCC('F', 'G', 'D', 'M')) {
+        afterburned = true;
+        // if (!readAfterburnerMap())
+            return;
+    } else {
+        throw std::runtime_error("Codec unsupported: " + fourCCToString(codec));
+    }
+
     readKeyTable();
     readConfig();
     readCasts();
 }
 
 void Movie::readMemoryMap() {
-    // at the beginning of the file, we need to break some of the typical rules. We don't know names, lengths and offsets yet.
-
-    // Meta
-    std::shared_ptr<MetaChunk> meta = std::static_pointer_cast<MetaChunk>(readChunk(FOURCC('R', 'I', 'F', 'X')));
-
-    if (meta->codec != FOURCC('M', 'V', '9', '3')) {
-        throw std::runtime_error("Codec unsupported: " + fourCCToString(meta->codec));
-    }
-
     // Initial map
     std::shared_ptr<InitialMapChunk> imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
 
@@ -156,7 +166,7 @@ std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
 
     // don't cache the deserialized map chunks
     // we'll just generate a new one if we need to save
-    if (fourCC != FOURCC('R', 'I', 'F', 'X') && fourCC != FOURCC('i', 'm', 'a', 'p') && fourCC != FOURCC('m', 'm', 'a', 'p')) {
+    if (fourCC != FOURCC('i', 'm', 'a', 'p') && fourCC != FOURCC('m', 'm', 'a', 'p')) {
         deserializedChunks[id] = chunk;
     }
 
@@ -166,18 +176,7 @@ std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
 std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     auto offset = stream->pos();
 
-    // check if this is the chunk we are expecting
     auto validFourCC = stream->readUint32();
-    if (fourCC == FOURCC('R', 'I', 'F', 'X')) {
-        //if (validName.substring(0, 2) == "MZ") {
-            // handle Projector HERE
-        //}
-        if (validFourCC == FOURCC('X', 'F', 'I', 'R')) {
-            stream->endianness = kLittleEndian;
-            validFourCC = FOURCC('R', 'I', 'F', 'X');
-        }
-    }
-    // check if it has the length the mmap table specifies
     auto validLen = stream->readUint32();
 
     // use the valid length if mmap hasn't been read yet
@@ -196,21 +195,11 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
         std::cout << "At offset " + std::to_string(offset) + " reading chunk '" + fourCCToString(fourCC) + "' with length " + std::to_string(len) + "\n";
     }
 
-    if (fourCC == FOURCC('R', 'I', 'F', 'X')) {
-        // we're going to pretend RIFX is only 12 bytes long
-        // this is because offsets are relative to the beginning of the file
-        // whereas everywhere else they're relative to chunk start
-        len = 4;
-    }
-
     // copy the contents of the chunk to a new DataStream (minus name/length as that's not what offsets are usually relative to)
     auto chunkStream = stream->readBytes(len);
 
     std::shared_ptr<Chunk> res;
     switch (fourCC) {
-    case FOURCC('R', 'I', 'F', 'X'):
-        res = std::make_shared<MetaChunk>(this);
-        break;
     case FOURCC('i', 'm', 'a', 'p'):
         res = std::make_shared<InitialMapChunk>(this);
         break;

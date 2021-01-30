@@ -251,12 +251,6 @@ void MemoryMapChunk::read(ReadStream &stream) {
     }
 }
 
-/* MetaChunk */
-
-void MetaChunk::read(ReadStream &stream) {
-    codec = stream.readUint32();
-}
-
 /* ScriptChunk */
 
 void ScriptChunk::read(ReadStream &stream) {
