@@ -174,7 +174,6 @@ void KeyTableChunk::read(ReadStream &stream) {
     }
 }
 
-
 /* ListChunk */
 
 void ListChunk::read(ReadStream &stream) {
