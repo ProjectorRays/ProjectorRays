@@ -35,9 +35,12 @@ void Movie::read(ReadStream *s) {
         throw std::runtime_error("Codec unsupported: " + fourCCToString(codec));
     }
 
-    readKeyTable();
-    readConfig();
-    readCasts();
+    if (!readKeyTable())
+        return;
+    if (!readConfig())
+        return;
+    if (!readCasts())
+        return;
 }
 
 void Movie::readMemoryMap() {
