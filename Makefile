@@ -11,7 +11,7 @@ OBJS = \
 	src/util.o
 
 projectorrays: $(OBJS)
-	$(CXX) -o projectorrays $(CXXFLAGS) $(OBJS)
+	$(CXX) -o projectorrays $(CXXFLAGS) -lz $(OBJS)
 
 .PHONY: clean
 clean:

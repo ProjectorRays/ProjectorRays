@@ -35,7 +35,10 @@ public:
     bool eof();
     bool pastEOF();
 
+    std::shared_ptr<std::vector<uint8_t>> copyBytes(size_t len);
+
     std::unique_ptr<ReadStream> readBytes(size_t len);
+    std::unique_ptr<ReadStream> readZlibBytes(unsigned long len, unsigned long *outLen);
     uint8_t readUint8();
     int8_t readInt8();
     uint16_t readUint16();
@@ -46,6 +49,7 @@ public:
     int32_t readInt32();
     double readDouble();
     double readAppleFloat80();
+    uint32_t readVarInt();
     std::string readString(size_t len);
     std::string readPascalString();
 };

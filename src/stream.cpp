@@ -1,4 +1,6 @@
+#include <iostream>
 #include <boost/endian/conversion.hpp>
+#include <zlib.h>
 
 #include "stream.h"
 #include "util.h"
@@ -29,10 +31,35 @@ bool ReadStream::pastEOF() {
     return  _pos > _len || _offset + _pos > _buf->size();
 }
 
+std::shared_ptr<std::vector<uint8_t>> ReadStream::copyBytes(size_t len) {
+    size_t p =  _offset + _pos;
+    _pos += len;
+    if (pastEOF())
+        return nullptr;
+
+    auto res = std::make_shared<std::vector<uint8_t>>(len, 0);
+    res->assign(_buf->begin() + p, _buf->begin() + p + len);
+    return res;
+}
+
 std::unique_ptr<ReadStream> ReadStream::readBytes(size_t len) {
     auto res = std::make_unique<ReadStream>(_buf, endianness, _offset + _pos, len);
-    skip(len);
+    _pos += len;
     return res;
+}
+
+std::unique_ptr<ReadStream> ReadStream::readZlibBytes(unsigned long len, unsigned long *outLen) {
+    size_t p = _offset + _pos;
+    _pos += len;
+    if (pastEOF())
+        return nullptr;
+
+    auto out = std::make_shared<std::vector<uint8_t>>(*outLen, 0);
+    int ret = uncompress(out->data(), outLen, _buf->data() + p, len);
+    if (ret != Z_OK)
+        return nullptr;
+
+    return std::make_unique<ReadStream>(out, endianness, 0, *outLen);
 }
 
 uint8_t ReadStream::readUint8() {
@@ -147,6 +174,16 @@ double ReadStream::readAppleFloat80() {
     uint64_t f64fract = fraction >> 11;
     uint64_t f64bin = f64sign | f64exp | f64fract;
     return *(double *)(&f64bin);
+}
+
+uint32_t ReadStream::readVarInt() {
+	uint32_t val = 0;
+	uint8_t b;
+	do {
+		b = readUint8();
+		val = (val << 7) | (b & 0x7f); // The 7 least significant bits are appended to the result
+	} while (b >> 7); // If the most significant bit is 1, there's another byte after
+	return val;
 }
 
 std::string ReadStream::readString(size_t len) {

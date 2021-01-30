@@ -17,15 +17,16 @@ struct ReadStream;
 struct ChunkInfo {
     int32_t id;
     uint32_t fourCC;
-    int32_t len;
-    int32_t uncompressedLen;
+    uint32_t len;
+    uint32_t uncompressedLen;
     int32_t offset;
-    int32_t compressionType;
+    uint32_t compressionType;
 };
 
 class Movie {
 private:
     std::map<int32_t, std::shared_ptr<std::vector<uint8_t>>> _cachedChunkData;
+    size_t _ilsBodyOffset;
 
 public:
     ReadStream *stream;
@@ -43,16 +44,18 @@ public:
 
     std::vector<std::shared_ptr<CastChunk>> casts;
 
-    Movie() : stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
+    Movie() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
 
     void read(ReadStream *s);
     void readMemoryMap();
+    bool readAfterburnerMap();
     bool readKeyTable();
     bool readConfig();
     bool readCasts();
     const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
     std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
     std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
+    std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, ReadStream &stream);
 };
 
 }

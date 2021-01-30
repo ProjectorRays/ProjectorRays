@@ -4,7 +4,7 @@ ProjectorRays is an experimental Lingo decompiler for Macromedia Director/Shockw
 
 ## How do I use it?
 
-The only dependency besides the standard library is Boost. Once you have this, run `make` and then `./projectorrays [path to .dir file]`
+The only dependencies besides the standard library are Boost and zlib. Once you have these, run `make` and then `./projectorrays [path to .dir file]`
 
 ProjectorRays will output `.lingo` files with guessed source code in the current working directory.
 
