@@ -92,6 +92,16 @@ std::unique_ptr<Node> Handler::pop() {
     return res;
 }
 
+int Handler::variableMultiplier() {
+    // TODO: Determine what version this changed to 1.
+    // For now approximating it with the point at which Ltcx changed to LctX.
+    if (script->movie->capitalX)
+        return 1;
+    if (script->movie->version >= 500)
+        return 8;
+    return 6;
+}
+
 void Handler::translate(const std::vector<std::string> &names) {
     stack.clear();
     ast = std::make_unique<AST>(name, argumentNames);
@@ -291,8 +301,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpPushCons:
         {
-            auto literalId = script->movie->capitalX ? bytecode.obj : bytecode.obj / 6;
-            translation = std::make_unique<LiteralNode>(script->literals[literalId].value);
+            translation = std::make_unique<LiteralNode>(script->literals[bytecode.obj / variableMultiplier()].value);
             break;
         }
     case kOpPushSymb:
@@ -306,10 +315,10 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         translation = std::make_unique<VarNode>(names[bytecode.obj]);
         break;
     case kOpGetParam:
-        translation = std::make_unique<VarNode>(argumentNames[bytecode.obj]);
+        translation = std::make_unique<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
         break;
     case kOpGetLocal:
-        translation = std::make_unique<VarNode>(localNames[bytecode.obj]);
+        translation = std::make_unique<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
         break;
     case kOpSetGlobal:
     case kOpSetProp:
@@ -323,7 +332,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     case kOpSetParam:
         {
             stmt = true;
-            auto var = std::make_unique<VarNode>(argumentNames[bytecode.obj]);
+            auto var = std::make_unique<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
             auto value = pop();
             translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
         }
@@ -331,7 +340,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     case kOpSetLocal:
         {
             stmt = true;
-            auto var = std::make_unique<VarNode>(localNames[bytecode.obj]);
+            auto var = std::make_unique<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
             auto value = pop();
             translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
         }

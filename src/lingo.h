@@ -238,6 +238,7 @@ struct Handler {
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
     void readNames(const std::vector<std::string> &names);
     std::unique_ptr<Node> pop();
+    int variableMultiplier();
     void translate(const std::vector<std::string> &names);
     void translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
 };
