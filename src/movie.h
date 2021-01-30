@@ -51,7 +51,7 @@ public:
     bool readConfig();
     bool readCasts();
     const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
-    std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t offset);
+    std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
     std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
 };
 
