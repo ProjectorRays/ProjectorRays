@@ -685,10 +685,11 @@ std::string Handler::bytecodeText() {
         if (bytecode.opID > 0x40)
             res += " " + std::to_string(bytecode.obj);
         if (bytecode.translation) {
-            res += " -- ";
+            res += " | ";
             if (bytecode.translation->isStatement)
-                res += "STATEMENT: ";
-            res += bytecode.translation->toString(true);
+                res += bytecode.translation->toString(true);
+            else
+                res += "<" + bytecode.translation->toString(true) + ">";
         }
         res += "\n";
     }
