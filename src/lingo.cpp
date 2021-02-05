@@ -366,13 +366,16 @@ void BlockNode::addChild(std::unique_ptr<Node> child) {
 /* HandlerNode */
 
 std::string HandlerNode::toString() {
-    std::string res = "on " + handler->name + "(";
-    for (size_t i = 0; i < handler->argumentNames.size(); i++) {
-        if (i > 0)
-            res += ", ";
-        res += handler->argumentNames[i];
+    std::string res = "on " + handler->name;
+    if (handler->argumentNames.size() > 0) {
+        res += " ";
+        for (size_t i = 0; i < handler->argumentNames.size(); i++) {
+            if (i > 0)
+                res += ", ";
+            res += handler->argumentNames[i];
+        }
     }
-    res += ")\n";
+    res += "\n";
     if (handler->globalNames.size() > 0) {
         res += "  global ";
         for (size_t i = 0; i < handler->globalNames.size(); i++) {
