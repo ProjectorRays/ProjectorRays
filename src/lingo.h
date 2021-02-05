@@ -542,14 +542,11 @@ struct CallNode : Node {
 /* ObjCallNode */
 
 struct ObjCallNode : Node {
-    std::shared_ptr<Node> obj;
     std::string name;
     std::shared_ptr<Node> argList;
 
-    ObjCallNode(std::shared_ptr<Node> o, std::string n, std::shared_ptr<Node> a)
+    ObjCallNode(std::string n, std::shared_ptr<Node> a)
         : Node(kObjCallNode, false) {
-        obj = std::move(o);
-        obj->parent = this;
         name = n;
         argList = std::move(a);
         argList->parent = this;

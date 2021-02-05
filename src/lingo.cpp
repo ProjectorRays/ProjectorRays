@@ -524,7 +524,15 @@ std::string CallNode::toString(bool summary) {
 /* ObjCallNode */
 
 std::string ObjCallNode::toString(bool summary) {
-    return obj->toString(summary) + "." + name + "(" + argList->toString(summary) + ")";
+    auto rawArgs = argList->getValue()->l;
+    std::string res = rawArgs[0]->toString(summary) + "." + name + "(";
+    for (size_t i = 1; i < rawArgs.size(); i++) {
+        if (i > 1)
+            res += ", ";
+        res += rawArgs[i]->toString(summary);
+    }
+    res += ")";
+    return res;
 }
 
 /* TheExprNode */
