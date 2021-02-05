@@ -1,3 +1,5 @@
+#include <iomanip>
+
 #include "lingo.h"
 #include "util.h"
 
@@ -257,7 +259,15 @@ std::string Datum::toString(bool summary) {
     case kDatumInt:
         return std::to_string(i);
     case kDatumFloat:
-        return std::to_string(f);
+        {
+            std::stringstream ss;
+            ss << std::noshowpoint << f;
+            std::string res = ss.str();
+            if (res.find('.') == std::string::npos) {
+                res += ".0";
+            }
+            return res;
+        }
     case kDatumList:
     case kDatumArgList:
     case kDatumArgListNoRet:
