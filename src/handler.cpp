@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iomanip>
 
 #include "chunk.h"
 #include "lingo.h"
@@ -44,9 +45,9 @@ void Handler::readData(ReadStream &stream) {
             obj = stream.readUint8();
         }
         // read the first byte to convert to an opcode
-        Bytecode bytecode(op, obj, pos);
+        Bytecode bytecode(op, obj, pos - compiledOffset);
         bytecodeArray.push_back(bytecode);
-        bytecodePosMap[pos] = bytecodeArray.size() - 1;
+        bytecodePosMap[pos - compiledOffset] = bytecodeArray.size() - 1;
     }
 
     argumentNameIDs = readVarnamesTable(stream, argumentCount, argumentOffset);
@@ -669,6 +670,12 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         ast->enterBlock(nextBlock);
 }
 
+std::string posToString(int32_t pos) {
+    std::stringstream ss;
+    ss << "[" << std::setfill(' ') << std::setw(3) << pos << "]";
+    return ss.str();
+}
+
 std::string Handler::bytecodeText() {
     std::string res = "on " + name;
     if (argumentNames.size() > 0) {
@@ -681,17 +688,33 @@ std::string Handler::bytecodeText() {
     }
     res += "\n";
     for (auto &bytecode : bytecodeArray) {
-        res += "  " + Lingo::getOpcodeName(bytecode.opID);
-        if (bytecode.opID > 0x40)
-            res += " " + std::to_string(bytecode.obj);
-        if (bytecode.translation) {
-            res += " | ";
-            if (bytecode.translation->isStatement)
-                res += bytecode.translation->toString(true);
-            else
-                res += "<" + bytecode.translation->toString(true) + ">";
+        auto line = "  " + posToString(bytecode.pos) + " " + Lingo::getOpcodeName(bytecode.opID);
+        switch (bytecode.opcode) {
+        case kOpJmp:
+        case kOpJmpIfZ:
+            line += " " + posToString(bytecode.pos + bytecode.obj);
+            break;
+        case kOpEndRepeat:
+            line += " " + posToString(bytecode.pos - bytecode.obj);
+            break;
+        default:
+            if (bytecode.opID > 0x40)
+                line += " " + std::to_string(bytecode.obj);
+            break;
         }
-        res += "\n";
+        if (bytecode.translation) {
+            line += " ...";
+            while (line.length() < 49) {
+                line += ".";
+            }
+            line += " ";
+            if (bytecode.translation->isStatement)
+                line += bytecode.translation->toString(true);
+            else
+                line += "<" + bytecode.translation->toString(true) + ">";
+        }
+        line += "\n";
+        res += line;
     }
     res += "end\n";
     return res;
