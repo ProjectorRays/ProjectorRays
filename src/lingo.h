@@ -171,7 +171,7 @@ struct Datum {
     int i;
     double f;
     std::string s;
-    std::vector<std::unique_ptr<Node>> l;
+    std::vector<std::shared_ptr<Node>> l;
 
     Datum() {
         type = kDatumVoid;
@@ -188,9 +188,9 @@ struct Datum {
         type = t;
         s = val;
     }
-    Datum(DatumType t, std::vector<std::unique_ptr<Node>> val) {
+    Datum(DatumType t, std::vector<std::shared_ptr<Node>> val) {
         type = t;
-        l = std::move(val);
+        l = val;
     }
 
     int toInt();
@@ -227,7 +227,7 @@ struct Handler {
     std::vector<std::string> globalNames;
     std::string name;
 
-    std::vector<std::unique_ptr<Node>> stack;
+    std::vector<std::shared_ptr<Node>> stack;
     std::unique_ptr<AST> ast;
 
     Handler(ScriptChunk *s) {
@@ -238,7 +238,7 @@ struct Handler {
     void readData(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
     void readNames(const std::vector<std::string> &names);
-    std::unique_ptr<Node> pop();
+    std::shared_ptr<Node> pop();
     int variableMultiplier();
     void registerGlobal(std::string name);
     void translate(const std::vector<std::string> &names);
@@ -251,10 +251,10 @@ struct Bytecode {
     OpCode opcode;
     uint32_t obj;
     int32_t pos;
-    Node *translation;
+    std::shared_ptr<Node> translation;
 
     Bytecode(OpCode op, uint32_t o, int32_t p)
-        : opcode(op), obj(o), pos(p), translation(nullptr) {}
+        : opcode(op), obj(o), pos(p) {}
 };
 
 /* Node */
@@ -304,24 +304,24 @@ struct LiteralNode : Node {
 /* BlockNode */
 
 struct BlockNode : Node {
-    std::vector<std::unique_ptr<Node>> children;
+    std::vector<std::shared_ptr<Node>> children;
     int32_t endPos;
 
     BlockNode() : Node(kBlockNode, false), endPos(-1) {}
     virtual ~BlockNode() = default;
     virtual std::string toString();
-    void addChild(std::unique_ptr<Node> child);
+    void addChild(std::shared_ptr<Node> child);
 };
 
 /* HandlerNode */
 
 struct HandlerNode : Node {
     Handler *handler;
-    std::unique_ptr<BlockNode> block;
+    std::shared_ptr<BlockNode> block;
 
     HandlerNode(Handler *h)
         : Node(kHandlerNode, false), handler(h) {
-        block = std::make_unique<BlockNode>();
+        block = std::make_shared<BlockNode>();
         block->parent = this;
     }
     virtual ~HandlerNode() = default;
@@ -339,9 +339,9 @@ struct ExitStmtNode : Node {
 /* InverseOpNode */
 
 struct InverseOpNode : Node {
-    std::unique_ptr<Node> operand;
+    std::shared_ptr<Node> operand;
 
-    InverseOpNode(std::unique_ptr<Node> o) : Node(kInverseOpNode, false) {
+    InverseOpNode(std::shared_ptr<Node> o) : Node(kInverseOpNode, false) {
         operand = std::move(o);
         operand->parent = this;
     }
@@ -352,9 +352,9 @@ struct InverseOpNode : Node {
 /* NotOpNode */
 
 struct NotOpNode : Node {
-    std::unique_ptr<Node> operand;
+    std::shared_ptr<Node> operand;
 
-    NotOpNode(std::unique_ptr<Node> o) : Node(kNotOpNode, false) {
+    NotOpNode(std::shared_ptr<Node> o) : Node(kNotOpNode, false) {
         operand = std::move(o);
         operand->parent = this;
     }
@@ -366,10 +366,10 @@ struct NotOpNode : Node {
 
 struct BinaryOpNode : Node {
     OpCode opcode;
-    std::unique_ptr<Node> left;
-    std::unique_ptr<Node> right;
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
 
-    BinaryOpNode(OpCode op, std::unique_ptr<Node> a, std::unique_ptr<Node> b)
+    BinaryOpNode(OpCode op, std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         : Node(kBinaryOpNode, false), opcode(op) {
         left = std::move(a);
         left->parent = this;
@@ -384,11 +384,11 @@ struct BinaryOpNode : Node {
 
 struct StringSplitExprNode : Node {
     ChunkType type;
-    std::unique_ptr<Node> first;
-    std::unique_ptr<Node> last;
-    std::unique_ptr<Node> string;
+    std::shared_ptr<Node> first;
+    std::shared_ptr<Node> last;
+    std::shared_ptr<Node> string;
 
-    StringSplitExprNode(ChunkType t, std::unique_ptr<Node> a, std::unique_ptr<Node> b, std::unique_ptr<Node> s)
+    StringSplitExprNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
         : Node(kStringSplitExprNode, false), type(t) {
         first = std::move(a);
         first->parent = this;
@@ -405,11 +405,11 @@ struct StringSplitExprNode : Node {
 
 struct StringHiliteStmtNode : Node {
     ChunkType type;
-    std::unique_ptr<Node> first;
-    std::unique_ptr<Node> last;
-    std::unique_ptr<Node> string;
+    std::shared_ptr<Node> first;
+    std::shared_ptr<Node> last;
+    std::shared_ptr<Node> string;
 
-    StringHiliteStmtNode(ChunkType t, std::unique_ptr<Node> a, std::unique_ptr<Node> b, std::unique_ptr<Node> s)
+    StringHiliteStmtNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
         : Node(kStringHiliteStmtNode, true), type(t) {
         first = std::move(a);
         first->parent = this;
@@ -425,10 +425,10 @@ struct StringHiliteStmtNode : Node {
 /* SpriteIntersectsExprNode */
 
 struct SpriteIntersectsExprNode : Node {
-    std::unique_ptr<Node> firstSprite;
-    std::unique_ptr<Node> secondSprite;
+    std::shared_ptr<Node> firstSprite;
+    std::shared_ptr<Node> secondSprite;
 
-    SpriteIntersectsExprNode(std::unique_ptr<Node> a, std::unique_ptr<Node> b)
+    SpriteIntersectsExprNode(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         : Node(kSpriteIntersectsExprNode, false) {
         firstSprite = std::move(a);
         firstSprite->parent = this;
@@ -442,10 +442,10 @@ struct SpriteIntersectsExprNode : Node {
 /* SpriteWithinExprNode */
 
 struct SpriteWithinExprNode : Node {
-    std::unique_ptr<Node> firstSprite;
-    std::unique_ptr<Node> secondSprite;
+    std::shared_ptr<Node> firstSprite;
+    std::shared_ptr<Node> secondSprite;
 
-    SpriteWithinExprNode(std::unique_ptr<Node> a, std::unique_ptr<Node> b)
+    SpriteWithinExprNode(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
         : Node(kSpriteWithinExprNode, false) {
         firstSprite = std::move(a);
         firstSprite->parent = this;
@@ -459,9 +459,9 @@ struct SpriteWithinExprNode : Node {
 /* FieldExprNode */
 
 struct FieldExprNode : Node {
-    std::unique_ptr<Node> fieldID;
+    std::shared_ptr<Node> fieldID;
 
-    FieldExprNode(std::unique_ptr<Node> f) : Node(kFieldExprNode, false) {
+    FieldExprNode(std::shared_ptr<Node> f) : Node(kFieldExprNode, false) {
         fieldID = std::move(f);
         fieldID->parent = this;
     }
@@ -482,10 +482,10 @@ struct VarNode: Node {
 /* AssignmentStmtNode */
 
 struct AssignmentStmtNode : Node {
-    std::unique_ptr<Node> variable;
-    std::unique_ptr<Node> value;
+    std::shared_ptr<Node> variable;
+    std::shared_ptr<Node> value;
 
-    AssignmentStmtNode(std::unique_ptr<Node> var, std::unique_ptr<Node> val)
+    AssignmentStmtNode(std::shared_ptr<Node> var, std::shared_ptr<Node> val)
         : Node(kAssignmentStmtNode, true) {
         variable = std::move(var);
         variable->parent = this;
@@ -501,16 +501,16 @@ struct AssignmentStmtNode : Node {
 
 struct IfStmtNode : Node {
     IfType ifType;
-    std::unique_ptr<Node> condition;
-    std::unique_ptr<BlockNode> block1;
-    std::unique_ptr<BlockNode> block2;
+    std::shared_ptr<Node> condition;
+    std::shared_ptr<BlockNode> block1;
+    std::shared_ptr<BlockNode> block2;
 
-    IfStmtNode(std::unique_ptr<Node> c) : Node(kIfStmtNode, true), ifType(kIf) {
+    IfStmtNode(std::shared_ptr<Node> c) : Node(kIfStmtNode, true), ifType(kIf) {
         condition = std::move(c);
         condition->parent = this;
-        block1 = std::make_unique<BlockNode>();
+        block1 = std::make_shared<BlockNode>();
         block1->parent = this;
-        block2 = std::make_unique<BlockNode>();
+        block2 = std::make_shared<BlockNode>();
         block2->parent = this;
     }
     virtual ~IfStmtNode() = default;
@@ -521,9 +521,9 @@ struct IfStmtNode : Node {
 
 struct CallNode : Node {
     std::string name;
-    std::unique_ptr<Node> argList;
+    std::shared_ptr<Node> argList;
 
-    CallNode(std::string n, std::unique_ptr<Node> a) : Node(kCallNode, false) {
+    CallNode(std::string n, std::shared_ptr<Node> a) : Node(kCallNode, false) {
         name = n;
         argList = std::move(a);
         argList->parent = this;
@@ -537,11 +537,11 @@ struct CallNode : Node {
 /* ObjCallNode */
 
 struct ObjCallNode : Node {
-    std::unique_ptr<Node> obj;
+    std::shared_ptr<Node> obj;
     std::string name;
-    std::unique_ptr<Node> argList;
+    std::shared_ptr<Node> argList;
 
-    ObjCallNode(std::unique_ptr<Node> o, std::string n, std::unique_ptr<Node> a)
+    ObjCallNode(std::shared_ptr<Node> o, std::string n, std::shared_ptr<Node> a)
         : Node(kObjCallNode, false) {
         obj = std::move(o);
         obj->parent = this;
@@ -569,9 +569,9 @@ struct TheExprNode : Node {
 
 struct LastStringChunkExprNode : Node {
     ChunkType type;
-    std::unique_ptr<Node> string;
+    std::shared_ptr<Node> string;
 
-    LastStringChunkExprNode(ChunkType t, std::unique_ptr<Node> s)
+    LastStringChunkExprNode(ChunkType t, std::shared_ptr<Node> s)
         : Node(kLastStringChunkExprNode, false), type(t) {
         string = std::move(s);
         string->parent = this;
@@ -584,9 +584,9 @@ struct LastStringChunkExprNode : Node {
 
 struct StringChunkCountExprNode : Node {
     ChunkType type;
-    std::unique_ptr<Node> string;
+    std::shared_ptr<Node> string;
 
-    StringChunkCountExprNode(ChunkType t, std::unique_ptr<Node> s)
+    StringChunkCountExprNode(ChunkType t, std::shared_ptr<Node> s)
         : Node(kStringChunkCountExprNode, false), type(t) {
         string = std::move(s);
         string->parent = this;
@@ -598,10 +598,10 @@ struct StringChunkCountExprNode : Node {
 /* MenuPropExprNode */
 
 struct MenuPropExprNode : Node {
-    std::unique_ptr<Node> menuID;
+    std::shared_ptr<Node> menuID;
     uint prop;
 
-    MenuPropExprNode(std::unique_ptr<Node> m, uint p)
+    MenuPropExprNode(std::shared_ptr<Node> m, uint p)
         : Node(kMenuPropExprNode, false), prop(p) {
         menuID = std::move(m);
         menuID->parent = this;
@@ -613,11 +613,11 @@ struct MenuPropExprNode : Node {
 /* MenuItemPropExprNode */
 
 struct MenuItemPropExprNode : Node {
-    std::unique_ptr<Node> menuID;
-    std::unique_ptr<Node> itemID;
+    std::shared_ptr<Node> menuID;
+    std::shared_ptr<Node> itemID;
     uint prop;
 
-    MenuItemPropExprNode(std::unique_ptr<Node> m, std::unique_ptr<Node> i, uint p)
+    MenuItemPropExprNode(std::shared_ptr<Node> m, std::shared_ptr<Node> i, uint p)
         : Node(kMenuItemPropExprNode, false), prop(p) {
         menuID = std::move(m);
         menuID->parent = this;
@@ -631,10 +631,10 @@ struct MenuItemPropExprNode : Node {
 /* SoundPropExprNode */
 
 struct SoundPropExprNode : Node {
-    std::unique_ptr<Node> soundID;
+    std::shared_ptr<Node> soundID;
     uint prop;
 
-    SoundPropExprNode(std::unique_ptr<Node> s, uint p)
+    SoundPropExprNode(std::shared_ptr<Node> s, uint p)
         : Node(kSoundPropExprNode, false), prop(p) {
         soundID = std::move(s);
         soundID->parent = this;
@@ -646,10 +646,10 @@ struct SoundPropExprNode : Node {
 /* SpritePropExprNode */
 
 struct SpritePropExprNode : Node {
-    std::unique_ptr<Node> spriteID;
+    std::shared_ptr<Node> spriteID;
     uint prop;
 
-    SpritePropExprNode(std::unique_ptr<Node> s, uint p)
+    SpritePropExprNode(std::shared_ptr<Node> s, uint p)
         : Node(kSpritePropExprNode, false), prop(p) {
         spriteID = std::move(s);
         spriteID->parent = this;
@@ -661,10 +661,10 @@ struct SpritePropExprNode : Node {
 /* CastPropExprNode */
 
 struct CastPropExprNode : Node {
-    std::unique_ptr<Node> castID;
+    std::shared_ptr<Node> castID;
     std::string prop;
 
-    CastPropExprNode(std::unique_ptr<Node> c, std::string p)
+    CastPropExprNode(std::shared_ptr<Node> c, std::string p)
         : Node(kCastPropExprNode, false), prop(p) {
         castID = std::move(c);
         castID->parent = this;
@@ -676,10 +676,10 @@ struct CastPropExprNode : Node {
 /* FieldPropExprNode */
 
 struct FieldPropExprNode : Node {
-    std::unique_ptr<Node> fieldID;
+    std::shared_ptr<Node> fieldID;
     uint prop;
 
-    FieldPropExprNode(std::unique_ptr<Node> f, uint p)
+    FieldPropExprNode(std::shared_ptr<Node> f, uint p)
         : Node(kFieldPropExprNode, false), prop(p) {
         fieldID = std::move(f);
         fieldID->parent = this;
@@ -691,10 +691,10 @@ struct FieldPropExprNode : Node {
 /* ObjPropExprNode */
 
 struct ObjPropExprNode : Node {
-    std::unique_ptr<Node> obj;
+    std::shared_ptr<Node> obj;
     std::string prop;
 
-    ObjPropExprNode(std::unique_ptr<Node> o, std::string p)
+    ObjPropExprNode(std::shared_ptr<Node> o, std::string p)
         : Node(kObjPropExprNode, false), prop(p) {
         obj = std::move(o);
         obj->parent = this;
@@ -722,16 +722,16 @@ struct NextRepeatStmtNode : Node {
 /* AST */
 
 struct AST {
-    std::unique_ptr<HandlerNode> root;
+    std::shared_ptr<HandlerNode> root;
     BlockNode *currentBlock;
 
     AST(Handler *handler) {
-        root = std::make_unique<HandlerNode>(handler);
+        root = std::make_shared<HandlerNode>(handler);
         currentBlock = root->block.get();
     }
 
     std::string toString();
-    void addStatement(std::unique_ptr<Node> statement);
+    void addStatement(std::shared_ptr<Node> statement);
     void enterBlock(BlockNode *block);
     void exitBlock();
 };

@@ -85,11 +85,11 @@ void Handler::readNames(const std::vector<std::string> &names) {
     }
 }
 
-std::unique_ptr<Node> Handler::pop() {
+std::shared_ptr<Node> Handler::pop() {
     if (stack.empty())
-        return std::make_unique<ErrorNode>();
+        return std::make_shared<ErrorNode>();
     
-    auto res = std::move(stack.back());
+    auto res = stack.back();
     stack.pop_back();
     return res;
 }
@@ -139,8 +139,8 @@ void Handler::translate(const std::vector<std::string> &names) {
 }
 
 void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vector<std::string> &names) {
-    std::unique_ptr<Node> comment = nullptr;
-    std::unique_ptr<Node> translation = nullptr;
+    std::shared_ptr<Node> comment = nullptr;
+    std::shared_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
 
     switch (bytecode.opcode) {
@@ -148,10 +148,10 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         if (index == bytecodeArray.size() - 1) {
             return; // end of handler
         }
-        translation = std::make_unique<ExitStmtNode>();
+        translation = std::make_shared<ExitStmtNode>();
         break;
     case kOpPushZero:
-        translation = std::make_unique<LiteralNode>(std::make_shared<Datum>(0));
+        translation = std::make_shared<LiteralNode>(std::make_shared<Datum>(0));
         break;
     case kOpMul:
     case kOpAdd:
@@ -173,19 +173,19 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         {
             auto b = pop();
             auto a = pop();
-            translation = std::make_unique<BinaryOpNode>(bytecode.opcode, std::move(a), std::move(b));
+            translation = std::make_shared<BinaryOpNode>(bytecode.opcode, std::move(a), std::move(b));
         }
         break;
     case kOpInv:
         {
             auto x = pop();
-            translation = std::make_unique<InverseOpNode>(std::move(x));
+            translation = std::make_shared<InverseOpNode>(std::move(x));
         }
         break;
     case kOpNot:
         {
             auto x = pop();
-            translation = std::make_unique<NotOpNode>(std::move(x));
+            translation = std::make_shared<NotOpNode>(std::move(x));
         }
         break;
     case kOpSplitStr:
@@ -200,15 +200,15 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto lastChar = pop();
             auto firstChar = pop();
             if (firstChar->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringSplitExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
+                translation = std::make_shared<StringSplitExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
             } else if (firstWord->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringSplitExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
+                translation = std::make_shared<StringSplitExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
             } else if (firstItem->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringSplitExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
+                translation = std::make_shared<StringSplitExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
             } else if (firstLine->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringSplitExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+                translation = std::make_shared<StringSplitExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
             } else {
-                translation = std::make_unique<ErrorNode>();
+                translation = std::make_shared<ErrorNode>();
             }
         }
         break;
@@ -224,15 +224,15 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto lastChar = pop();
             auto firstChar = pop();
             if (firstChar->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
+                translation = std::make_shared<StringHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
             } else if (firstWord->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
+                translation = std::make_shared<StringHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
             } else if (firstItem->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
+                translation = std::make_shared<StringHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
             } else if (firstLine->getValue()->type != kDatumVoid) {
-                translation = std::make_unique<StringHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+                translation = std::make_shared<StringHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
             } else {
-                translation = std::make_unique<ErrorNode>();
+                translation = std::make_shared<ErrorNode>();
             }
         }
         break;
@@ -240,20 +240,20 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         {
             auto firstSprite = pop();
             auto secondSprite = pop();
-            translation = std::make_unique<SpriteIntersectsExprNode>(std::move(firstSprite), std::move(secondSprite));
+            translation = std::make_shared<SpriteIntersectsExprNode>(std::move(firstSprite), std::move(secondSprite));
         }
         break;
     case kOpIntoSpr:
         {
             auto firstSprite = pop();
             auto secondSprite = pop();
-            translation = std::make_unique<SpriteWithinExprNode>(std::move(firstSprite), std::move(secondSprite));
+            translation = std::make_shared<SpriteWithinExprNode>(std::move(firstSprite), std::move(secondSprite));
         }
         break;
     case kOpCastStr:
         {
             auto fieldID = pop();
-            translation = std::make_unique<FieldExprNode>(std::move(fieldID));
+            translation = std::make_shared<FieldExprNode>(std::move(fieldID));
         }
         break;
     case kOpStartObj:
@@ -267,102 +267,102 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         {
             auto list = pop();
             list->getValue()->type = kDatumList;
-            translation = std::move(list);
+            translation = list;
         }
         break;
     case kOpPushPropList:
         {
             auto list = pop();
             list->getValue()->type = kDatumPropList;
-            translation = std::move(list);
+            translation = list;
         }
         break;
     case kOpPushInt01:
     case kOpPushInt2E:
         {
             auto i = std::make_shared<Datum>((int)bytecode.obj);
-            translation = std::make_unique<LiteralNode>(std::move(i));
+            translation = std::make_shared<LiteralNode>(std::move(i));
         }
         break;
     case kOpPushArgListNoRet:
         {
             auto argCount = bytecode.obj;
-            std::vector<std::unique_ptr<Node>> args;
+            std::vector<std::shared_ptr<Node>> args;
             while (argCount) {
                 args.insert(args.begin(), pop());
                 argCount--;
             }
-            auto argList = std::make_shared<Datum>(kDatumArgListNoRet, std::move(args));
-            translation = std::make_unique<LiteralNode>(std::move(argList));
+            auto argList = std::make_shared<Datum>(kDatumArgListNoRet, args);
+            translation = std::make_shared<LiteralNode>(std::move(argList));
         }
         break;
     case kOpPushArgList:
         {
             auto argCount = bytecode.obj;
-            std::vector<std::unique_ptr<Node>> args;
+            std::vector<std::shared_ptr<Node>> args;
             while (argCount) {
                 args.insert(args.begin(), pop());
                 argCount--;
             }
-            auto argList = std::make_shared<Datum>(kDatumArgList, std::move(args));
-            translation = std::make_unique<LiteralNode>(std::move(argList));
+            auto argList = std::make_shared<Datum>(kDatumArgList, args);
+            translation = std::make_shared<LiteralNode>(std::move(argList));
         }
         break;
     case kOpPushCons:
         {
-            translation = std::make_unique<LiteralNode>(script->literals[bytecode.obj / variableMultiplier()].value);
+            translation = std::make_shared<LiteralNode>(script->literals[bytecode.obj / variableMultiplier()].value);
             break;
         }
     case kOpPushSymb:
         {
             auto sym = std::make_shared<Datum>(kDatumSymbol, names[bytecode.obj]);
-            translation = std::make_unique<LiteralNode>(std::move(sym));
+            translation = std::make_shared<LiteralNode>(std::move(sym));
         }
         break;
     case kOpGetGlobal:
         {
             auto name = names[bytecode.obj];
             registerGlobal(name);
-            translation = std::make_unique<VarNode>(name);
+            translation = std::make_shared<VarNode>(name);
         }
         break;
     case kOpGetProp:
-        translation = std::make_unique<VarNode>(names[bytecode.obj]);
+        translation = std::make_shared<VarNode>(names[bytecode.obj]);
         break;
     case kOpGetParam:
-        translation = std::make_unique<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
+        translation = std::make_shared<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
         break;
     case kOpGetLocal:
-        translation = std::make_unique<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
+        translation = std::make_shared<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
         break;
     case kOpSetGlobal:
         {
             auto varName = names[bytecode.obj];
             registerGlobal(varName);
-            auto var = std::make_unique<VarNode>(varName);
+            auto var = std::make_shared<VarNode>(varName);
             auto value = pop();
-            translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetProp:
         {
-            auto var = std::make_unique<VarNode>(names[bytecode.obj]);
+            auto var = std::make_shared<VarNode>(names[bytecode.obj]);
             auto value = pop();
-            translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetParam:
         {
-            auto var = std::make_unique<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
+            auto var = std::make_shared<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
             auto value = pop();
-            translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetLocal:
         {
-            auto var = std::make_unique<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
+            auto var = std::make_shared<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
             auto value = pop();
-            translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
+            translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpJmp:
@@ -375,9 +375,9 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
 
             if (blockParent && blockParent->type == kIfStmtNode) {
                 if (nextBytecode.pos == ast->currentBlock->endPos && targetPrevBytecode.opcode == kOpEndRepeat) {
-                    translation = std::make_unique<ExitRepeatStmtNode>();
+                    translation = std::make_shared<ExitRepeatStmtNode>();
                 } else if (targetBytecode.opcode == kOpEndRepeat) {
-                    translation = std::make_unique<NextRepeatStmtNode>();
+                    translation = std::make_shared<NextRepeatStmtNode>();
                 } else if (nextBytecode.pos == ast->currentBlock->endPos) {
                     auto ifStmt = static_cast<IfStmtNode *>(blockParent);
                     ifStmt->ifType = kIfElse;
@@ -393,7 +393,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto i = bytecodePosMap[targetPos];
             while (bytecodeArray[i].opcode != kOpJmpIfZ) i++;
             auto &targetBytecode = bytecodeArray[i];
-            auto ifStmt = static_cast<IfStmtNode *>(targetBytecode.translation);
+            auto ifStmt = std::static_pointer_cast<IfStmtNode>(targetBytecode.translation);
             ifStmt->ifType = kRepeatWhile;
             return; // if statement amended, nothing to push
         }
@@ -402,22 +402,22 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         {
             auto endPos = bytecode.pos + bytecode.obj;
             auto condition = pop();
-            auto ifStmt = std::make_unique<IfStmtNode>(std::move(condition));
+            auto ifStmt = std::make_shared<IfStmtNode>(std::move(condition));
             ifStmt->block1->endPos = endPos;
+            translation = ifStmt;
             nextBlock = ifStmt->block1.get();
-            translation = std::move(ifStmt);
         }
         break;
     case kOpCallLocal:
         {
             auto argList = pop();
-            translation = std::make_unique<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
+            translation = std::make_shared<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
         }
         break;
     case kOpCallExt:
         {
             auto argList = pop();
-            translation = std::make_unique<CallNode>(names[bytecode.obj], std::move(argList));
+            translation = std::make_shared<CallNode>(names[bytecode.obj], std::move(argList));
         }
         break;
     case kOpCallObjOld:
@@ -441,11 +441,11 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto id = pop()->getValue()->toInt();
                 if (id <= 0x0b) {
                     auto propName = Lingo::getName(Lingo::moviePropertyNames00, id);
-                    translation = std::make_unique<TheExprNode>(propName);
+                    translation = std::make_shared<TheExprNode>(propName);
                 } else {
                     auto string = pop();
                     auto chunkType = static_cast<ChunkType>(id - 0x0b);
-                    translation = std::make_unique<LastStringChunkExprNode>(chunkType, std::move(string));
+                    translation = std::make_shared<LastStringChunkExprNode>(chunkType, std::move(string));
                 }
             }
             break;
@@ -453,14 +453,14 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             {
                 auto chunkType = static_cast<ChunkType>(pop()->getValue()->toInt());
                 auto string = pop();
-                translation = std::make_unique<StringChunkCountExprNode>(chunkType, std::move(string));
+                translation = std::make_shared<StringChunkCountExprNode>(chunkType, std::move(string));
             }
             break;
         case 0x02:
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto menuID = pop();
-                translation = std::make_unique<MenuPropExprNode>(std::move(menuID), propertyID);
+                translation = std::make_shared<MenuPropExprNode>(std::move(menuID), propertyID);
             }
             break;
         case 0x03:
@@ -468,33 +468,33 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto propertyID = pop()->getValue()->toInt();
                 auto menuID = pop();
                 auto itemID = pop();
-                translation = std::make_unique<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
+                translation = std::make_shared<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
             }
             break;
         case 0x04:
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto soundID = pop();
-                translation = std::make_unique<SoundPropExprNode>(std::move(soundID), propertyID);
+                translation = std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
             }
             break;
         case 0x06:
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto spriteID = pop();
-                translation = std::make_unique<SoundPropExprNode>(std::move(spriteID), propertyID);
+                translation = std::make_shared<SoundPropExprNode>(std::move(spriteID), propertyID);
             }
             break;
         case 0x07:
             {
                 auto propertyID = pop()->getValue()->toInt();
-                translation = std::make_unique<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
+                translation = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
             }
             break;
         case 0x08:
             {
                 auto propertyID = pop()->getValue()->toInt();
-                translation = std::make_unique<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames08, propertyID));
+                translation = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames08, propertyID));
             }
             break;
         case 0x09:
@@ -502,14 +502,14 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto propertyID = pop()->getValue()->toInt();
                 auto propName = Lingo::getName(Lingo::castPropertyNames09, propertyID);
                 auto castID = pop();
-                translation = std::make_unique<CastPropExprNode>(std::move(castID), propName);
+                translation = std::make_shared<CastPropExprNode>(std::move(castID), propName);
             }
             break;
         case 0x0c:
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto fieldID = pop();
-                translation = std::make_unique<FieldPropExprNode>(std::move(fieldID), propertyID);
+                translation = std::make_shared<FieldPropExprNode>(std::move(fieldID), propertyID);
             }
             break;
         case 0x0d:
@@ -517,11 +517,11 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto propertyID = pop()->getValue()->toInt();
                 auto propName = Lingo::getName(Lingo::castPropertyNames0D, propertyID);
                 auto castID = pop();
-                translation = std::make_unique<CastPropExprNode>(std::move(castID), propName);
+                translation = std::make_shared<CastPropExprNode>(std::move(castID), propName);
             }
             break;
         default:
-            translation = std::make_unique<ErrorNode>();
+            translation = std::make_shared<ErrorNode>();
         }
         break;
     case kOpSet:
@@ -532,10 +532,10 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto value = pop();
                 if (id <= 0x05) {
                     auto propName = Lingo::getName(Lingo::moviePropertyNames00, id);
-                    std::unique_ptr<Node> prop = std::make_unique<TheExprNode>(propName);
-                    translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                    std::shared_ptr<Node> prop = std::make_shared<TheExprNode>(propName);
+                    translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
                 } else {
-                    translation = std::make_unique<ErrorNode>();
+                    translation = std::make_shared<ErrorNode>();
                 }
             }
             break;
@@ -545,8 +545,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto value = pop();
                 auto menuID = pop();
                 auto itemID = pop();
-                auto prop = std::make_unique<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x04:
@@ -554,8 +554,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto propertyID = pop()->getValue()->toInt();
                 auto value = pop();
                 auto soundID = pop();
-                auto prop = std::make_unique<SoundPropExprNode>(std::move(soundID), propertyID);
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x06:
@@ -563,16 +563,16 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto propertyID = pop()->getValue()->toInt();
                 auto value = pop();
                 auto spriteID = pop();
-                auto prop = std::make_unique<SoundPropExprNode>(std::move(spriteID), propertyID);
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<SoundPropExprNode>(std::move(spriteID), propertyID);
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x07:
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto value = pop();
-                auto prop = std::make_unique<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x09:
@@ -581,8 +581,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto value = pop();
                 auto propName = Lingo::getName(Lingo::castPropertyNames09, propertyID);
                 auto castID = pop();
-                auto prop = std::make_unique<CastPropExprNode>(std::move(castID), propName);
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<CastPropExprNode>(std::move(castID), propName);
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x0c:
@@ -590,8 +590,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto propertyID = pop()->getValue()->toInt();
                 auto value = pop();
                 auto fieldID = pop();
-                auto prop = std::make_unique<FieldPropExprNode>(std::move(fieldID), propertyID);
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<FieldPropExprNode>(std::move(fieldID), propertyID);
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x0d:
@@ -600,42 +600,42 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
                 auto value = pop();
                 auto propName = Lingo::getName(Lingo::castPropertyNames0D, propertyID);
                 auto castID = pop();
-                auto prop = std::make_unique<CastPropExprNode>(std::move(castID), propName);
-                translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+                auto prop = std::make_shared<CastPropExprNode>(std::move(castID), propName);
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         default:
-            translation = std::make_unique<ErrorNode>();
+            translation = std::make_shared<ErrorNode>();
         }
         break;
     case kOpGetMovieProp:
-        translation = std::make_unique<TheExprNode>(names[bytecode.obj]);
+        translation = std::make_shared<TheExprNode>(names[bytecode.obj]);
         break;
     case kOpSetMovieProp:
         {
             auto value = pop();
-            auto prop = std::make_unique<TheExprNode>(names[bytecode.obj]);
-            translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+            auto prop = std::make_shared<TheExprNode>(names[bytecode.obj]);
+            translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
         }
         break;
     case kOpGetObjProp:
         {
             auto object = pop();
-            translation = std::make_unique<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
+            translation = std::make_shared<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
         }
         break;
     case kOpSetObjProp:
         {
             auto value = pop();
             auto object = pop();
-            auto prop = std::make_unique<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
-            translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
+            auto prop = std::make_shared<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
+            translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
         }
         break;
     case kOpGetMovieInfo:
         {
             pop(); // FIXME: What is this?
-            translation = std::make_unique<TheExprNode>(names[bytecode.obj]);
+            translation = std::make_shared<TheExprNode>(names[bytecode.obj]);
         }
         break;
     case kOpCallObj:
@@ -644,7 +644,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto &rawList = argList->getValue()->l;
             auto obj = std::move(rawList.front());
             rawList.erase(rawList.begin());
-            translation = std::make_unique<ObjCallNode>(std::move(obj), names[bytecode.obj], std::move(argList));
+            translation = std::make_shared<ObjCallNode>(std::move(obj), names[bytecode.obj], std::move(argList));
         }
         break;
     default:
@@ -652,8 +652,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto commentText = "unk" + std::to_string(bytecode.opcode); // TODO: hex
             if (bytecode.opcode >= 0x40)
                 commentText += " " + std::to_string(bytecode.obj);
-            comment = std::make_unique<CommentNode>(commentText);
-            translation = std::make_unique<ErrorNode>();
+            comment = std::make_shared<CommentNode>(commentText);
+            translation = std::make_shared<ErrorNode>();
             stack.clear(); // Clear stack so later bytecode won't be too screwed up
         }
     }
@@ -661,9 +661,9 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     if (comment)
         ast->addStatement(std::move(comment));
     if (!translation)
-        translation = std::make_unique<ErrorNode>();
+        translation = std::make_shared<ErrorNode>();
 
-    bytecode.translation = translation.get();
+    bytecode.translation = translation;
     if (translation->isStatement) {
         ast->addStatement(std::move(translation));
     } else {

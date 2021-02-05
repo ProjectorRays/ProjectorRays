@@ -286,7 +286,7 @@ std::string AST::toString() {
     return root->toString();
 }
 
-void AST::addStatement(std::unique_ptr<Node> statement) {
+void AST::addStatement(std::shared_ptr<Node> statement) {
     currentBlock->addChild(std::move(statement));
 }
 
@@ -358,7 +358,7 @@ std::string BlockNode::toString() {
     return res;
 }
 
-void BlockNode::addChild(std::unique_ptr<Node> child) {
+void BlockNode::addChild(std::shared_ptr<Node> child) {
     child->parent = this;
     children.push_back(std::move(child));
 }
