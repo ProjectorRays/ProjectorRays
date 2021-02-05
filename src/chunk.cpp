@@ -215,6 +215,10 @@ std::string ListChunk::readPascalString(ReadStream &stream, uint16_t index) {
     if (index >= offsetTableLen)
         return "";
 
+    auto length = offsetTable[index + 1] - offsetTable[index];
+    if (length == 0)
+        return "";
+
     stream.seek(listOffset + offsetTable[index]);
     return stream.readPascalString();
 }
