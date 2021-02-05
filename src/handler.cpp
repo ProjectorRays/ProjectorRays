@@ -145,6 +145,9 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
 
     switch (bytecode.opcode) {
     case kOpRet:
+        if (index == bytecodeArray.size() - 1) {
+            return; // end of handler
+        }
         translation = std::make_unique<ExitStmtNode>();
         break;
     case kOpPushZero:
