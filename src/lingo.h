@@ -57,7 +57,7 @@ enum OpCode {
     kOpPushPropList     = 0x1f,
 
     // multi-byte
-    kOpPushInt01        = 0x41,
+    kOpPushInt41        = 0x41,
     kOpPushArgListNoRet = 0x42,
     kOpPushArgList      = 0x43,
     kOpPushCons         = 0x44,
@@ -86,7 +86,7 @@ enum OpCode {
     kOpSetObjProp       = 0x62,
     kOpGetMovieInfo     = 0x66,
     kOpCallObj          = 0x67,
-    kOpPushInt2E        = 0x6e
+    kOpPushInt6E        = 0x6e
 };
 
 enum DatumType {

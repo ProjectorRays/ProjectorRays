@@ -271,8 +271,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             translation = list;
         }
         break;
-    case kOpPushInt01:
-    case kOpPushInt2E:
+    case kOpPushInt41:
+    case kOpPushInt6E:
         {
             auto i = std::make_shared<Datum>((int)bytecode.obj);
             translation = std::make_shared<LiteralNode>(std::move(i));
