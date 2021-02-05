@@ -46,11 +46,11 @@ enum OpCode {
     kOpNot              = 0x14,
     kOpContainsStr      = 0x15,
     kOpContains0Str     = 0x16,
-    kOpSplitStr         = 0x17,
-    kOpHiliiteStr       = 0x18,
+    kOpGetChunk         = 0x17,
+    kOpHiliteChunk      = 0x18,
     kOpOntoSpr          = 0x19,
     kOpIntoSpr          = 0x1a,
-    kOpCastStr          = 0x1b,
+    kOpGetField         = 0x1b,
     kOpStartObj         = 0x1c,
     kOpStopObj          = 0x1d,
     kOpPushList         = 0x1e,
@@ -119,8 +119,8 @@ enum NodeType {
     kInverseOpNode,
     kNotOpNode,
     kBinaryOpNode,
-    kStringSplitExprNode,
-    kStringHiliteStmtNode,
+    kChunkExprNode,
+    kChunkHiliteStmtNode,
     kSpriteIntersectsExprNode,
     kSpriteWithinExprNode,
     kFieldExprNode,
@@ -385,16 +385,16 @@ struct BinaryOpNode : Node {
     virtual std::string toString(bool summary);
 };
 
-/* StringSplitExprNode */
+/* ChunkExprNode */
 
-struct StringSplitExprNode : Node {
+struct ChunkExprNode : Node {
     ChunkType type;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> last;
     std::shared_ptr<Node> string;
 
-    StringSplitExprNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
-        : Node(kStringSplitExprNode, false), type(t) {
+    ChunkExprNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
+        : Node(kChunkExprNode, false), type(t) {
         first = std::move(a);
         first->parent = this;
         last = std::move(b);
@@ -402,28 +402,28 @@ struct StringSplitExprNode : Node {
         string = std::move(s);
         string->parent = this;
     }
-    virtual ~StringSplitExprNode() = default;
+    virtual ~ChunkExprNode() = default;
     virtual std::string toString(bool summary);
 };
 
-/* StringHiliteStmtNode */
+/* ChunkHiliteStmtNode */
 
-struct StringHiliteStmtNode : Node {
+struct ChunkHiliteStmtNode : Node {
     ChunkType type;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> last;
-    std::shared_ptr<Node> string;
+    std::shared_ptr<Node> fieldID;
 
-    StringHiliteStmtNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
-        : Node(kStringHiliteStmtNode, true), type(t) {
+    ChunkHiliteStmtNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> f)
+        : Node(kChunkHiliteStmtNode, true), type(t) {
         first = std::move(a);
         first->parent = this;
         last = std::move(b);
         last->parent = this;
-        string = std::move(s);
-        string->parent = this;
+        fieldID = std::move(f);
+        fieldID->parent = this;
     }
-    virtual ~StringHiliteStmtNode() = default;
+    virtual ~ChunkHiliteStmtNode() = default;
     virtual std::string toString(bool summary);
 };
 

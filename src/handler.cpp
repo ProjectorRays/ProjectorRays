@@ -182,7 +182,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             translation = std::make_shared<NotOpNode>(std::move(x));
         }
         break;
-    case kOpSplitStr:
+    case kOpGetChunk:
         {
             auto string = pop();
             auto lastLine = pop();
@@ -193,22 +193,24 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto firstWord = pop();
             auto lastChar = pop();
             auto firstChar = pop();
-            if (firstChar->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringSplitExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
-            } else if (firstWord->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringSplitExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
-            } else if (firstItem->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringSplitExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
-            } else if (firstLine->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringSplitExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+            if (firstChar->getValue()->toInt()) {
+                translation = std::make_shared<ChunkExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
+            } else if (firstWord->getValue()->toInt()) {
+                translation = std::make_shared<ChunkExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
+            } else if (firstItem->getValue()->toInt()) {
+                translation = std::make_shared<ChunkExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
+            } else if (firstLine->getValue()->toInt()) {
+                translation = std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
             } else {
                 translation = std::make_shared<ErrorNode>();
             }
         }
         break;
-    case kOpHiliiteStr:
+    case kOpHiliteChunk:
         {
-            auto string = pop();
+            if (script->movie->version >= 500)
+                auto castID = pop();
+            auto fieldID = pop();
             auto lastLine = pop();
             auto firstLine = pop();
             auto lastItem = pop();
@@ -217,14 +219,14 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto firstWord = pop();
             auto lastChar = pop();
             auto firstChar = pop();
-            if (firstChar->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
-            } else if (firstWord->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
-            } else if (firstItem->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
-            } else if (firstLine->getValue()->type != kDatumVoid) {
-                translation = std::make_shared<StringHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+            if (firstChar->getValue()->toInt()) {
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(fieldID));
+            } else if (firstWord->getValue()->toInt()) {
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(fieldID));
+            } else if (firstItem->getValue()->toInt()) {
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(fieldID));
+            } else if (firstLine->getValue()->toInt()) {
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(fieldID));
             } else {
                 translation = std::make_shared<ErrorNode>();
             }
@@ -244,8 +246,10 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             translation = std::make_shared<SpriteWithinExprNode>(std::move(firstSprite), std::move(secondSprite));
         }
         break;
-    case kOpCastStr:
+    case kOpGetField:
         {
+            if (script->movie->version >= 500)
+                auto castID = pop();
             auto fieldID = pop();
             translation = std::make_shared<FieldExprNode>(std::move(fieldID));
         }

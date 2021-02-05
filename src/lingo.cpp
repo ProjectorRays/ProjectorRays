@@ -28,11 +28,11 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpNot,               "not" },
     { kOpContainsStr,       "containsstr" },
     { kOpContains0Str,      "contains0str" },
-    { kOpSplitStr,          "splitstr" },
-    { kOpHiliiteStr,        "hilitestr" },
+    { kOpGetChunk,          "getchunk" },
+    { kOpHiliteChunk,       "hilitechunk" },
     { kOpOntoSpr,           "ontospr" },
     { kOpIntoSpr,           "intospr" },
-    { kOpCastStr,           "caststr" },
+    { kOpGetField,          "getfield" },
     { kOpStartObj,          "startobj" },
     { kOpStopObj,           "stopobj" },
     { kOpPushList,          "pushlist" },
@@ -429,27 +429,25 @@ std::string BinaryOpNode::toString(bool summary) {
     return left->toString(summary) + " " +  opString + " " + right->toString(summary);
 }
 
-/* StringSplitExprNode */
+/* ChunkExprNode */
 
-std::string StringSplitExprNode::toString(bool summary) {
-    auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    auto res = string->toString(summary) + "." + typeString + "[" + first->toString(summary);
+std::string ChunkExprNode::toString(bool summary) {
+    auto res = Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(summary);
     if (last->getValue()->toInt()) {
-        res += ".." + last->toString(summary);
+        res += " to " + last->toString(summary);
     }
-    res += "]";
+    res += " of " + string->toString(summary);
     return res;
 }
 
-/* StringHiliteStmtNode */
+/* ChunkHiliteStmtNode */
 
-std::string StringHiliteStmtNode::toString(bool summary) {
-    auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    auto res = string->toString(summary) + "." + typeString + "[" + first->toString(summary);
+std::string ChunkHiliteStmtNode::toString(bool summary) {
+    auto res = "hilite " + Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(summary);
     if (last->getValue()->toInt()) {
-        res += ".." + last->toString(summary);
+        res += " to " + last->toString(summary);
     }
-    res += "].hilite()";
+    res += " of field " + fieldID->toString(summary);
     return res;
 }
 
