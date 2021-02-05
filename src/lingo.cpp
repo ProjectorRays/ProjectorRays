@@ -255,7 +255,23 @@ std::string Datum::toString(bool summary) {
     case kDatumSymbol:
         return "#" + s;
     case kDatumString:
-        return "\"" + s + "\""; // FIXME: escape
+        if (s.length() == 1) {
+            switch (s[0]) {
+            case '\x03':
+                return "ENTER";
+            case '\x08':
+                return "BACKSPACE";
+            case '\t':
+                return "TAB";
+            case '\r':
+                return "RETURN";
+            case '"':
+                return "QUOTE";
+            default:
+                break;
+            }
+        }
+        return "\"" + s + "\"";
     case kDatumInt:
         return std::to_string(i);
     case kDatumFloat:
