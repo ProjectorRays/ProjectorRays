@@ -335,9 +335,32 @@ void ScriptChunk::translate(const std::vector<std::string> &names) {
 
 std::string ScriptChunk::toString() {
     std::string res = "";
+    bool hasVarDeclaration = false;
+
+    if (propertyNames.size() > 0) {
+        hasVarDeclaration = true;
+        res += "property ";
+        for (size_t i = 0; i < propertyNames.size(); i++) {
+            if (i > 0)
+                res += ", ";
+            res += propertyNames[i];
+        }
+        res += "\n";
+    }
+    if (globalNames.size() > 0) {
+        hasVarDeclaration = true;
+        res += "global ";
+        for (size_t i = 0; i < globalNames.size(); i++) {
+            if (i > 0)
+                res += ", ";
+            res += globalNames[i];
+        }
+        res += "\n";
+    }
+
     for (size_t i = 0; i < handlers.size(); i++) {
-        if (i > 0)
-            res += "\n\n";
+        if (i > 0 || hasVarDeclaration)
+            res += "\n";
         res += handlers[i]->ast->toString();
     }
     return res;

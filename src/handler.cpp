@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "chunk.h"
 #include "lingo.h"
 #include "movie.h"
@@ -102,9 +104,16 @@ int Handler::variableMultiplier() {
     return 6;
 }
 
+void Handler::registerGlobal(std::string name) {
+    if (std::find(script->globalNames.begin(), script->globalNames.end(), name) == script->globalNames.end()
+            && std::find(globalNames.begin(), globalNames.end(), name) == globalNames.end()) {
+        globalNames.push_back(name);
+    }
+}
+
 void Handler::translate(const std::vector<std::string> &names) {
     stack.clear();
-    ast = std::make_unique<AST>(name, argumentNames);
+    ast = std::make_unique<AST>(this);
     for (size_t i = 0; i < bytecodeArray.size(); i++) {
         auto &bytecode = bytecodeArray[i];
         auto pos = bytecode.pos;
@@ -311,6 +320,12 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         }
         break;
     case kOpGetGlobal:
+        {
+            auto name = names[bytecode.obj];
+            registerGlobal(name);
+            translation = std::make_unique<VarNode>(name);
+        }
+        break;
     case kOpGetProp:
         translation = std::make_unique<VarNode>(names[bytecode.obj]);
         break;
@@ -321,6 +336,15 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         translation = std::make_unique<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
         break;
     case kOpSetGlobal:
+        {
+            stmt = true;
+            auto varName = names[bytecode.obj];
+            registerGlobal(varName);
+            auto var = std::make_unique<VarNode>(varName);
+            auto value = pop();
+            translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
+        }
+        break;
     case kOpSetProp:
         {
             stmt = true;

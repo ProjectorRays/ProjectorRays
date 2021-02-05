@@ -224,6 +224,7 @@ struct Handler {
     std::map<uint32_t, size_t> bytecodePosMap;
     std::vector<std::string> argumentNames;
     std::vector<std::string> localNames;
+    std::vector<std::string> globalNames;
     std::string name;
 
     std::vector<std::unique_ptr<Node>> stack;
@@ -239,6 +240,7 @@ struct Handler {
     void readNames(const std::vector<std::string> &names);
     std::unique_ptr<Node> pop();
     int variableMultiplier();
+    void registerGlobal(std::string name);
     void translate(const std::vector<std::string> &names);
     void translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
 };
@@ -313,12 +315,11 @@ struct BlockNode : Node {
 /* HandlerNode */
 
 struct HandlerNode : Node {
-    std::string name;
-    std::vector<std::string> args;
+    Handler *handler;
     std::unique_ptr<BlockNode> block;
 
-    HandlerNode(std::string n, std::vector<std::string> a)
-        : Node(kHandlerNode), name(n), args(a) {
+    HandlerNode(Handler *h)
+        : Node(kHandlerNode), handler(h) {
         block = std::make_unique<BlockNode>();
         block->parent = this;
     }
@@ -719,8 +720,8 @@ struct AST {
     std::unique_ptr<HandlerNode> root;
     BlockNode *currentBlock;
 
-    AST(std::string name, std::vector<std::string> args) {
-        root = std::make_unique<HandlerNode>(name, args);
+    AST(Handler *handler) {
+        root = std::make_unique<HandlerNode>(handler);
         currentBlock = root->block.get();
     }
 
