@@ -142,11 +142,9 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     std::unique_ptr<Node> comment = nullptr;
     std::unique_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
-    bool stmt = false;
 
     switch (bytecode.opcode) {
     case kOpRet:
-        stmt = true;
         translation = std::make_unique<ExitStmtNode>();
         break;
     case kOpPushZero:
@@ -213,7 +211,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpHiliiteStr:
         {
-            stmt = true;
             auto string = pop();
             auto lastLine = pop();
             auto firstLine = pop();
@@ -337,7 +334,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpSetGlobal:
         {
-            stmt = true;
             auto varName = names[bytecode.obj];
             registerGlobal(varName);
             auto var = std::make_unique<VarNode>(varName);
@@ -347,7 +343,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpSetProp:
         {
-            stmt = true;
             auto var = std::make_unique<VarNode>(names[bytecode.obj]);
             auto value = pop();
             translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
@@ -355,7 +350,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpSetParam:
         {
-            stmt = true;
             auto var = std::make_unique<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
             auto value = pop();
             translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
@@ -363,7 +357,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpSetLocal:
         {
-            stmt = true;
             auto var = std::make_unique<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
             auto value = pop();
             translation = std::make_unique<AssignmentStmtNode>(std::move(var), std::move(value));
@@ -379,10 +372,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
 
             if (blockParent && blockParent->type == kIfStmtNode) {
                 if (nextBytecode.pos == ast->currentBlock->endPos && targetPrevBytecode.opcode == kOpEndRepeat) {
-                    stmt = true;
                     translation = std::make_unique<ExitRepeatStmtNode>();
                 } else if (targetBytecode.opcode == kOpEndRepeat) {
-                    stmt = true;
                     translation = std::make_unique<NextRepeatStmtNode>();
                 } else if (nextBytecode.pos == ast->currentBlock->endPos) {
                     auto ifStmt = static_cast<IfStmtNode *>(blockParent);
@@ -406,7 +397,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpJmpIfZ:
         {
-            stmt = true;
             auto endPos = bytecode.pos + bytecode.obj;
             auto condition = pop();
             auto ifStmt = std::make_unique<IfStmtNode>(std::move(condition));
@@ -418,16 +408,12 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     case kOpCallLocal:
         {
             auto argList = pop();
-            if (argList->getValue()->type == kDatumArgListNoRet)
-                stmt = true;
             translation = std::make_unique<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
         }
         break;
     case kOpCallExt:
         {
             auto argList = pop();
-            if (argList->getValue()->type == kDatumArgListNoRet)
-                stmt = true;
             translation = std::make_unique<CallNode>(names[bytecode.obj], std::move(argList));
         }
         break;
@@ -536,7 +522,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         }
         break;
     case kOpSet:
-        stmt = true;
         switch (bytecode.obj) {
         case 0x00:
             {
@@ -625,7 +610,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpSetMovieProp:
         {
-            stmt = true;
             auto value = pop();
             auto prop = std::make_unique<TheExprNode>(names[bytecode.obj]);
             translation = std::make_unique<AssignmentStmtNode>(std::move(prop), std::move(value));
@@ -639,7 +623,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     case kOpSetObjProp:
         {
-            stmt = true;
             auto value = pop();
             auto object = pop();
             auto prop = std::make_unique<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
@@ -655,8 +638,6 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     case kOpCallObj:
         {
             auto argList = pop();
-            if (argList->getValue()->type == kDatumArgListNoRet)
-                stmt = true;
             auto &rawList = argList->getValue()->l;
             auto obj = std::move(rawList.front());
             rawList.erase(rawList.begin());
@@ -680,7 +661,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         translation = std::make_unique<ErrorNode>();
 
     bytecode.translation = translation.get();
-    if (stmt) {
+    if (translation->isStatement) {
         ast->addStatement(std::move(translation));
     } else {
         stack.push_back(std::move(translation));

@@ -261,9 +261,10 @@ struct Bytecode {
 
 struct Node {
     NodeType type;
+    bool isStatement;
     Node *parent;
 
-    Node(NodeType t) : type(t), parent(nullptr) {}
+    Node(NodeType t, bool s) : type(t), isStatement(s), parent(nullptr) {}
     virtual ~Node() = default;
     virtual std::string toString();
     virtual std::shared_ptr<Datum> getValue();
@@ -272,7 +273,7 @@ struct Node {
 /* ErrorNode */
 
 struct ErrorNode : Node {
-    ErrorNode() : Node(kErrorNode) {};
+    ErrorNode() : Node(kErrorNode, false) {};
     virtual ~ErrorNode() = default;
     virtual std::string toString();
 };
@@ -282,7 +283,7 @@ struct ErrorNode : Node {
 struct CommentNode : Node {
     std::string text;
 
-    CommentNode(std::string t) : Node(kCommentNode), text(t) {}
+    CommentNode(std::string t) : Node(kCommentNode, false), text(t) {}
     virtual ~CommentNode() = default;
     virtual std::string toString();
 };
@@ -292,7 +293,7 @@ struct CommentNode : Node {
 struct LiteralNode : Node {
     std::shared_ptr<Datum> value;
 
-    LiteralNode(std::shared_ptr<Datum> d) : Node(kLiteralNode) {
+    LiteralNode(std::shared_ptr<Datum> d) : Node(kLiteralNode, false) {
         value = std::move(d);
     }
     virtual ~LiteralNode() = default;
@@ -306,7 +307,7 @@ struct BlockNode : Node {
     std::vector<std::unique_ptr<Node>> children;
     int32_t endPos;
 
-    BlockNode() : Node(kBlockNode), endPos(-1) {}
+    BlockNode() : Node(kBlockNode, false), endPos(-1) {}
     virtual ~BlockNode() = default;
     virtual std::string toString();
     void addChild(std::unique_ptr<Node> child);
@@ -319,7 +320,7 @@ struct HandlerNode : Node {
     std::unique_ptr<BlockNode> block;
 
     HandlerNode(Handler *h)
-        : Node(kHandlerNode), handler(h) {
+        : Node(kHandlerNode, false), handler(h) {
         block = std::make_unique<BlockNode>();
         block->parent = this;
     }
@@ -330,7 +331,7 @@ struct HandlerNode : Node {
 /* ExitStmtNode */
 
 struct ExitStmtNode : Node {
-    ExitStmtNode() : Node(kExitStmtNode) {}
+    ExitStmtNode() : Node(kExitStmtNode, true) {}
     virtual ~ExitStmtNode() = default;
     virtual std::string toString();
 };
@@ -340,7 +341,7 @@ struct ExitStmtNode : Node {
 struct InverseOpNode : Node {
     std::unique_ptr<Node> operand;
 
-    InverseOpNode(std::unique_ptr<Node> o) : Node(kInverseOpNode) {
+    InverseOpNode(std::unique_ptr<Node> o) : Node(kInverseOpNode, false) {
         operand = std::move(o);
         operand->parent = this;
     }
@@ -353,7 +354,7 @@ struct InverseOpNode : Node {
 struct NotOpNode : Node {
     std::unique_ptr<Node> operand;
 
-    NotOpNode(std::unique_ptr<Node> o) : Node(kNotOpNode) {
+    NotOpNode(std::unique_ptr<Node> o) : Node(kNotOpNode, false) {
         operand = std::move(o);
         operand->parent = this;
     }
@@ -369,7 +370,7 @@ struct BinaryOpNode : Node {
     std::unique_ptr<Node> right;
 
     BinaryOpNode(OpCode op, std::unique_ptr<Node> a, std::unique_ptr<Node> b)
-        : Node(kBinaryOpNode), opcode(op) {
+        : Node(kBinaryOpNode, false), opcode(op) {
         left = std::move(a);
         left->parent = this;
         right = std::move(b);
@@ -388,7 +389,7 @@ struct StringSplitExprNode : Node {
     std::unique_ptr<Node> string;
 
     StringSplitExprNode(ChunkType t, std::unique_ptr<Node> a, std::unique_ptr<Node> b, std::unique_ptr<Node> s)
-        : Node(kStringSplitExprNode), type(t) {
+        : Node(kStringSplitExprNode, false), type(t) {
         first = std::move(a);
         first->parent = this;
         last = std::move(b);
@@ -409,7 +410,7 @@ struct StringHiliteStmtNode : Node {
     std::unique_ptr<Node> string;
 
     StringHiliteStmtNode(ChunkType t, std::unique_ptr<Node> a, std::unique_ptr<Node> b, std::unique_ptr<Node> s)
-        : Node(kStringHiliteStmtNode), type(t) {
+        : Node(kStringHiliteStmtNode, true), type(t) {
         first = std::move(a);
         first->parent = this;
         last = std::move(b);
@@ -428,7 +429,7 @@ struct SpriteIntersectsExprNode : Node {
     std::unique_ptr<Node> secondSprite;
 
     SpriteIntersectsExprNode(std::unique_ptr<Node> a, std::unique_ptr<Node> b)
-        : Node(kSpriteIntersectsExprNode) {
+        : Node(kSpriteIntersectsExprNode, false) {
         firstSprite = std::move(a);
         firstSprite->parent = this;
         secondSprite = std::move(b);
@@ -445,7 +446,7 @@ struct SpriteWithinExprNode : Node {
     std::unique_ptr<Node> secondSprite;
 
     SpriteWithinExprNode(std::unique_ptr<Node> a, std::unique_ptr<Node> b)
-        : Node(kSpriteWithinExprNode) {
+        : Node(kSpriteWithinExprNode, false) {
         firstSprite = std::move(a);
         firstSprite->parent = this;
         secondSprite = std::move(b);
@@ -460,7 +461,7 @@ struct SpriteWithinExprNode : Node {
 struct FieldExprNode : Node {
     std::unique_ptr<Node> fieldID;
 
-    FieldExprNode(std::unique_ptr<Node> f) : Node(kFieldExprNode) {
+    FieldExprNode(std::unique_ptr<Node> f) : Node(kFieldExprNode, false) {
         fieldID = std::move(f);
         fieldID->parent = this;
     }
@@ -473,7 +474,7 @@ struct FieldExprNode : Node {
 struct VarNode: Node {
     std::string varName;
 
-    VarNode(std::string v) : Node(kVarNode), varName(v) {}
+    VarNode(std::string v) : Node(kVarNode, false), varName(v) {}
     virtual ~VarNode() = default;
     virtual std::string toString();
 };
@@ -485,7 +486,7 @@ struct AssignmentStmtNode : Node {
     std::unique_ptr<Node> value;
 
     AssignmentStmtNode(std::unique_ptr<Node> var, std::unique_ptr<Node> val)
-        : Node(kAssignmentStmtNode) {
+        : Node(kAssignmentStmtNode, true) {
         variable = std::move(var);
         variable->parent = this;
         value = std::move(val);
@@ -504,7 +505,7 @@ struct IfStmtNode : Node {
     std::unique_ptr<BlockNode> block1;
     std::unique_ptr<BlockNode> block2;
 
-    IfStmtNode(std::unique_ptr<Node> c) : Node(kIfStmtNode), ifType(kIf) {
+    IfStmtNode(std::unique_ptr<Node> c) : Node(kIfStmtNode, true), ifType(kIf) {
         condition = std::move(c);
         condition->parent = this;
         block1 = std::make_unique<BlockNode>();
@@ -522,10 +523,12 @@ struct CallNode : Node {
     std::string name;
     std::unique_ptr<Node> argList;
 
-    CallNode(std::string n, std::unique_ptr<Node> a) : Node(kCallNode) {
+    CallNode(std::string n, std::unique_ptr<Node> a) : Node(kCallNode, false) {
         name = n;
         argList = std::move(a);
         argList->parent = this;
+        if (argList->getValue()->type == kDatumArgListNoRet)
+            isStatement = true;
     }
     virtual ~CallNode() = default;
     virtual std::string toString();
@@ -539,12 +542,14 @@ struct ObjCallNode : Node {
     std::unique_ptr<Node> argList;
 
     ObjCallNode(std::unique_ptr<Node> o, std::string n, std::unique_ptr<Node> a)
-        : Node(kObjCallNode) {
+        : Node(kObjCallNode, false) {
         obj = std::move(o);
         obj->parent = this;
         name = n;
         argList = std::move(a);
         argList->parent = this;
+        if (argList->getValue()->type == kDatumArgListNoRet)
+            isStatement = true;
     }
     virtual ~ObjCallNode() = default;
     virtual std::string toString();
@@ -555,7 +560,7 @@ struct ObjCallNode : Node {
 struct TheExprNode : Node {
     std::string prop;
 
-    TheExprNode(std::string p) : Node(kTheExprNode), prop(p) {}
+    TheExprNode(std::string p) : Node(kTheExprNode, false), prop(p) {}
     virtual ~TheExprNode() = default;
     virtual std::string toString();
 };
@@ -567,7 +572,7 @@ struct LastStringChunkExprNode : Node {
     std::unique_ptr<Node> string;
 
     LastStringChunkExprNode(ChunkType t, std::unique_ptr<Node> s)
-        : Node(kLastStringChunkExprNode), type(t) {
+        : Node(kLastStringChunkExprNode, false), type(t) {
         string = std::move(s);
         string->parent = this;
     }
@@ -582,7 +587,7 @@ struct StringChunkCountExprNode : Node {
     std::unique_ptr<Node> string;
 
     StringChunkCountExprNode(ChunkType t, std::unique_ptr<Node> s)
-        : Node(kStringChunkCountExprNode), type(t) {
+        : Node(kStringChunkCountExprNode, false), type(t) {
         string = std::move(s);
         string->parent = this;
     }
@@ -597,7 +602,7 @@ struct MenuPropExprNode : Node {
     uint prop;
 
     MenuPropExprNode(std::unique_ptr<Node> m, uint p)
-        : Node(kMenuPropExprNode), prop(p) {
+        : Node(kMenuPropExprNode, false), prop(p) {
         menuID = std::move(m);
         menuID->parent = this;
     }
@@ -613,7 +618,7 @@ struct MenuItemPropExprNode : Node {
     uint prop;
 
     MenuItemPropExprNode(std::unique_ptr<Node> m, std::unique_ptr<Node> i, uint p)
-        : Node(kMenuItemPropExprNode), prop(p) {
+        : Node(kMenuItemPropExprNode, false), prop(p) {
         menuID = std::move(m);
         menuID->parent = this;
         itemID = std::move(i);
@@ -630,7 +635,7 @@ struct SoundPropExprNode : Node {
     uint prop;
 
     SoundPropExprNode(std::unique_ptr<Node> s, uint p)
-        : Node(kSoundPropExprNode), prop(p) {
+        : Node(kSoundPropExprNode, false), prop(p) {
         soundID = std::move(s);
         soundID->parent = this;
     }
@@ -645,7 +650,7 @@ struct SpritePropExprNode : Node {
     uint prop;
 
     SpritePropExprNode(std::unique_ptr<Node> s, uint p)
-        : Node(kSpritePropExprNode), prop(p) {
+        : Node(kSpritePropExprNode, false), prop(p) {
         spriteID = std::move(s);
         spriteID->parent = this;
     }
@@ -660,7 +665,7 @@ struct CastPropExprNode : Node {
     std::string prop;
 
     CastPropExprNode(std::unique_ptr<Node> c, std::string p)
-        : Node(kCastPropExprNode), prop(p) {
+        : Node(kCastPropExprNode, false), prop(p) {
         castID = std::move(c);
         castID->parent = this;
     }
@@ -675,7 +680,7 @@ struct FieldPropExprNode : Node {
     uint prop;
 
     FieldPropExprNode(std::unique_ptr<Node> f, uint p)
-        : Node(kFieldPropExprNode), prop(p) {
+        : Node(kFieldPropExprNode, false), prop(p) {
         fieldID = std::move(f);
         fieldID->parent = this;
     }
@@ -690,7 +695,7 @@ struct ObjPropExprNode : Node {
     std::string prop;
 
     ObjPropExprNode(std::unique_ptr<Node> o, std::string p)
-        : Node(kObjPropExprNode), prop(p) {
+        : Node(kObjPropExprNode, false), prop(p) {
         obj = std::move(o);
         obj->parent = this;
     }
@@ -701,7 +706,7 @@ struct ObjPropExprNode : Node {
 /* ExitRepeatStmtNode */
 
 struct ExitRepeatStmtNode : Node {
-    ExitRepeatStmtNode() : Node(kExitRepeatStmtNode) {}
+    ExitRepeatStmtNode() : Node(kExitRepeatStmtNode, true) {}
     virtual ~ExitRepeatStmtNode() = default;
     virtual std::string toString();
 };
@@ -709,7 +714,7 @@ struct ExitRepeatStmtNode : Node {
 /* NextRepeatStmtNode */
 
 struct NextRepeatStmtNode : Node {
-    NextRepeatStmtNode() : Node(kNextRepeatStmtNode) {}
+    NextRepeatStmtNode() : Node(kNextRepeatStmtNode, true) {}
     virtual ~NextRepeatStmtNode() = default;
     virtual std::string toString();
 };
