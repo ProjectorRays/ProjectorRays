@@ -12,7 +12,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpRet,               "ret" },
     { kOpPushZero,          "pushzero" },
     { kOpMul,               "mul" },
-    { kOpAdd,               "div" },
+    { kOpAdd,               "add" },
     { kOpSub,               "sub" },
     { kOpDiv,               "div" },
     { kOpMod,               "mod" },
