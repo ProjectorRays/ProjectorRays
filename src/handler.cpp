@@ -34,23 +34,17 @@ void Handler::readData(ReadStream &stream) {
     while (stream.pos() < compiledOffset + compiledLen) {
         auto pos = stream.pos();
         auto op = stream.readUint8();
-        OpCode opcode = kOpRet;
         // instructions can be one, two or three bytes
         auto obj = 0;
         if (op >= 0xc0) {
-            opcode = static_cast<OpCode>(op - 0x80);
             obj = stream.readUint24();
         } else if (op >= 0x80) {
-            opcode = static_cast<OpCode>(op - 0x40);
             obj = stream.readUint16();
         } else if (op >= 0x40) {
-            opcode = static_cast<OpCode>(op);
             obj = stream.readUint8();
-        } else {
-            opcode = static_cast<OpCode>(op);
         }
         // read the first byte to convert to an opcode
-        Bytecode bytecode(opcode, obj, pos);
+        Bytecode bytecode(op, obj, pos);
         bytecodeArray.push_back(bytecode);
         bytecodePosMap[pos] = bytecodeArray.size() - 1;
     }
@@ -649,7 +643,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         break;
     default:
         {
-            auto commentText = "unk" + std::to_string(bytecode.opcode); // TODO: hex
+            auto commentText = Lingo::getOpcodeName(bytecode.opID);
             if (bytecode.opcode >= 0x40)
                 commentText += " " + std::to_string(bytecode.obj);
             comment = std::make_shared<CommentNode>(commentText);
@@ -672,5 +666,33 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
 
     if (nextBlock)
         ast->enterBlock(nextBlock);
+}
+
+std::string Handler::bytecodeText() {
+    std::string res = "on " + name;
+    if (argumentNames.size() > 0) {
+        res += " ";
+        for (size_t i = 0; i < argumentNames.size(); i++) {
+            if (i > 0)
+                res += ", ";
+            res += argumentNames[i];
+        }
     }
+    res += "\n";
+    for (auto &bytecode : bytecodeArray) {
+        res += "  " + Lingo::getOpcodeName(bytecode.opID);
+        if (bytecode.opID > 0x40)
+            res += " " + std::to_string(bytecode.obj);
+        if (bytecode.translation) {
+            res += " -- ";
+            if (bytecode.translation->isStatement)
+                res += "STATEMENT: ";
+            res += bytecode.translation->toString(true);
+        }
+        res += "\n";
+    }
+    res += "end\n";
+    return res;
+}
+
 }

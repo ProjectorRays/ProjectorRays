@@ -211,6 +211,20 @@ std::map<uint, std::string> Lingo::castPropertyNames0D = {
     { 0x01, "sound" }
 };
 
+std::string Lingo::getOpcodeName(uint8_t id) {
+    if (id >= 0x40)
+        id = 0x40 + id % 0x40;
+    auto it = opcodeNames.find(id);
+    if (it == opcodeNames.end()){
+        char hexID[3];
+        sprintf(hexID, "%02X", id);
+        std::string res = "unk";
+        res.append(hexID);
+        return res;
+    }
+    return it->second;
+}
+
 std::string Lingo::getName(const std::map<uint, std::string> &nameMap, uint id) {
     auto it = nameMap.find(id);
     if (it == nameMap.end())
@@ -232,7 +246,7 @@ int Datum::toInt() {
     return 0;
 }
 
-std::string Datum::toString() {
+std::string Datum::toString(bool summary) {
     switch (type) {
     case kDatumVoid:
         return "VOID";
@@ -254,7 +268,7 @@ std::string Datum::toString() {
             for (size_t i = 0; i < l.size(); i++) {
                 if (i > 0)
                     res += ", ";
-                res += l[i]->toString();
+                res += l[i]->toString(summary);
             }
             if (type == kDatumList)
                 res += "]";
@@ -269,7 +283,7 @@ std::string Datum::toString() {
                 for (size_t i = 0; i < l.size(); i += 2) {
                     if (i > 0)
                         res += ", ";
-                    res += l[i]->toString() + ": " + l[i + 1]->toString();
+                    res += l[i]->toString(summary) + ": " + l[i + 1]->toString(summary);
                 }
             }
             res += "]";
@@ -282,8 +296,8 @@ std::string Datum::toString() {
 
 /* AST */
 
-std::string AST::toString() {
-    return root->toString();
+std::string AST::toString(bool summary) {
+    return root->toString(summary);
 }
 
 void AST::addStatement(std::shared_ptr<Node> statement) {
@@ -318,7 +332,7 @@ void AST::exitBlock() {
 
 /* Node */
 
-std::string Node::toString() {
+std::string Node::toString(bool summary) {
     return "";
 }
 
@@ -328,20 +342,20 @@ std::shared_ptr<Datum> Node::getValue() {
 
 /* ErrorNode */
 
-std::string ErrorNode::toString() {
+std::string ErrorNode::toString(bool summary) {
     return "ERROR";
 }
 
 /* CommentNode */
 
-std::string CommentNode::toString() {
+std::string CommentNode::toString(bool summary) {
     return "-- " + text;
 }
 
 /* LiteralNode */
 
-std::string LiteralNode::toString() {
-    return value->toString();
+std::string LiteralNode::toString(bool summary) {
+    return value->toString(summary);
 }
 
 std::shared_ptr<Datum> LiteralNode::getValue() {
@@ -350,10 +364,10 @@ std::shared_ptr<Datum> LiteralNode::getValue() {
 
 /* BlockNode */
 
-std::string BlockNode::toString() {
+std::string BlockNode::toString(bool summary) {
     std::string res = "";
     for (const auto &child : children) {
-        res += indent(child->toString() + "\n");
+        res += indent(child->toString(summary) + "\n");
     }
     return res;
 }
@@ -365,7 +379,7 @@ void BlockNode::addChild(std::shared_ptr<Node> child) {
 
 /* HandlerNode */
 
-std::string HandlerNode::toString() {
+std::string HandlerNode::toString(bool summary) {
     std::string res = "on " + handler->name;
     if (handler->argumentNames.size() > 0) {
         res += " ";
@@ -385,43 +399,43 @@ std::string HandlerNode::toString() {
         }
         res += "\n";
     }
-    res += block->toString();
+    res += block->toString(summary);
     res += "end\n";
     return res;
 }
 
 /* ExitStmtNode */
 
-std::string ExitStmtNode::toString() {
+std::string ExitStmtNode::toString(bool summary) {
     return "exit";
 }
 
 /* InverseOpNode */
 
-std::string InverseOpNode::toString() {
-    return "-" + operand->toString();
+std::string InverseOpNode::toString(bool summary) {
+    return "-" + operand->toString(summary);
 }
 
 /* NotOpNode */
 
-std::string NotOpNode::toString() {
-    return "not " + operand->toString();
+std::string NotOpNode::toString(bool summary) {
+    return "not " + operand->toString(summary);
 }
 
 /* BinaryOpNode */
 
-std::string BinaryOpNode::toString() {
+std::string BinaryOpNode::toString(bool summary) {
     auto opString = Lingo::getName(Lingo::binaryOpNames, opcode);
-    return left->toString() + " " +  opString + " " + right->toString();
+    return left->toString(summary) + " " +  opString + " " + right->toString(summary);
 }
 
 /* StringSplitExprNode */
 
-std::string StringSplitExprNode::toString() {
+std::string StringSplitExprNode::toString(bool summary) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    auto res = string->toString() + "." + typeString + "[" + first->toString();
+    auto res = string->toString(summary) + "." + typeString + "[" + first->toString(summary);
     if (last->getValue()->toInt()) {
-        res += ".." + last->toString();
+        res += ".." + last->toString(summary);
     }
     res += "]";
     return res;
@@ -429,11 +443,11 @@ std::string StringSplitExprNode::toString() {
 
 /* StringHiliteStmtNode */
 
-std::string StringHiliteStmtNode::toString() {
+std::string StringHiliteStmtNode::toString(bool summary) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    auto res = string->toString() + "." + typeString + "[" + first->toString();
+    auto res = string->toString(summary) + "." + typeString + "[" + first->toString(summary);
     if (last->getValue()->toInt()) {
-        res += ".." + last->toString();
+        res += ".." + last->toString(summary);
     }
     res += "].hilite()";
     return res;
@@ -441,136 +455,156 @@ std::string StringHiliteStmtNode::toString() {
 
 /* SpriteIntersectsExprNode */
 
-std::string SpriteIntersectsExprNode::toString() {
-    return "sprite(" + firstSprite->toString() + ").intersects(" + secondSprite->toString() + ")";
+std::string SpriteIntersectsExprNode::toString(bool summary) {
+    return "sprite(" + firstSprite->toString(summary) + ").intersects(" + secondSprite->toString(summary) + ")";
 }
 
 /* SpriteWithinExprNode */
 
-std::string SpriteWithinExprNode::toString() {
-    return "sprite(" + firstSprite->toString() + ").within(" + secondSprite->toString() + ")";
+std::string SpriteWithinExprNode::toString(bool summary) {
+    return "sprite(" + firstSprite->toString(summary) + ").within(" + secondSprite->toString(summary) + ")";
 }
 
 /* FieldExprNode */
 
-std::string FieldExprNode::toString() {
-    return "field(" + fieldID->toString() + ")";
+std::string FieldExprNode::toString(bool summary) {
+    return "field(" + fieldID->toString(summary) + ")";
 }
 
 /* VarNode */
 
-std::string VarNode::toString() {
+std::string VarNode::toString(bool summary) {
     return varName;
 }
 
 /* AssignmentStmtNode */
 
-std::string AssignmentStmtNode::toString() {
-    return variable->toString() + " = " + value->toString();
+std::string AssignmentStmtNode::toString(bool summary) {
+    return variable->toString(summary) + " = " + value->toString(summary);
 }
 
 /* IfStmtNode */
 
-std::string IfStmtNode::toString() {
+std::string IfStmtNode::toString(bool summary) {
+    std::string res;
     switch (ifType) {
     case kIf:
-        return "if " + condition->toString() + " then\n" + block1->toString() + "end if";
+        res = "if " + condition->toString(summary) + " then";
+        break;
     case kIfElse:
-        return "if " + condition->toString() + " then\n" + block1->toString() + "else\n" + block2->toString() + "end if";
+        res = "if " + condition->toString(summary) + " then";
+        break;
     case kRepeatWhile:
-        return "repeat while " + condition->toString() + "\n" + block1->toString() + "end repeat";
+        res = "repeat while " + condition->toString(summary);
+        break;
     }
-    return "ERROR";
+    if (summary) {
+        if (ifType == kIfElse) {
+            res += " / else";
+        }
+    } else {
+        res += "\n";
+        res += block1->toString(summary);
+        if (ifType == kIfElse) {
+            res += "else\n" + block2->toString(summary);
+        }
+        if (ifType == kRepeatWhile) {
+            res += "end repeat";
+        } else {
+            res += "end if";
+        }
+    }
+    return res;
 }
 
 /* CallNode */
 
-std::string CallNode::toString() {
-    return name + "(" + argList->toString() + ")";
+std::string CallNode::toString(bool summary) {
+    return name + "(" + argList->toString(summary) + ")";
 }
 
 /* ObjCallNode */
 
-std::string ObjCallNode::toString() {
-    return obj->toString() + "." + name + "(" + argList->toString() + ")";
+std::string ObjCallNode::toString(bool summary) {
+    return obj->toString(summary) + "." + name + "(" + argList->toString(summary) + ")";
 }
 
 /* TheExprNode */
 
-std::string TheExprNode::toString() {
+std::string TheExprNode::toString(bool summary) {
     return "the " + prop;
 }
 
 /* LastStringChunkExprNode */
 
-std::string LastStringChunkExprNode::toString() {
+std::string LastStringChunkExprNode::toString(bool summary) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    return "the last " + typeString + " in " + string->toString();
+    return "the last " + typeString + " in " + string->toString(summary);
 }
 
 /* StringChunkCountExprNode */
 
-std::string StringChunkCountExprNode::toString() {
+std::string StringChunkCountExprNode::toString(bool summary) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    return "the number of " + typeString + " in " + string->toString();
+    return "the number of " + typeString + " in " + string->toString(summary);
 }
 
 /* MenuPropExprNode */
 
-std::string MenuPropExprNode::toString() {
+std::string MenuPropExprNode::toString(bool summary) {
     auto propString = Lingo::getName(Lingo::menuPropertyNames, prop);
-    return "menu(" + menuID->toString() + ")." + propString;
+    return "menu(" + menuID->toString(summary) + ")." + propString;
 }
 
 /* MenuItemPropExprNode */
 
-std::string MenuItemPropExprNode::toString() {
+std::string MenuItemPropExprNode::toString(bool summary) {
     auto propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
-    return "menu(" + menuID->toString() + ").item(" + itemID->toString() + ")." + propString;
+    return "menu(" + menuID->toString(summary) + ").item(" + itemID->toString(summary) + ")." + propString;
 }
 
 /* SoundPropExprNode */
 
-std::string SoundPropExprNode::toString() {
+std::string SoundPropExprNode::toString(bool summary) {
     auto propString = Lingo::getName(Lingo::soundPropertyNames, prop);
-    return "sound(" + soundID->toString() + ")." + propString;
+    return "sound(" + soundID->toString(summary) + ")." + propString;
 }
 
 /* SpritePropExprNode */
 
-std::string SpritePropExprNode::toString() {
+std::string SpritePropExprNode::toString(bool summary) {
     auto propString = Lingo::getName(Lingo::spritePropertyNames, prop);
-    return "sprite(" + spriteID->toString() + ")." + propString;
+    return "sprite(" + spriteID->toString(summary) + ")." + propString;
 }
 
 /* CastPropExprNode */
 
-std::string CastPropExprNode::toString() {
-    return "cast(" + castID->toString() + ")." + prop;
+std::string CastPropExprNode::toString(bool summary) {
+    return "cast(" + castID->toString(summary) + ")." + prop;
 }
 
 /* FieldPropExprNode */
 
-std::string FieldPropExprNode::toString() {
+std::string FieldPropExprNode::toString(bool summary) {
     auto propString = Lingo::getName(Lingo::fieldPropertyNames, prop);
-    return "field(" + fieldID->toString() + ")." + propString;
+    return "field(" + fieldID->toString(summary) + ")." + propString;
 }
 
 /* ObjPropExprNode */
 
-std::string ObjPropExprNode::toString() {
-    return obj->toString() + "." + prop;
+std::string ObjPropExprNode::toString(bool summary) {
+    return obj->toString(summary) + "." + prop;
 }
 
 /* ExitRepeatStmtNode */
 
-std::string ExitRepeatStmtNode::toString() {
+std::string ExitRepeatStmtNode::toString(bool summary) {
     return "exit repeat";
 }
 
 /* NextRepeatStmtNode */
 
-std::string NextRepeatStmtNode::toString() {
+std::string NextRepeatStmtNode::toString(bool summary) {
     return "next repeat";
 }
 

@@ -56,8 +56,9 @@ int main(int argc, char *argv[]) {
                 scriptType = "UnknownScript";
                 id = std::to_string(it->first);
             }
-            std::string fileName = "Cast " + cast->name + " " + scriptType + " " + id + ".lingo";
-            writeFile(fileName, it->second->toString());
+            std::string fileName = "Cast " + cast->name + " " + scriptType + " " + id;
+            writeFile(fileName + ".lingo", it->second->scriptText());
+            writeFile(fileName + ".lbc", it->second->bytecodeText());
         }
     }
 

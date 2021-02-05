@@ -217,7 +217,9 @@ struct ScriptChunk : Chunk {
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
     void readNames(const std::vector<std::string> &names);
     void translate(const std::vector<std::string> &names);
-    std::string toString();
+    std::string varDeclarations();
+    std::string scriptText();
+    std::string bytecodeText();
 };
 
 struct ScriptContextChunk : Chunk {

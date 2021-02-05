@@ -161,6 +161,7 @@ struct Lingo {
     static std::map<uint, std::string> fieldPropertyNames;
     static std::map<uint, std::string> castPropertyNames0D;
 
+    static std::string getOpcodeName(uint8_t id);
     static std::string getName(const std::map<uint, std::string> &nameMap, uint id);
 };
 
@@ -194,7 +195,7 @@ struct Datum {
     }
 
     int toInt();
-    std::string toString();
+    std::string toString(bool summary);
 };
 
 /* Handler */
@@ -243,18 +244,22 @@ struct Handler {
     void registerGlobal(std::string name);
     void translate(const std::vector<std::string> &names);
     void translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
+    std::string bytecodeText();
 };
 
 /* Bytecode */
 
 struct Bytecode {
+    uint8_t opID;
     OpCode opcode;
     uint32_t obj;
     int32_t pos;
     std::shared_ptr<Node> translation;
 
-    Bytecode(OpCode op, uint32_t o, int32_t p)
-        : opcode(op), obj(o), pos(p) {}
+    Bytecode(uint8_t op, uint32_t o, int32_t p)
+        : opID(op), obj(o), pos(p) {
+        opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
+    }
 };
 
 /* Node */
@@ -266,7 +271,7 @@ struct Node {
 
     Node(NodeType t, bool s) : type(t), isStatement(s), parent(nullptr) {}
     virtual ~Node() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
     virtual std::shared_ptr<Datum> getValue();
 };
 
@@ -275,7 +280,7 @@ struct Node {
 struct ErrorNode : Node {
     ErrorNode() : Node(kErrorNode, false) {};
     virtual ~ErrorNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* CommentNode */
@@ -285,7 +290,7 @@ struct CommentNode : Node {
 
     CommentNode(std::string t) : Node(kCommentNode, false), text(t) {}
     virtual ~CommentNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* LiteralNode */
@@ -297,7 +302,7 @@ struct LiteralNode : Node {
         value = std::move(d);
     }
     virtual ~LiteralNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
     virtual std::shared_ptr<Datum> getValue();
 };
 
@@ -309,7 +314,7 @@ struct BlockNode : Node {
 
     BlockNode() : Node(kBlockNode, false), endPos(-1) {}
     virtual ~BlockNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
     void addChild(std::shared_ptr<Node> child);
 };
 
@@ -325,7 +330,7 @@ struct HandlerNode : Node {
         block->parent = this;
     }
     virtual ~HandlerNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* ExitStmtNode */
@@ -333,7 +338,7 @@ struct HandlerNode : Node {
 struct ExitStmtNode : Node {
     ExitStmtNode() : Node(kExitStmtNode, true) {}
     virtual ~ExitStmtNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* InverseOpNode */
@@ -346,7 +351,7 @@ struct InverseOpNode : Node {
         operand->parent = this;
     }
     virtual ~InverseOpNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* NotOpNode */
@@ -359,7 +364,7 @@ struct NotOpNode : Node {
         operand->parent = this;
     }
     virtual ~NotOpNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* BinaryOpNode */
@@ -377,7 +382,7 @@ struct BinaryOpNode : Node {
         right->parent = this;
     }
     virtual ~BinaryOpNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* StringSplitExprNode */
@@ -398,7 +403,7 @@ struct StringSplitExprNode : Node {
         string->parent = this;
     }
     virtual ~StringSplitExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* StringHiliteStmtNode */
@@ -419,7 +424,7 @@ struct StringHiliteStmtNode : Node {
         string->parent = this;
     }
     virtual ~StringHiliteStmtNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* SpriteIntersectsExprNode */
@@ -436,7 +441,7 @@ struct SpriteIntersectsExprNode : Node {
         secondSprite->parent = this;
     }
     virtual ~SpriteIntersectsExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* SpriteWithinExprNode */
@@ -453,7 +458,7 @@ struct SpriteWithinExprNode : Node {
         secondSprite->parent = this;
     }
     virtual ~SpriteWithinExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* FieldExprNode */
@@ -466,7 +471,7 @@ struct FieldExprNode : Node {
         fieldID->parent = this;
     }
     virtual ~FieldExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* VarNode */
@@ -476,7 +481,7 @@ struct VarNode: Node {
 
     VarNode(std::string v) : Node(kVarNode, false), varName(v) {}
     virtual ~VarNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* AssignmentStmtNode */
@@ -494,7 +499,7 @@ struct AssignmentStmtNode : Node {
     }
 
     virtual ~AssignmentStmtNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* IfStmtNode */
@@ -514,7 +519,7 @@ struct IfStmtNode : Node {
         block2->parent = this;
     }
     virtual ~IfStmtNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* CallNode */
@@ -531,7 +536,7 @@ struct CallNode : Node {
             isStatement = true;
     }
     virtual ~CallNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* ObjCallNode */
@@ -552,7 +557,7 @@ struct ObjCallNode : Node {
             isStatement = true;
     }
     virtual ~ObjCallNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* TheExprNode */
@@ -562,7 +567,7 @@ struct TheExprNode : Node {
 
     TheExprNode(std::string p) : Node(kTheExprNode, false), prop(p) {}
     virtual ~TheExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* LastStringChunkExprNode */
@@ -577,7 +582,7 @@ struct LastStringChunkExprNode : Node {
         string->parent = this;
     }
     virtual ~LastStringChunkExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* StringChunkCountExprNode */
@@ -592,7 +597,7 @@ struct StringChunkCountExprNode : Node {
         string->parent = this;
     }
     virtual ~StringChunkCountExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* MenuPropExprNode */
@@ -607,7 +612,7 @@ struct MenuPropExprNode : Node {
         menuID->parent = this;
     }
     virtual ~MenuPropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* MenuItemPropExprNode */
@@ -625,7 +630,7 @@ struct MenuItemPropExprNode : Node {
         itemID->parent = this;
     }
     virtual ~MenuItemPropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* SoundPropExprNode */
@@ -640,7 +645,7 @@ struct SoundPropExprNode : Node {
         soundID->parent = this;
     }
     virtual ~SoundPropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* SpritePropExprNode */
@@ -655,7 +660,7 @@ struct SpritePropExprNode : Node {
         spriteID->parent = this;
     }
     virtual ~SpritePropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* CastPropExprNode */
@@ -670,7 +675,7 @@ struct CastPropExprNode : Node {
         castID->parent = this;
     }
     virtual ~CastPropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* FieldPropExprNode */
@@ -685,7 +690,7 @@ struct FieldPropExprNode : Node {
         fieldID->parent = this;
     }
     virtual ~FieldPropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* ObjPropExprNode */
@@ -700,7 +705,7 @@ struct ObjPropExprNode : Node {
         obj->parent = this;
     }
     virtual ~ObjPropExprNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* ExitRepeatStmtNode */
@@ -708,7 +713,7 @@ struct ObjPropExprNode : Node {
 struct ExitRepeatStmtNode : Node {
     ExitRepeatStmtNode() : Node(kExitRepeatStmtNode, true) {}
     virtual ~ExitRepeatStmtNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* NextRepeatStmtNode */
@@ -716,7 +721,7 @@ struct ExitRepeatStmtNode : Node {
 struct NextRepeatStmtNode : Node {
     NextRepeatStmtNode() : Node(kNextRepeatStmtNode, true) {}
     virtual ~NextRepeatStmtNode() = default;
-    virtual std::string toString();
+    virtual std::string toString(bool summary);
 };
 
 /* AST */
@@ -730,7 +735,7 @@ struct AST {
         currentBlock = root->block.get();
     }
 
-    std::string toString();
+    std::string toString(bool summary);
     void addStatement(std::shared_ptr<Node> statement);
     void enterBlock(BlockNode *block);
     void exitBlock();

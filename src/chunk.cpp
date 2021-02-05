@@ -337,12 +337,9 @@ void ScriptChunk::translate(const std::vector<std::string> &names) {
     }
 }
 
-std::string ScriptChunk::toString() {
+std::string ScriptChunk::varDeclarations() {
     std::string res = "";
-    bool hasVarDeclaration = false;
-
     if (propertyNames.size() > 0) {
-        hasVarDeclaration = true;
         res += "property ";
         for (size_t i = 0; i < propertyNames.size(); i++) {
             if (i > 0)
@@ -352,7 +349,6 @@ std::string ScriptChunk::toString() {
         res += "\n";
     }
     if (globalNames.size() > 0) {
-        hasVarDeclaration = true;
         res += "global ";
         for (size_t i = 0; i < globalNames.size(); i++) {
             if (i > 0)
@@ -361,11 +357,25 @@ std::string ScriptChunk::toString() {
         }
         res += "\n";
     }
+    return res;
+}
 
+std::string ScriptChunk::scriptText() {
+    std::string res = varDeclarations();
     for (size_t i = 0; i < handlers.size(); i++) {
-        if (i > 0 || hasVarDeclaration)
+        if (res.size() > 0)
             res += "\n";
-        res += handlers[i]->ast->toString();
+        res += handlers[i]->ast->toString(false);
+    }
+    return res;
+}
+
+std::string ScriptChunk::bytecodeText() {
+    std::string res = varDeclarations();
+    for (size_t i = 0; i < handlers.size(); i++) {
+        if (res.size() > 0)
+            res += "\n";
+        res += handlers[i]->bytecodeText();
     }
     return res;
 }
