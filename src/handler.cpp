@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iomanip>
+#include <boost/format.hpp>
 
 #include "chunk.h"
 #include "lingo.h"
@@ -80,6 +81,14 @@ void Handler::readNames(const std::vector<std::string> &names) {
     }
 }
 
+std::shared_ptr<Node> Handler::peek() {
+    if (stack.empty())
+        return std::make_shared<ErrorNode>();
+    
+    auto res = stack.back();
+    return res;
+}
+
 std::shared_ptr<Node> Handler::pop() {
     if (stack.empty())
         return std::make_shared<ErrorNode>();
@@ -106,34 +115,101 @@ void Handler::registerGlobal(std::string name) {
     }
 }
 
+std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index, const std::vector<std::string> &names) {
+    if (index >= bytecodeArray.size() - 12)
+        return nullptr;
+    if (!(bytecodeArray[index + 1].opcode == kOpPushArgList && bytecodeArray[index + 1].obj == 1))
+        return nullptr;
+    if (!(bytecodeArray[index + 2].opcode == kOpCallExt && names[bytecodeArray[index + 2].obj] == "count"))
+        return nullptr;
+    if (!(bytecodeArray[index + 3].opcode == kOpPushInt41 && bytecodeArray[index + 3].obj == 1))
+        return nullptr;
+    if (!(bytecodeArray[index + 4].opcode == kOpPeek && bytecodeArray[index + 4].obj == 0))
+        return nullptr;
+    if (!(bytecodeArray[index + 5].opcode == kOpPeek && bytecodeArray[index + 5].obj == 2))
+        return nullptr;
+    if (!(bytecodeArray[index + 6].opcode == kOpLtEq))
+        return nullptr;
+    if (!(bytecodeArray[index + 7].opcode == kOpJmpIfZ))
+        return nullptr;
+
+    size_t endPos = bytecodeArray[index + 7].pos + 8 + bytecodeArray[index + 7].obj;
+
+    if (!(bytecodeArray[index + 8].opcode == kOpPeek && bytecodeArray[index + 8].obj == 2))
+        return nullptr;
+    if (!(bytecodeArray[index + 9].opcode == kOpPeek && bytecodeArray[index + 9].obj == 1))
+        return nullptr;
+    if (!(bytecodeArray[index + 10].opcode == kOpPushArgList && bytecodeArray[index + 10].obj == 2))
+        return nullptr;
+    if (!(bytecodeArray[index + 11].opcode == kOpCallExt && names[bytecodeArray[index + 11].obj] == "getAt"))
+        return nullptr;
+
+    std::string varName;
+    switch (bytecodeArray[index + 12].opcode) {
+        case kOpSetGlobal:
+            varName = names[bytecodeArray[index + 12].obj];
+            registerGlobal(varName);
+            break;
+        case kOpSetProp:
+            varName = names[bytecodeArray[index + 12].obj];
+            break;
+        case kOpSetParam:
+            varName = argumentNames[bytecodeArray[index + 12].obj / variableMultiplier()];
+            break;
+        case kOpSetLocal:
+            varName = localNames[bytecodeArray[index + 12].obj / variableMultiplier()];
+            break;
+        default:
+            return nullptr;
+    }
+
+    auto res = std::make_shared<RepeatWithInStmtNode>(varName);
+    res->block->endPos = endPos;
+    return res;
+}
+
 void Handler::translate(const std::vector<std::string> &names) {
     stack.clear();
     ast = std::make_unique<AST>(this);
-    for (size_t i = 0; i < bytecodeArray.size(); i++) {
+    size_t i = 0;
+    while (i < bytecodeArray.size()) {
         auto &bytecode = bytecodeArray[i];
         auto pos = bytecode.pos;
-        if (ast->currentBlock->endPos >= 0) {
-            // exit last block if at end
-            while (pos == ast->currentBlock->endPos) {
-                auto exitedBlock = ast->currentBlock;
-                auto blockParent = ast->currentBlock->parent;
-                ast->exitBlock();
-                if (!blockParent)
-                    continue;
-
-                if (blockParent->type == kIfStmtNode) {
-                    auto ifStatement = static_cast<IfStmtNode *>(blockParent);
+        // exit last block if at end
+        while (pos == ast->currentBlock->endPos) {
+            auto exitedBlock = ast->currentBlock;
+            auto ancestorStmt = ast->currentBlock->ancestorStatement();
+            ast->exitBlock();
+            if (ancestorStmt) {
+                if (ancestorStmt->type == kIfStmtNode) {
+                    auto ifStatement = static_cast<IfStmtNode *>(ancestorStmt);
                     if (ifStatement->ifType == kIfElse && exitedBlock == ifStatement->block1.get()) {
                         ast->enterBlock(ifStatement->block2.get());
+                    }
+                } else if (ancestorStmt->type == kCasesStmtNode) {
+                    auto casesStmt = static_cast<CasesStmtNode *>(ancestorStmt);
+                    auto caseNode = ast->currentBlock->currentCase;
+                    if (caseNode->expect == kCaseExpectOtherwise) {
+                        if (exitedBlock == caseNode->block.get()) {
+                            caseNode->otherwise = std::make_shared<BlockNode>();
+                            caseNode->otherwise->parent = caseNode;
+                            caseNode->otherwise->endPos = casesStmt->endPos;
+                            ast->enterBlock(caseNode->otherwise.get());
+                        } else {
+                            ast->currentBlock->currentCase = nullptr;
+                        }
+                    } else if (caseNode->expect == kCaseExpectPop) {
+                        ast->currentBlock->currentCase = nullptr;
                     }
                 }
             }
         }
-        translateBytecode(bytecode, i, names);
+        auto translateSize = translateBytecode(bytecode, i, names);
+        i += translateSize;
     }
 }
 
-void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vector<std::string> &names) {
+size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vector<std::string> &names) {
     std::shared_ptr<Node> comment = nullptr;
     std::shared_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
@@ -141,7 +217,7 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
     switch (bytecode.opcode) {
     case kOpRet:
         if (index == bytecodeArray.size() - 1) {
-            return; // end of handler
+            return 1; // end of handler
         }
         translation = std::make_shared<ExitStmtNode>();
         break;
@@ -370,18 +446,24 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             auto &nextBytecode = bytecodeArray[index + 1];
             auto &targetBytecode = bytecodeArray[bytecodePosMap[targetPos]];
             auto &targetPrevBytecode = bytecodeArray[index - 1];
-            auto blockParent = ast->currentBlock->parent;
+            auto ancestorStatement = ast->currentBlock->ancestorStatement();
 
-            if (blockParent && blockParent->type == kIfStmtNode) {
-                if (nextBytecode.pos == ast->currentBlock->endPos && targetPrevBytecode.opcode == kOpEndRepeat) {
-                    translation = std::make_shared<ExitRepeatStmtNode>();
-                } else if (targetBytecode.opcode == kOpEndRepeat) {
-                    translation = std::make_shared<NextRepeatStmtNode>();
-                } else if (nextBytecode.pos == ast->currentBlock->endPos) {
-                    auto ifStmt = static_cast<IfStmtNode *>(blockParent);
-                    ifStmt->ifType = kIfElse;
-                    ifStmt->block2->endPos = targetPos;
-                    return; // if statement amended, nothing to push
+            if (ancestorStatement) {
+                if (ancestorStatement->type == kIfStmtNode) {
+                    if (nextBytecode.pos == ast->currentBlock->endPos && targetPrevBytecode.opcode == kOpEndRepeat) {
+                        translation = std::make_shared<ExitRepeatStmtNode>();
+                    } else if (targetBytecode.opcode == kOpEndRepeat) {
+                        translation = std::make_shared<NextRepeatStmtNode>();
+                    } else if (nextBytecode.pos == ast->currentBlock->endPos) {
+                        auto ifStmt = static_cast<IfStmtNode *>(ancestorStatement);
+                        ifStmt->ifType = kIfElse;
+                        ifStmt->block2->endPos = targetPos;
+                        return 1; // if statement amended, nothing to push
+                    }
+                } else if (ancestorStatement->type == kCasesStmtNode) {
+                    auto casesStmt = static_cast<CasesStmtNode *>(ancestorStatement);
+                    casesStmt->endPos = targetPos;
+                    return 1;
                 }
             }
         }
@@ -390,11 +472,13 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
         {
             auto targetPos = bytecode.pos - bytecode.obj;
             auto i = bytecodePosMap[targetPos];
-            while (bytecodeArray[i].opcode != kOpJmpIfZ) i++;
+            while (bytecodeArray[i].opcode != kOpJmpIfZ) i++; // TODO: See if this can be removed
             auto &targetBytecode = bytecodeArray[i];
-            auto ifStmt = std::static_pointer_cast<IfStmtNode>(targetBytecode.translation);
-            ifStmt->ifType = kRepeatWhile;
-            return; // if statement amended, nothing to push
+            if (targetBytecode.translation && targetBytecode.translation->type == kIfStmtNode) {
+                auto ifStmt = std::static_pointer_cast<IfStmtNode>(targetBytecode.translation);
+                ifStmt->ifType = kRepeatWhile;
+            }
+            return 1; // if statement amended, nothing to push
         }
         break;
     case kOpJmpIfZ:
@@ -631,6 +715,99 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
             translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
         }
         break;
+    case kOpPeek:
+        {
+            // This op denotes the beginning of a 'repeat with ... in list' statement or a case in a cases statement.
+
+            // In a 'repeat with ... in list' statement, this peeked value is the list.
+            // In a cases statement, this is the switch expression.
+            auto peekedValue = peek();
+
+            auto prevCase = ast->currentBlock->currentCase;
+            if (!prevCase) {
+                // Try to a build a 'repeat with ... in list' statement with the following bytecode.
+                auto repeatWithIn = buildRepeatWithIn(index, names);
+                if (repeatWithIn) {
+                    stack.push_back(std::make_shared<TempNode>());
+                    stack.push_back(std::make_shared<TempNode>());
+                    repeatWithIn->list = std::move(peekedValue);
+                    bytecode.translation = repeatWithIn;
+                    ast->addStatement(repeatWithIn);
+                    ast->enterBlock(repeatWithIn->block.get());
+                    return 13;
+                }
+            }
+
+            // This must be a case. Find the comparison against the switch expression.
+            auto originalStackSize = stack.size();
+            size_t currIndex = index + 1;
+            Bytecode *currBytecode = &bytecodeArray[currIndex];
+            do {
+                translateBytecode(*currBytecode, currIndex, names);
+                currIndex += 1;
+                currBytecode = &bytecodeArray[currIndex];
+            } while (!(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq)));
+
+            // If the comparison is <>, this is followed by another, equivalent case.
+            // (e.g. this could be case1 in `case1, case2: statement`)
+            bool notEq = (currBytecode->opcode == kOpNtEq);
+            std::shared_ptr<Node> caseValue = pop(); // This is the value the switch expression is compared against.
+
+            currIndex += 1;
+            currBytecode = &bytecodeArray[currIndex];
+            if (currBytecode->opcode != kOpJmpIfZ) {
+                throw new std::runtime_error(boost::str(
+                    boost::format("Expected jmpifz at index %zu") % currIndex
+                ));
+            }
+
+            auto jmpPos = currBytecode->pos + currBytecode->obj;
+            auto &targetBytecode = bytecodeArray[bytecodePosMap[jmpPos]];
+            CaseExpect expect;
+            if (notEq)
+                expect = kCaseExpectOr; // Expect an equivalent case after this one.
+            else if (targetBytecode.opcode == kOpPeek)
+                expect = kCaseExpectNext; // Expect a different case after this one.
+            else if (targetBytecode.opcode == kOpPop)
+                expect = kCaseExpectPop; // Expect the end of the switch statement (where the switch expression is popped off the stack).
+            else
+                expect = kCaseExpectOtherwise; // Expect an 'otherwise' block.
+
+            auto currCase = std::make_shared<CaseNode>(std::move(caseValue), expect);
+
+            ast->currentBlock->currentCase = currCase.get();
+
+            if (!prevCase) {
+                auto casesStmt = std::make_shared<CasesStmtNode>(std::move(peekedValue));
+                casesStmt->firstCase = currCase;
+                currCase->parent = casesStmt.get();
+                bytecode.translation = casesStmt;
+                ast->addStatement(casesStmt);
+            } else if (prevCase->expect == kCaseExpectOr) {
+                prevCase->nextOr = currCase;
+                currCase->parent = prevCase;
+            } else if (prevCase->expect == kCaseExpectNext) {
+                prevCase->nextCase = currCase;
+                currCase->parent = prevCase;
+            }
+
+            // The block doesn't start until the after last equivalent case,
+            // so don't create a block yet if we're expecting an equivalent case.
+            if (currCase->expect != kCaseExpectOr) {
+                currCase->block = std::make_shared<BlockNode>();
+                currCase->block->parent = currCase.get();
+                currCase->block->endPos = jmpPos;
+                ast->enterBlock(currCase->block.get());
+            }
+
+            return currIndex - index + 1;
+        }
+        break;
+    case kOpPop:
+        for (size_t i = 0; i < bytecode.obj; i++) {
+            pop();
+        }
+        return 1;
     case kOpGetMovieInfo:
         {
             pop(); // FIXME: What is this?
@@ -668,6 +845,8 @@ void Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vec
 
     if (nextBlock)
         ast->enterBlock(nextBlock);
+
+    return 1;
 }
 
 std::string posToString(int32_t pos) {

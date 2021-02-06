@@ -68,6 +68,8 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpSetMovieProp,      "setmovieprop" },
     { kOpGetObjProp,        "getobjprop" },
     { kOpSetObjProp,        "setobjprop" },
+    { kOpPeek,              "peek" },
+    { kOpPop,               "pop" },
     { kOpGetMovieInfo,      "getmovieinfo" },
     { kOpCallObj,           "objcall" },
     { kOpPushInt6E,         "pushint6E" }
@@ -335,25 +337,19 @@ void AST::enterBlock(BlockNode *block) {
 }
 
 void AST::exitBlock() {
-    auto parent = currentBlock->parent; // handler
-    if (!parent) {
+    auto ancestorStatement = currentBlock->ancestorStatement();
+    if (!ancestorStatement) {
         currentBlock = nullptr;
         return;
     }
 
-    auto grandparent = parent->parent; // block
-    if (!grandparent) {
+    auto block = ancestorStatement->parent;
+    if (!block || block->type != kBlockNode) {
         currentBlock = nullptr;
         return;
     }
 
-    auto newBlock = static_cast<BlockNode *>(grandparent);
-    if (!newBlock) {
-        currentBlock = nullptr;
-        return;
-    }
-
-    currentBlock = newBlock;
+    currentBlock = static_cast<BlockNode *>(block);
 }
 
 /* Node */
@@ -366,10 +362,24 @@ std::shared_ptr<Datum> Node::getValue() {
     return std::make_shared<Datum>();
 }
 
+Node *Node::ancestorStatement() {
+    Node *ancestor = parent;
+    while (ancestor && !ancestor->isStatement) {
+        ancestor = ancestor->parent;
+    }
+    return ancestor;
+}
+
 /* ErrorNode */
 
 std::string ErrorNode::toString(bool summary) {
     return "ERROR";
+}
+
+/* TempNode */
+
+std::string TempNode::toString(bool summary) {
+    return "TEMP";
 }
 
 /* CommentNode */
@@ -537,6 +547,43 @@ std::string IfStmtNode::toString(bool summary) {
         } else {
             res += "end if";
         }
+    }
+    return res;
+}
+
+/* RepeatWithInStmtNode */
+
+std::string RepeatWithInStmtNode::toString(bool summary) {
+    std::string res = "repeat with " + varName + " in " + list->toString(summary);
+    if (!summary) {
+        res += "\n" + block->toString(summary) + "end repeat";
+    }
+    return res;
+}
+
+/* CaseNode */
+
+std::string CaseNode::toString(bool summary) {
+    std::string res = value->toString(summary);
+    if (nextOr) {
+        res += ", " + nextOr->toString(summary);
+    } else {
+        res += ":\n" + block->toString(summary);
+    }
+    if (nextCase) {
+        res += nextCase->toString(summary);
+    } else if (otherwise) {
+        res += "otherwise:\n" + otherwise->toString(summary);
+    }
+    return res;
+}
+
+/* CasesStmtNode */
+
+std::string CasesStmtNode::toString(bool summary) {
+    std::string res = "case " + value->toString(summary) + " of";
+    if (!summary) {
+        res += "\n" + indent(firstCase->toString(summary)) + "end case";
     }
     return res;
 }

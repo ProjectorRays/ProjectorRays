@@ -15,10 +15,11 @@ enum IfType {
 };
 
 struct AST;
-struct BlockNode;
 struct Bytecode;
+struct CaseNode;
 struct Node;
 struct ReadStream;
+struct RepeatWithInStmtNode;
 struct ScriptChunk;
 
 typedef unsigned int uint;
@@ -84,6 +85,8 @@ enum OpCode {
     kOpSetMovieProp     = 0x60,
     kOpGetObjProp       = 0x61,
     kOpSetObjProp       = 0x62,
+    kOpPeek             = 0x64,
+    kOpPop              = 0x65,
     kOpGetMovieInfo     = 0x66,
     kOpCallObj          = 0x67,
     kOpPushInt6E        = 0x6e
@@ -111,6 +114,7 @@ enum ChunkType {
 enum NodeType {
     kNoneNode,
     kErrorNode,
+    kTempNode,
     kCommentNode,
     kLiteralNode,
     kBlockNode,
@@ -127,6 +131,9 @@ enum NodeType {
     kVarNode,
     kAssignmentStmtNode,
     kIfStmtNode,
+    kRepeatWithInStmtNode,
+    kCasesStmtNode,
+    kCaseNode,
     kCallNode,
     kObjCallNode,
     kTheExprNode,
@@ -141,6 +148,13 @@ enum NodeType {
     kObjPropExprNode,
     kExitRepeatStmtNode,
     kNextRepeatStmtNode
+};
+
+enum CaseExpect {
+    kCaseExpectPop,
+    kCaseExpectOr,
+    kCaseExpectNext,
+    kCaseExpectOtherwise
 };
 
 /* Lingo */
@@ -239,11 +253,13 @@ struct Handler {
     void readData(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
     void readNames(const std::vector<std::string> &names);
+    std::shared_ptr<Node> peek();
     std::shared_ptr<Node> pop();
     int variableMultiplier();
     void registerGlobal(std::string name);
+    std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index, const std::vector<std::string> &names);
     void translate(const std::vector<std::string> &names);
-    void translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
+    size_t translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
     std::string bytecodeText();
 };
 
@@ -273,6 +289,7 @@ struct Node {
     virtual ~Node() = default;
     virtual std::string toString(bool summary);
     virtual std::shared_ptr<Datum> getValue();
+    Node *ancestorStatement();
 };
 
 /* ErrorNode */
@@ -280,6 +297,14 @@ struct Node {
 struct ErrorNode : Node {
     ErrorNode() : Node(kErrorNode, false) {};
     virtual ~ErrorNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+/* TempNode */
+
+struct TempNode : Node {
+    TempNode() : Node(kTempNode, false) {};
+    virtual ~TempNode() = default;
     virtual std::string toString(bool summary);
 };
 
@@ -310,9 +335,12 @@ struct LiteralNode : Node {
 
 struct BlockNode : Node {
     std::vector<std::shared_ptr<Node>> children;
-    int32_t endPos;
 
-    BlockNode() : Node(kBlockNode, false), endPos(-1) {}
+    // for use during translation:
+    int32_t endPos;
+    CaseNode *currentCase;
+
+    BlockNode() : Node(kBlockNode, false), endPos(-1), currentCase(nullptr) {}
     virtual ~BlockNode() = default;
     virtual std::string toString(bool summary);
     void addChild(std::shared_ptr<Node> child);
@@ -522,6 +550,60 @@ struct IfStmtNode : Node {
     virtual std::string toString(bool summary);
 };
 
+/* RepeatWithInStmtNode */
+
+struct RepeatWithInStmtNode : Node {
+    std::string varName;
+    std::shared_ptr<Node> list;
+    std::shared_ptr<BlockNode> block;
+
+    RepeatWithInStmtNode(std::string v) : Node(kRepeatWithInStmtNode, true) {
+        varName = v;
+        block = std::make_shared<BlockNode>();
+        block->parent = this;
+    }
+    virtual ~RepeatWithInStmtNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+/* CaseNode */
+
+struct CaseNode : Node {
+    std::shared_ptr<Node> value;
+    CaseExpect expect;
+
+    std::shared_ptr<CaseNode> nextOr;
+
+    std::shared_ptr<CaseNode> nextCase;
+    std::shared_ptr<BlockNode> block;
+    std::shared_ptr<BlockNode> otherwise;
+
+    CaseNode(std::shared_ptr<Node> v, CaseExpect e) : Node(kCaseNode, false), expect(e) {
+        value = std::move(v);
+        value->parent = this;
+    }
+    virtual ~CaseNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+
+/* CasesStmtNode */
+
+struct CasesStmtNode : Node {
+    std::shared_ptr<Node> value;
+    std::shared_ptr<CaseNode> firstCase;
+
+    // for use during translation:
+    int32_t endPos;
+
+    CasesStmtNode(std::shared_ptr<Node> v) : Node(kCasesStmtNode, true), endPos(-1) {
+        value = std::move(v);
+        value->parent = this;
+    }
+    virtual ~CasesStmtNode() = default;
+    virtual std::string toString(bool summary);
+};
+
 /* CallNode */
 
 struct CallNode : Node {
@@ -727,7 +809,7 @@ struct AST {
     std::shared_ptr<HandlerNode> root;
     BlockNode *currentBlock;
 
-    AST(Handler *handler) {
+    AST(Handler *handler){
         root = std::make_shared<HandlerNode>(handler);
         currentBlock = root->block.get();
     }
