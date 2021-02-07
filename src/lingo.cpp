@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <limits>
 
 #include "lingo.h"
 #include "util.h"
@@ -279,10 +280,10 @@ std::string Datum::toString(bool summary) {
     case kDatumFloat:
         {
             std::stringstream ss;
-            ss << std::noshowpoint << f;
+            ss << std::fixed << std::setprecision(std::numeric_limits<double>::max_digits10) << f;
             std::string res = ss.str();
-            if (res.find('.') == std::string::npos) {
-                res += ".0";
+            while (res[res.size() - 1] == '0' && res[res.size() - 2] != '.') {
+                res.pop_back();
             }
             return res;
         }
