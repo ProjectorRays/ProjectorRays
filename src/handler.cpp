@@ -494,13 +494,23 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
     case kOpCallLocal:
         {
             auto argList = pop();
-            translation = std::make_shared<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
+            auto call = std::make_shared<CallExprNode>(script->handlers[bytecode.obj]->name, std::move(argList));
+            if (call->argList->getValue()->type == kDatumArgListNoRet) {
+                translation = std::make_shared<ExprStmtNode>(std::move(call));
+            } else {
+                translation = std::move(call);
+            }
         }
         break;
     case kOpCallExt:
         {
             auto argList = pop();
-            translation = std::make_shared<CallNode>(names[bytecode.obj], std::move(argList));
+            auto call = std::make_shared<CallExprNode>(names[bytecode.obj], std::move(argList));
+            if (call->argList->getValue()->type == kDatumArgListNoRet) {
+                translation = std::make_shared<ExprStmtNode>(std::move(call));
+            } else {
+                translation = std::move(call);
+            }
         }
         break;
     case kOpCallObjOld:
@@ -818,7 +828,12 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
     case kOpCallObj:
         {
             auto argList = pop();
-            translation = std::make_shared<ObjCallNode>(names[bytecode.obj], std::move(argList));
+            auto call = std::make_shared<ObjCallExprNode>(names[bytecode.obj], std::move(argList));
+            if (call->argList->getValue()->type == kDatumArgListNoRet) {
+                translation = std::make_shared<ExprStmtNode>(std::move(call));
+            } else {
+                translation = std::move(call);
+            }
         }
         break;
     default:
@@ -838,10 +853,10 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
         translation = std::make_shared<ErrorNode>();
 
     bytecode.translation = translation;
-    if (translation->isStatement) {
-        ast->addStatement(std::move(translation));
-    } else {
+    if (translation->isExpression) {
         stack.push_back(std::move(translation));
+    } else {
+        ast->addStatement(std::move(translation));
     }
 
     if (nextBlock)
@@ -888,10 +903,10 @@ std::string Handler::bytecodeText() {
                 line += ".";
             }
             line += " ";
-            if (bytecode.translation->isStatement)
-                line += bytecode.translation->toString(true);
-            else
+            if (bytecode.translation->isExpression)
                 line += "<" + bytecode.translation->toString(true) + ">";
+            else
+                line += bytecode.translation->toString(true);
         }
         line += "\n";
         res += line;
