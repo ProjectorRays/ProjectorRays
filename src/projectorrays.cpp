@@ -13,7 +13,7 @@
 
 using namespace ProjectorRays;
 
-std::shared_ptr<std::vector<uint8_t>> readFile(std::string fileName) {
+std::shared_ptr<std::vector<uint8_t>> readFile(const std::string &fileName) {
     std::ifstream f;
     f.open(fileName, std::ios::in | std::ios::binary);
     f.seekg(0, std::ios::end);
@@ -25,7 +25,7 @@ std::shared_ptr<std::vector<uint8_t>> readFile(std::string fileName) {
     return buf;
 }
 
-void writeFile(std::string fileName, std::string contents) {
+void writeFile(const std::string &fileName, const std::string &contents) {
     std::ofstream f;
     f.open(fileName, std::ios::out);
     f << contents;

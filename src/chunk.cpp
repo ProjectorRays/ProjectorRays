@@ -17,7 +17,7 @@ void CastChunk::read(ReadStream &stream) {
     }
 }
 
-void CastChunk::populate(std::string castName, int32_t id, uint16_t minMember) {
+void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMember) {
     name = castName;
 
     for (const auto &entry : movie->keyTable->entries) {

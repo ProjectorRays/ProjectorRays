@@ -256,7 +256,7 @@ struct Handler {
     std::shared_ptr<Node> peek();
     std::shared_ptr<Node> pop();
     int variableMultiplier();
-    void registerGlobal(std::string name);
+    void registerGlobal(const std::string &name);
     std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index, const std::vector<std::string> &names);
     void translate(const std::vector<std::string> &names);
     size_t translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);

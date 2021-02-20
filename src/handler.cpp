@@ -108,7 +108,7 @@ int Handler::variableMultiplier() {
     return 6;
 }
 
-void Handler::registerGlobal(std::string name) {
+void Handler::registerGlobal(const std::string &name) {
     if (std::find(script->globalNames.begin(), script->globalNames.end(), name) == script->globalNames.end()
             && std::find(globalNames.begin(), globalNames.end(), name) == globalNames.end()) {
         globalNames.push_back(name);

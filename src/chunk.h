@@ -58,7 +58,7 @@ struct CastChunk : Chunk {
     CastChunk(Movie *m) : Chunk(m) {}
     virtual ~CastChunk() = default;
     virtual void read(ReadStream &stream);
-    void populate(std::string castName, int32_t id, uint16_t minMember);
+    void populate(const std::string &castName, int32_t id, uint16_t minMember);
 };
 
 struct CastListChunk : ListChunk {
