@@ -7,11 +7,13 @@
 #include <string>
 #include <vector>
 
-#include "subchunk.h" // FIXME: get rid of header dependency
+#include "castmember.h"
+#include "subchunk.h"
 #include "util.h"
 
 namespace ProjectorRays {
 
+struct CastMember;
 struct Handler;
 struct LiteralStore;
 struct Movie;
@@ -71,22 +73,12 @@ struct CastListChunk : ListChunk {
     virtual void read(ReadStream &stream);
 };
 
-enum CastMemberType {
-    kBitmapCast = 0x01,
-    kFilmLoopCast = 0x02,
-    kPaletteCast = 0x04,
-    kAudioCast = 0x06,
-    kButtonCast = 0x07,
-    kShapeCast = 0x08,
-    kScriptCast = 0x0b,
-    kXtraCast = 0x0f
-};
-
 struct CastMemberChunk : Chunk {
-    uint32_t type;
+    MemberType type;
     uint32_t infoLen;
     uint32_t specificDataLen;
     std::shared_ptr<CastInfoChunk> info;
+    std::unique_ptr<CastMember> member;
 
     uint16_t id;
     ScriptChunk *script;

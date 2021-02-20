@@ -1,3 +1,4 @@
+#include "castmember.h"
 #include "chunk.h"
 #include "lingo.h"
 #include "movie.h"
@@ -75,8 +76,10 @@ void CastListChunk::read(ReadStream &stream) {
 void CastMemberChunk::read(ReadStream &stream) {
     stream.endianness = kBigEndian;
 
+    std::unique_ptr<ReadStream> specificStream;
+
     if (movie->version >= 500) {
-        type = stream.readUint32();
+        type = static_cast<MemberType>(stream.readUint32());
         infoLen = stream.readUint32();
         specificDataLen = stream.readUint32();
 
@@ -86,20 +89,38 @@ void CastMemberChunk::read(ReadStream &stream) {
         info->read(*infoStream);
 
         // specific data
-        // TODO
+        specificStream = stream.readBytes(specificDataLen);
     } else {
-        type = 0;
         specificDataLen = stream.readUint16();
         infoLen = stream.readUint32();
 
+        // these bytes are common but stored in the specific data
+        uint32_t specificDataLeft = specificDataLen;
+        type = static_cast<MemberType>(stream.readUint8());
+        specificDataLeft -= 1;
+        if (specificDataLeft) {
+            /* uint8_t flags1 = */ stream.readUint8();
+            specificDataLeft -= 1;
+        }
+
         // specific data
-        stream.skip(specificDataLen);
+        specificStream = stream.readBytes(specificDataLeft);
 
         // info
         std::unique_ptr<ReadStream> infoStream = stream.readBytes(infoLen);
         info = std::make_shared<CastInfoChunk>(movie);
         info->read(*infoStream);
     }
+
+    switch (type) {
+    case kScriptMember:
+        member = std::make_unique<ScriptMember>(movie);
+        break;
+    default:
+        member = std::make_unique<CastMember>(movie, type);
+        break;
+    }
+    member->read(*specificStream);
 }
 
 /* CastInfoChunk */

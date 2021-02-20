@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "castmember.h"
 #include "chunk.h"
 #include "lingo.h"
 #include "stream.h"
@@ -48,7 +49,25 @@ int main(int argc, char *argv[]) {
             std::string id;
             CastMemberChunk *member = it->second->member;
             if (member) {
-                scriptType = "CastScript";
+                if (member->type == kScriptMember) {
+                    ScriptMember *scriptMember = static_cast<ScriptMember *>(member->member.get());
+                    switch (scriptMember->scriptType) {
+                    case kScoreScript:
+                        scriptType = (movie->version >= 700) ? "BehaviorScript" : "ScoreScript";
+                        break;
+                    case kMovieScript:
+                        scriptType = "MovieScript";
+                        break;
+                    case kParentScript:
+                        scriptType = "ParentScript";
+                        break;
+                    default:
+                        scriptType = "UnknownScript";
+                        break;
+                    }
+                } else {
+                    scriptType = "CastScript";
+                }
                 id = member->info->name.empty()
                     ? std::to_string(member->id)
                     : member->info->name;
