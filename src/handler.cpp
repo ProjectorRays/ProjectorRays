@@ -761,7 +761,8 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
                 ));
             }
 
-            auto jmpPos = currBytecode->pos + currBytecode->obj;
+            auto &jmpifz = *currBytecode;
+            auto jmpPos = jmpifz.pos + jmpifz.obj;
             auto &targetBytecode = bytecodeArray[bytecodePosMap[jmpPos]];
             CaseExpect expect;
             if (notEq)
@@ -774,7 +775,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
                 expect = kCaseExpectOtherwise; // Expect an 'otherwise' block.
 
             auto currCase = std::make_shared<CaseNode>(std::move(caseValue), expect);
-
+            jmpifz.translation = currCase;
             ast->currentBlock->currentCase = currCase.get();
 
             if (!prevCase) {

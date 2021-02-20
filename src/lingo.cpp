@@ -565,16 +565,33 @@ std::string RepeatWithInStmtNode::toString(bool summary) {
 /* CaseNode */
 
 std::string CaseNode::toString(bool summary) {
-    std::string res = value->toString(summary);
-    if (nextOr) {
-        res += ", " + nextOr->toString(summary);
+    std::string res;
+    if (summary) {
+        res += "(case) ";
+        if (parent->type == kCaseNode) {
+            auto parentCase = static_cast<CaseNode *>(parent);
+            if (parentCase->nextOr.get() == this) {
+                res += "..., ";
+            }
+        }
+        res += value->toString(summary);
+        if (nextOr) {
+            res += ", ...";
+        } else {
+            res += ":";
+        }
     } else {
-        res += ":\n" + block->toString(summary);
-    }
-    if (nextCase) {
-        res += nextCase->toString(summary);
-    } else if (otherwise) {
-        res += "otherwise:\n" + otherwise->toString(summary);
+        res += value->toString(summary);
+        if (nextOr) {
+            res += ", " + nextOr->toString(summary);
+        } else {
+            res += ":\n" + block->toString(summary);
+        }
+        if (nextCase) {
+            res += nextCase->toString(summary);
+        } else if (otherwise) {
+            res += "otherwise:\n" + otherwise->toString(summary);
+        }
     }
     return res;
 }
