@@ -494,23 +494,13 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
     case kOpCallLocal:
         {
             auto argList = pop();
-            auto call = std::make_shared<CallExprNode>(script->handlers[bytecode.obj]->name, std::move(argList));
-            if (call->argList->getValue()->type == kDatumArgListNoRet) {
-                translation = std::make_shared<ExprStmtNode>(std::move(call));
-            } else {
-                translation = std::move(call);
-            }
+            translation = std::make_shared<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
         }
         break;
     case kOpCallExt:
         {
             auto argList = pop();
-            auto call = std::make_shared<CallExprNode>(names[bytecode.obj], std::move(argList));
-            if (call->argList->getValue()->type == kDatumArgListNoRet) {
-                translation = std::make_shared<ExprStmtNode>(std::move(call));
-            } else {
-                translation = std::move(call);
-            }
+            translation = std::make_shared<CallNode>(names[bytecode.obj], std::move(argList));
         }
         break;
     case kOpCallObjOld:
@@ -828,12 +818,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
     case kOpCallObj:
         {
             auto argList = pop();
-            auto call = std::make_shared<ObjCallExprNode>(names[bytecode.obj], std::move(argList));
-            if (call->argList->getValue()->type == kDatumArgListNoRet) {
-                translation = std::make_shared<ExprStmtNode>(std::move(call));
-            } else {
-                translation = std::move(call);
-            }
+            translation = std::make_shared<ObjCallNode>(names[bytecode.obj], std::move(argList));
         }
         break;
     default:

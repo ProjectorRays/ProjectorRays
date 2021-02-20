@@ -371,12 +371,6 @@ Node *Node::ancestorStatement() {
     return ancestor;
 }
 
-/* ExptStmtNode */
-
-std::string ExprStmtNode::toString(bool summary) {
-    return expr->toString(summary);
-}
-
 /* ErrorNode */
 
 std::string ErrorNode::toString(bool summary) {
@@ -612,15 +606,15 @@ std::string CasesStmtNode::toString(bool summary) {
     return res;
 }
 
-/* CallExprNode */
+/* CallNode */
 
-std::string CallExprNode::toString(bool summary) {
+std::string CallNode::toString(bool summary) {
     return name + "(" + argList->toString(summary) + ")";
 }
 
-/* ObjCallExprNode */
+/* ObjCallNode */
 
-std::string ObjCallExprNode::toString(bool summary) {
+std::string ObjCallNode::toString(bool summary) {
     auto rawArgs = argList->getValue()->l;
     std::string res = rawArgs[0]->toString(summary) + "." + name + "(";
     for (size_t i = 1; i < rawArgs.size(); i++) {

@@ -113,7 +113,6 @@ enum ChunkType {
 
 enum NodeType {
     kNoneNode,
-    kExprStmtNode,
     kErrorNode,
     kTempNode,
     kCommentNode,
@@ -135,8 +134,8 @@ enum NodeType {
     kRepeatWithInStmtNode,
     kCasesStmtNode,
     kCaseNode,
-    kCallExprNode,
-    kObjCallExprNode,
+    kCallNode,
+    kObjCallNode,
     kTheExprNode,
     kLastStringChunkExprNode,
     kStringChunkCountExprNode,
@@ -320,17 +319,6 @@ struct LabelNode : Node {
         isLabel = true;
     }
     virtual ~LabelNode() = default;
-};
-
-/* ExprStmtNode */
-
-struct ExprStmtNode : StmtNode {
-    std::shared_ptr<Node> expr;
-    ExprStmtNode(std::shared_ptr<Node> e) : StmtNode(kExprStmtNode) {
-        expr = std::move(e);
-    }
-    virtual ~ExprStmtNode() = default;
-    virtual std::string toString(bool summary);
 };
 
 /* ErrorNode */
@@ -645,38 +633,41 @@ struct CasesStmtNode : StmtNode {
     virtual std::string toString(bool summary);
 };
 
-/* CallExprNode */
+/* CallNode */
 
-struct CallExprNode : ExprNode {
+struct CallNode : Node {
     std::string name;
     std::shared_ptr<Node> argList;
 
-    CallExprNode(std::string n, std::shared_ptr<Node> a) : ExprNode(kCallExprNode) {
+    CallNode(std::string n, std::shared_ptr<Node> a) : Node(kCallNode) {
         name = n;
         argList = std::move(a);
         argList->parent = this;
         if (argList->getValue()->type == kDatumArgListNoRet)
             isStatement = true;
+        else
+            isExpression = true;
     }
-    virtual ~CallExprNode() = default;
+    virtual ~CallNode() = default;
     virtual std::string toString(bool summary);
 };
 
-/* ObjCallExprNode */
+/* ObjCallNode */
 
-struct ObjCallExprNode : ExprNode {
+struct ObjCallNode : Node {
     std::string name;
     std::shared_ptr<Node> argList;
 
-    ObjCallExprNode(std::string n, std::shared_ptr<Node> a)
-        : ExprNode(kObjCallExprNode) {
+    ObjCallNode(std::string n, std::shared_ptr<Node> a) : Node(kObjCallNode) {
         name = n;
         argList = std::move(a);
         argList->parent = this;
         if (argList->getValue()->type == kDatumArgListNoRet)
             isStatement = true;
+        else
+            isExpression = true;
     }
-    virtual ~ObjCallExprNode() = default;
+    virtual ~ObjCallNode() = default;
     virtual std::string toString(bool summary);
 };
 
