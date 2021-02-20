@@ -649,6 +649,7 @@ struct CallNode : Node {
             isExpression = true;
     }
     virtual ~CallNode() = default;
+    bool noParens();
     virtual std::string toString(bool summary);
 };
 

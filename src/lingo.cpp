@@ -608,7 +608,31 @@ std::string CasesStmtNode::toString(bool summary) {
 
 /* CallNode */
 
+bool CallNode::noParens() {
+    if (isStatement) {
+        // TODO: Make a complete list of commonly paren-less commands
+        if (name == "put")
+            return true;
+        if (name == "return")
+            return true;
+    }
+
+    return false;
+}
+
 std::string CallNode::toString(bool summary) {
+    if (isExpression && argList->getValue()->l.size() == 0) {
+        if (name == "pi")
+            return "PI";
+        if (name == "space")
+            return "SPACE";
+        if (name == "void")
+            return "VOID";
+    }
+
+    if (noParens())
+        return name + " " + argList->toString(summary);
+
     return name + "(" + argList->toString(summary) + ")";
 }
 
