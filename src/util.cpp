@@ -55,4 +55,30 @@ int humanVersion(int ver) {
     return 200;
 }
 
+std::string cleanFileName(const std::string &fileName) {
+    // Replace any characters that are forbidden in a Windows file name
+    // https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+
+    std::string res;
+    for (char ch : fileName) {
+        switch (ch) {
+        case '<':
+        case '>':
+        case ':':
+        case '"':
+        case '/':
+        case '\\':
+        case '|':
+        case '?':
+        case '*':
+            res += '_';
+            break;
+        default:
+            res += ch;
+            break;
+        }
+    }
+    return res;
+}
+
 }
