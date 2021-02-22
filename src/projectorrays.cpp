@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
                     ScriptMember *scriptMember = static_cast<ScriptMember *>(member->member.get());
                     switch (scriptMember->scriptType) {
                     case kScoreScript:
-                        scriptType = (movie->version >= 700) ? "BehaviorScript" : "ScoreScript";
+                        scriptType = (movie->version >= 600) ? "BehaviorScript" : "ScoreScript";
                         break;
                     case kMovieScript:
                         scriptType = "MovieScript";
