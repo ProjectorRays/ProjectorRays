@@ -11,7 +11,7 @@
 namespace ProjectorRays {
 
 struct Datum;
-struct ReadStream;
+class ReadStream;
 
 struct CastListEntry {
     std::string name;

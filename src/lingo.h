@@ -18,7 +18,7 @@ struct AST;
 struct Bytecode;
 struct CaseNode;
 struct Node;
-struct ReadStream;
+class ReadStream;
 struct RepeatWithInStmtNode;
 struct ScriptChunk;
 

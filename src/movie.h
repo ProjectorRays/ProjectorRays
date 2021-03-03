@@ -12,7 +12,7 @@ namespace ProjectorRays {
 
 struct Chunk;
 // struct Cast;
-struct ReadStream;
+class ReadStream;
 
 struct ChunkInfo {
     int32_t id;

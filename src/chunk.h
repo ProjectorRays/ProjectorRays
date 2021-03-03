@@ -16,7 +16,7 @@ namespace ProjectorRays {
 struct CastMember;
 struct Handler;
 struct LiteralStore;
-struct Movie;
+class Movie;
 
 struct CastInfoChunk;
 struct CastMemberChunk;
