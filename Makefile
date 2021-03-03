@@ -1,6 +1,7 @@
 CXXFLAGS=-std=c++17 -Wall -Wextra
 
 OBJS = \
+	src/castmember.o \
 	src/chunk.o \
 	src/handler.o \
 	src/lingo.o \
