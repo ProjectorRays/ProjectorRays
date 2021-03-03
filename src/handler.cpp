@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iomanip>
+#include <sstream>
 #include <boost/format.hpp>
 
 #include "chunk.h"

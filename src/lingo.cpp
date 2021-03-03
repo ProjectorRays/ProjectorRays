@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <limits>
+#include <sstream>
 
 #include "lingo.h"
 #include "util.h"
