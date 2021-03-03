@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
             }
             std::string fileName = cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
             writeFile(fileName + ".lingo", it->second->scriptText());
-            writeFile(fileName + ".lbc", it->second->bytecodeText());
+            writeFile(fileName + ".lasm", it->second->bytecodeText());
         }
     }
 
