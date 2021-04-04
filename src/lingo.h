@@ -279,7 +279,7 @@ struct Handler {
 struct Bytecode {
     uint8_t opID;
     OpCode opcode;
-    uint32_t obj;
+    int32_t obj;
     int32_t pos;
     std::shared_ptr<Node> translation;
 

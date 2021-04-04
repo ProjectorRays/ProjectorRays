@@ -41,11 +41,11 @@ void Handler::readData(ReadStream &stream) {
         // instructions can be one, two or three bytes
         auto obj = 0;
         if (op >= 0xc0) {
-            obj = stream.readUint24();
+            obj = stream.readInt32();
         } else if (op >= 0x80) {
-            obj = stream.readUint16();
+            obj = stream.readInt16();
         } else if (op >= 0x40) {
-            obj = stream.readUint8();
+            obj = stream.readInt8();
         }
         // read the first byte to convert to an opcode
         Bytecode bytecode(op, obj, pos - compiledOffset);
@@ -852,7 +852,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
         }
         break;
     case kOpPop:
-        for (size_t i = 0; i < bytecode.obj; i++) {
+        for (int i = 0; i < bytecode.obj; i++) {
             pop();
         }
         return 1;
