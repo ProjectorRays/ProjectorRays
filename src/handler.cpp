@@ -814,7 +814,13 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 translateBytecode(*currBytecode, currIndex);
                 currIndex += 1;
                 currBytecode = &bytecodeArray[currIndex];
-            } while (!(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq)));
+            } while (
+                currIndex < bytecodeArray.size()
+                && !(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq))
+            );
+            if (currIndex >= bytecodeArray.size()) {
+                throw new std::runtime_error("kOpPeek: Out of bounds!");
+            }
 
             // If the comparison is <>, this is followed by another, equivalent case.
             // (e.g. this could be case1 in `case1, case2: statement`)
@@ -822,6 +828,9 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             std::shared_ptr<Node> caseValue = pop(); // This is the value the switch expression is compared against.
 
             currIndex += 1;
+            if (currIndex >= bytecodeArray.size()) {
+                throw new std::runtime_error("kOpPeek: Out of bounds!");
+            }
             currBytecode = &bytecodeArray[currIndex];
             if (currBytecode->opcode != kOpJmpIfZ) {
                 throw new std::runtime_error(boost::str(
