@@ -92,6 +92,7 @@ enum OpCode {
     kOpCallObj          = 0x67,
     kOpPushInt16        = 0x6e,
     kOpPushInt32        = 0x6f,
+    kOpGetChainedProp   = 0x70,
     kOpPushFloat32      = 0x71
 
 };

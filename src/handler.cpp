@@ -777,6 +777,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         }
         break;
     case kOpGetObjProp:
+    case kOpGetChainedProp:
         {
             auto object = pop();
             translation = std::make_shared<ObjPropExprNode>(std::move(object), getName(bytecode.obj));

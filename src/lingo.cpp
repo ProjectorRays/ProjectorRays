@@ -77,6 +77,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpCallObj,           "objcall" },
     { kOpPushInt16,         "pushint16" },
     { kOpPushInt32,         "pushint32" },
+    { kOpGetChainedProp,    "getchainedprop" },
     { kOpPushFloat32,       "pushfloat32" }
 };
 
