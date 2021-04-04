@@ -141,7 +141,7 @@ std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Datum> id) {
             return std::make_shared<FieldExprNode>(std::move(fieldName));
         }
 	default:
-		std::cout << boost::format("findVar: unhandled var type %d") % varType;
+		std::cout << boost::format("findVar: unhandled var type %d\n") % varType;
 		break;
 	}
 	return std::make_shared<ErrorNode>();
