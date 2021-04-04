@@ -16,7 +16,7 @@ ProjectorRays currently supports these file types:
 
 ## How do I use it?
 
-The only dependencies besides the standard library are Boost and zlib. Once you have these, run `make` and then `./projectorrays MOVIE_FILE`
+The only dependencies besides the standard library are Boost 1.72.0 or later and zlib. Once you have these, run `make` and then `./projectorrays MOVIE_FILE`
 
 ProjectorRays will output `.lingo` files with guessed source code in the current working directory.
 
