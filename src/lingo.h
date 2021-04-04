@@ -262,15 +262,19 @@ struct Handler {
     void readRecord(ReadStream &stream);
     void readData(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
-    void readNames(const std::vector<std::string> &names);
+    void readNames();
+    std::string getName(int id);
+    std::string getArgumentName(int id);
+    std::string getLocalName(int id);
+    std::string getGlobalName(int id);
     std::shared_ptr<Node> peek();
     std::shared_ptr<Node> pop();
     int variableMultiplier();
     void registerGlobal(const std::string &name);
     std::shared_ptr<Node> findVar(int varType, std::shared_ptr<Datum> id);
-    std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index, const std::vector<std::string> &names);
-    void translate(const std::vector<std::string> &names);
-    size_t translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
+    std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index);
+    void translate();
+    size_t translateBytecode(Bytecode &bytecode, size_t pos);
     std::string bytecodeText();
 };
 

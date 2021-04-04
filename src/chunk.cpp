@@ -334,27 +334,26 @@ std::vector<int16_t> ScriptChunk::readVarnamesTable(ReadStream &stream, uint16_t
     return nameIDs;
 }
 
-void ScriptChunk::readNames(const std::vector<std::string> &names) {
+std::string ScriptChunk::getName(int id) {
+    return context->getName(id);
+}
+
+void ScriptChunk::setContext(ScriptContextChunk *ctx) {
+    this->context = ctx;
     for (auto nameID : propertyNameIDs) {
-        if (0 <= nameID && (unsigned)nameID < names.size())
-            propertyNames.push_back(names[nameID]);
-        else
-            propertyNames.push_back("UNKNOWN");
+        propertyNames.push_back(getName(nameID));
     }
     for (auto nameID : globalNameIDs) {
-        if (0 <= nameID && (unsigned)nameID < names.size())
-            globalNames.push_back(names[nameID]);
-        else
-            globalNames.push_back("UNKNOWN");
+        globalNames.push_back(getName(nameID));
     }
     for (const auto &handler : handlers) {
-        handler->readNames(names);
+        handler->readNames();
     }
 }
 
-void ScriptChunk::translate(const std::vector<std::string> &names) {
+void ScriptChunk::translate() {
     for (const auto &handler : handlers) {
-        handler->translate(names);
+        handler->translate();
     }
 }
 
@@ -432,14 +431,18 @@ void ScriptContextChunk::read(ReadStream &stream) {
         auto section = sectionMap[i - 1];
         if (section.sectionID > -1) {
             auto script = std::static_pointer_cast<ScriptChunk>(movie->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
-            script->readNames(lnam->names);
+            script->setContext(this);
             scripts[i] = script;
         }
     }
 
     for (auto it = scripts.begin(); it != scripts.end(); ++it) {
-        it->second->translate(lnam->names);
+        it->second->translate();
     }
+}
+
+std::string ScriptContextChunk::getName(int id) {
+    return lnam->getName(id);
 }
 
 /* ScriptNamesChunk */
@@ -461,6 +464,12 @@ void ScriptNamesChunk::read(ReadStream &stream) {
         auto length = stream.readUint8();
         name = stream.readString(length);
     }
+}
+
+std::string ScriptNamesChunk::getName(int id) {
+    if (-1 < id && (unsigned)id < names.size())
+        return names[id];
+    return "UNKNOWN_NAME_" + std::to_string(id);
 }
 
 }

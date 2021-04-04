@@ -67,20 +67,36 @@ std::vector<int16_t> Handler::readVarnamesTable(ReadStream &stream, uint16_t cou
     return nameIDs;
 }
 
-void Handler::readNames(const std::vector<std::string> &names) {
-    name = (0 <= nameID && (unsigned)nameID < names.size()) ? names[nameID] : "UNKNOWN";
+void Handler::readNames() {
+    name = getName(nameID);
     for (auto nameID : argumentNameIDs) {
-        if (0 <= nameID && (unsigned)nameID < names.size())
-            argumentNames.push_back(names[nameID]);
-        else
-            argumentNames.push_back("UNKNOWN");
+        argumentNames.push_back(getName(nameID));
     }
     for (auto nameID : localNameIDs) {
-        if (0 <= nameID && (unsigned)nameID < names.size())
-            localNames.push_back(names[nameID]);
-        else
-            localNames.push_back("UNKNOWN");
+        localNames.push_back(getName(nameID));
     }
+}
+
+std::string Handler::getName(int id) {
+    return script->getName(id);
+}
+
+std::string Handler::getArgumentName(int id) {
+    if (-1 < id && (unsigned)id < argumentNames.size())
+        return argumentNames[id];
+    return "UNKNOWN_ARG_" + std::to_string(id);
+}
+
+std::string Handler::getLocalName(int id) {
+    if (-1 < id && (unsigned)id < localNames.size())
+        return localNames[id];
+    return "UNKNOWN_LOCAL_" + std::to_string(id);
+}
+
+std::string Handler::getGlobalName(int id) {
+    if (-1 < id && (unsigned)id < globalNames.size())
+        return globalNames[id];
+    return "UNKNOWN_GLOBAL_" + std::to_string(id);
 }
 
 std::shared_ptr<Node> Handler::peek() {
@@ -125,13 +141,13 @@ std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Datum> id) {
 		return std::make_shared<LiteralNode>(std::move(id));
 	case 0x4: // arg
         {
-            std::string name = argumentNames[id->i / variableMultiplier()];
+            std::string name = getArgumentName(id->i / variableMultiplier());
             auto ref = std::make_shared<Datum>(kDatumVarRef, name);
             return std::make_shared<LiteralNode>(std::move(ref));
         }
 	case 0x5: // local
         {
-            std::string name = localNames[id->i / variableMultiplier()];
+            std::string name = getLocalName(id->i / variableMultiplier());
             auto ref = std::make_shared<Datum>(kDatumVarRef, name);
             return std::make_shared<LiteralNode>(std::move(ref));
         }
@@ -147,12 +163,12 @@ std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Datum> id) {
 	return std::make_shared<ErrorNode>();
 }
 
-std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index, const std::vector<std::string> &names) {
+std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index) {
     if (index >= bytecodeArray.size() - 12)
         return nullptr;
     if (!(bytecodeArray[index + 1].opcode == kOpPushArgList && bytecodeArray[index + 1].obj == 1))
         return nullptr;
-    if (!(bytecodeArray[index + 2].opcode == kOpCallExt && names[bytecodeArray[index + 2].obj] == "count"))
+    if (!(bytecodeArray[index + 2].opcode == kOpCallExt && getName(bytecodeArray[index + 2].obj) == "count"))
         return nullptr;
     if (!(bytecodeArray[index + 3].opcode == kOpPushInt41 && bytecodeArray[index + 3].obj == 1))
         return nullptr;
@@ -173,23 +189,23 @@ std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index, c
         return nullptr;
     if (!(bytecodeArray[index + 10].opcode == kOpPushArgList && bytecodeArray[index + 10].obj == 2))
         return nullptr;
-    if (!(bytecodeArray[index + 11].opcode == kOpCallExt && names[bytecodeArray[index + 11].obj] == "getAt"))
+    if (!(bytecodeArray[index + 11].opcode == kOpCallExt && getName(bytecodeArray[index + 11].obj) == "getAt"))
         return nullptr;
 
     std::string varName;
     switch (bytecodeArray[index + 12].opcode) {
         case kOpSetGlobal:
-            varName = names[bytecodeArray[index + 12].obj];
+            varName = getName(bytecodeArray[index + 12].obj);
             registerGlobal(varName);
             break;
         case kOpSetProp:
-            varName = names[bytecodeArray[index + 12].obj];
+            varName = getName(bytecodeArray[index + 12].obj);
             break;
         case kOpSetParam:
-            varName = argumentNames[bytecodeArray[index + 12].obj / variableMultiplier()];
+            varName = getArgumentName(bytecodeArray[index + 12].obj / variableMultiplier());
             break;
         case kOpSetLocal:
-            varName = localNames[bytecodeArray[index + 12].obj / variableMultiplier()];
+            varName = getLocalName(bytecodeArray[index + 12].obj / variableMultiplier());
             break;
         default:
             return nullptr;
@@ -200,7 +216,7 @@ std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index, c
     return res;
 }
 
-void Handler::translate(const std::vector<std::string> &names) {
+void Handler::translate() {
     stack.clear();
     ast = std::make_unique<AST>(this);
     size_t i = 0;
@@ -236,12 +252,12 @@ void Handler::translate(const std::vector<std::string> &names) {
                 }
             }
         }
-        auto translateSize = translateBytecode(bytecode, i, names);
+        auto translateSize = translateBytecode(bytecode, i);
         i += translateSize;
     }
 }
 
-size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::vector<std::string> &names) {
+size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
     std::shared_ptr<Node> comment = nullptr;
     std::shared_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
@@ -422,35 +438,35 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
         }
     case kOpPushSymb:
         {
-            auto sym = std::make_shared<Datum>(kDatumSymbol, names[bytecode.obj]);
+            auto sym = std::make_shared<Datum>(kDatumSymbol, getName(bytecode.obj));
             translation = std::make_shared<LiteralNode>(std::move(sym));
         }
         break;
     case kOpPushVarRef:
         {
-            auto ref = std::make_shared<Datum>(kDatumVarRef, names[bytecode.obj]);
+            auto ref = std::make_shared<Datum>(kDatumVarRef, getName(bytecode.obj));
             translation = std::make_shared<LiteralNode>(std::move(ref));
         }
         break;
     case kOpGetGlobal:
         {
-            auto name = names[bytecode.obj];
+            auto name = getName(bytecode.obj);
             registerGlobal(name);
             translation = std::make_shared<VarNode>(name);
         }
         break;
     case kOpGetProp:
-        translation = std::make_shared<VarNode>(names[bytecode.obj]);
+        translation = std::make_shared<VarNode>(getName(bytecode.obj));
         break;
     case kOpGetParam:
-        translation = std::make_shared<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
+        translation = std::make_shared<VarNode>(getName(bytecode.obj / variableMultiplier()));
         break;
     case kOpGetLocal:
-        translation = std::make_shared<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
+        translation = std::make_shared<VarNode>(getLocalName(bytecode.obj / variableMultiplier()));
         break;
     case kOpSetGlobal:
         {
-            auto varName = names[bytecode.obj];
+            auto varName = getName(bytecode.obj);
             registerGlobal(varName);
             auto var = std::make_shared<VarNode>(varName);
             auto value = pop();
@@ -459,21 +475,21 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
         break;
     case kOpSetProp:
         {
-            auto var = std::make_shared<VarNode>(names[bytecode.obj]);
+            auto var = std::make_shared<VarNode>(getName(bytecode.obj));
             auto value = pop();
             translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetParam:
         {
-            auto var = std::make_shared<VarNode>(argumentNames[bytecode.obj / variableMultiplier()]);
+            auto var = std::make_shared<VarNode>(getArgumentName(bytecode.obj / variableMultiplier()));
             auto value = pop();
             translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
         break;
     case kOpSetLocal:
         {
-            auto var = std::make_shared<VarNode>(localNames[bytecode.obj / variableMultiplier()]);
+            auto var = std::make_shared<VarNode>(getLocalName(bytecode.obj / variableMultiplier()));
             auto value = pop();
             translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));
         }
@@ -538,7 +554,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
     case kOpCallExt:
         {
             auto argList = pop();
-            translation = std::make_shared<CallNode>(names[bytecode.obj], std::move(argList));
+            translation = std::make_shared<CallNode>(getName(bytecode.obj), std::move(argList));
         }
         break;
     case kOpCallObjOld:
@@ -739,26 +755,26 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
         }
         break;
     case kOpGetMovieProp:
-        translation = std::make_shared<TheExprNode>(names[bytecode.obj]);
+        translation = std::make_shared<TheExprNode>(getName(bytecode.obj));
         break;
     case kOpSetMovieProp:
         {
             auto value = pop();
-            auto prop = std::make_shared<TheExprNode>(names[bytecode.obj]);
+            auto prop = std::make_shared<TheExprNode>(getName(bytecode.obj));
             translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
         }
         break;
     case kOpGetObjProp:
         {
             auto object = pop();
-            translation = std::make_shared<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
+            translation = std::make_shared<ObjPropExprNode>(std::move(object), getName(bytecode.obj));
         }
         break;
     case kOpSetObjProp:
         {
             auto value = pop();
             auto object = pop();
-            auto prop = std::make_shared<ObjPropExprNode>(std::move(object), names[bytecode.obj]);
+            auto prop = std::make_shared<ObjPropExprNode>(std::move(object), getName(bytecode.obj));
             translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
         }
         break;
@@ -773,7 +789,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
             auto prevCase = ast->currentBlock->currentCase;
             if (!prevCase) {
                 // Try to a build a 'repeat with ... in list' statement with the following bytecode.
-                auto repeatWithIn = buildRepeatWithIn(index, names);
+                auto repeatWithIn = buildRepeatWithIn(index);
                 if (repeatWithIn) {
                     stack.push_back(std::make_shared<TempNode>());
                     stack.push_back(std::make_shared<TempNode>());
@@ -790,7 +806,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
             size_t currIndex = index + 1;
             Bytecode *currBytecode = &bytecodeArray[currIndex];
             do {
-                translateBytecode(*currBytecode, currIndex, names);
+                translateBytecode(*currBytecode, currIndex);
                 currIndex += 1;
                 currBytecode = &bytecodeArray[currIndex];
             } while (!(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq)));
@@ -859,13 +875,13 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
     case kOpGetMovieInfo:
         {
             pop(); // FIXME: What is this?
-            translation = std::make_shared<TheExprNode>(names[bytecode.obj]);
+            translation = std::make_shared<TheExprNode>(getName(bytecode.obj));
         }
         break;
     case kOpCallObj:
         {
             auto argList = pop();
-            translation = std::make_shared<ObjCallNode>(names[bytecode.obj], std::move(argList));
+            translation = std::make_shared<ObjCallNode>(getName(bytecode.obj), std::move(argList));
         }
         break;
     default:

@@ -199,16 +199,17 @@ struct ScriptChunk : Chunk {
     std::vector<std::string> globalNames;
     std::vector<std::unique_ptr<Handler>> handlers;
     std::vector<LiteralStore> literals;
-    std::weak_ptr<ScriptContextChunk> context;
+    ScriptContextChunk *context;
 
     CastMemberChunk *member;
 
-    ScriptChunk(Movie *m) : Chunk(m), member(nullptr) {}
+    ScriptChunk(Movie *m) : Chunk(m), context(nullptr), member(nullptr) {}
     virtual ~ScriptChunk() = default;
     virtual void read(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
-    void readNames(const std::vector<std::string> &names);
-    void translate(const std::vector<std::string> &names);
+    std::string getName(int id);
+    void setContext(ScriptContextChunk *ctx);
+    void translate();
     std::string varDeclarations();
     std::string scriptText();
     std::string bytecodeText();
@@ -236,6 +237,7 @@ struct ScriptContextChunk : Chunk {
     ScriptContextChunk(Movie *m) : Chunk(m) {}
     virtual ~ScriptContextChunk() = default;
     virtual void read(ReadStream &stream);
+    std::string getName(int id);
 };
 
 struct ScriptNamesChunk : Chunk {
@@ -250,6 +252,7 @@ struct ScriptNamesChunk : Chunk {
     ScriptNamesChunk(Movie *m) : Chunk(m) {}
     virtual ~ScriptNamesChunk() = default;
     virtual void read(ReadStream &stream);
+    std::string getName(int id);
 };
 
 }
