@@ -27,6 +27,7 @@ typedef unsigned int uint;
 enum OpCode {
     // single-byte
     kOpRet              = 0x01,
+    kOpRetFactory       = 0x02,
     kOpPushZero         = 0x03,
     kOpMul              = 0x04,
     kOpAdd              = 0x05,

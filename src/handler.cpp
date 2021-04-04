@@ -264,6 +264,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
 
     switch (bytecode.opcode) {
     case kOpRet:
+    case kOpRetFactory:
         if (index == bytecodeArray.size() - 1) {
             return 1; // end of handler
         }

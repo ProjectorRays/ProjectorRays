@@ -12,6 +12,7 @@ namespace ProjectorRays {
 std::map<uint, std::string> Lingo::opcodeNames = {
     // single-byte
     { kOpRet,               "ret" },
+    { kOpRetFactory,        "retfactory" },
     { kOpPushZero,          "pushzero" },
     { kOpMul,               "mul" },
     { kOpAdd,               "add" },
