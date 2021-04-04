@@ -43,9 +43,9 @@ void Handler::readData(ReadStream &stream) {
         if (op >= 0xc0) {
             obj = stream.readInt32();
         } else if (op >= 0x80) {
-            obj = stream.readInt16();
+            obj = stream.readUint16();
         } else if (op >= 0x40) {
-            obj = stream.readInt8();
+            obj = stream.readUint8();
         }
         // read the first byte to convert to an opcode
         Bytecode bytecode(op, obj, pos - compiledOffset);
