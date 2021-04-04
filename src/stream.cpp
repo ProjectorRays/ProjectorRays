@@ -90,28 +90,6 @@ int16_t ReadStream::readInt16() {
     return (int16_t)readUint16();
 }
 
-uint32_t ReadStream::readUint24() {
-    size_t p = _offset + _pos;
-    _pos += 3;
-    if (pastEOF())
-        return 0;
-
-    return endianness
-        ? boost::endian::load_little_u24(reinterpret_cast<unsigned char *>(&_buf->data()[p]))
-        : boost::endian::load_big_u24(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
-}
-
-int32_t ReadStream::readInt24() {
-    size_t p = _offset + _pos;
-    _pos += 3;
-    if (pastEOF())
-        return 0;
-
-    return endianness
-        ? boost::endian::load_little_s24(reinterpret_cast<unsigned char *>(&_buf->data()[p]))
-        : boost::endian::load_big_s24(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
-}
-
 uint32_t ReadStream::readUint32() {
     size_t p = _offset + _pos;
     _pos += 4;

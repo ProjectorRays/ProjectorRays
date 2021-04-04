@@ -43,8 +43,6 @@ public:
     int8_t readInt8();
     uint16_t readUint16();
     int16_t readInt16();
-    uint32_t readUint24();
-    int32_t readInt24();
     uint32_t readUint32();
     int32_t readInt32();
     double readDouble();
