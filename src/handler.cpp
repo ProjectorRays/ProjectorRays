@@ -36,10 +36,10 @@ void Handler::readRecord(ReadStream &stream) {
 void Handler::readData(ReadStream &stream) {
     stream.seek(compiledOffset);
     while (stream.pos() < compiledOffset + compiledLen) {
-        auto pos = stream.pos();
-        auto op = stream.readUint8();
+        size_t pos = stream.pos();
+        uint8_t op = stream.readUint8();
         // instructions can be one, two or three bytes
-        auto obj = 0;
+        int32_t obj = 0;
         if (op >= 0xc0) {
             obj = stream.readInt32();
         } else if (op >= 0x80) {
