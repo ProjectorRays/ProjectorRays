@@ -48,6 +48,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpPushArgList,       "pusharglist" },
     { kOpPushCons,          "pushcons" },
     { kOpPushSymb,          "pushsymb" },
+    { kOpPushVarRef,        "pushvarref" },
     { kOpGetGlobal,         "getglobal" },
     { kOpGetProp,           "getprop" },
     { kOpGetParam,          "getparam" },
@@ -258,6 +259,8 @@ std::string Datum::toString(bool summary) {
         return "VOID";
     case kDatumSymbol:
         return "#" + s;
+    case kDatumVarRef:
+        return s;
     case kDatumString:
         if (s.length() == 1) {
             switch (s[0]) {

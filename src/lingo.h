@@ -63,6 +63,7 @@ enum OpCode {
     kOpPushArgList      = 0x43,
     kOpPushCons         = 0x44,
     kOpPushSymb         = 0x45,
+    kOpPushVarRef       = 0x46,
     kOpGetGlobal        = 0x49,
     kOpGetProp          = 0x4a,
     kOpGetParam         = 0x4b,
@@ -95,6 +96,7 @@ enum OpCode {
 enum DatumType {
     kDatumVoid,
     kDatumSymbol,
+    kDatumVarRef,
     kDatumString,
     kDatumInt,
     kDatumFloat,
@@ -165,6 +167,7 @@ struct Lingo {
     static std::map<uint, std::string> moviePropertyNames00;
     static std::map<uint, std::string> timeNames;
     static std::map<uint, std::string> chunkTypeNames;
+    static std::map<uint, std::string> putTypeNames;
     static std::map<uint, std::string> menuPropertyNames;
     static std::map<uint, std::string> menuItemPropertyNames;
     static std::map<uint, std::string> soundPropertyNames;

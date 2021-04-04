@@ -395,6 +395,12 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
             translation = std::make_shared<LiteralNode>(std::move(sym));
         }
         break;
+    case kOpPushVarRef:
+        {
+            auto ref = std::make_shared<Datum>(kDatumVarRef, names[bytecode.obj]);
+            translation = std::make_shared<LiteralNode>(std::move(ref));
+        }
+        break;
     case kOpGetGlobal:
         {
             auto name = names[bytecode.obj];
