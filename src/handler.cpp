@@ -433,7 +433,12 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         break;
     case kOpPushCons:
         {
-            translation = std::make_shared<LiteralNode>(script->literals[bytecode.obj / variableMultiplier()].value);
+            int literalID = bytecode.obj / variableMultiplier();
+            if (-1 < literalID && (unsigned)literalID < script->literals.size()) {
+                translation = std::make_shared<LiteralNode>(script->literals[literalID].value);
+            } else {
+                translation = std::make_shared<ErrorNode>();
+            }
             break;
         }
     case kOpPushSymb:
