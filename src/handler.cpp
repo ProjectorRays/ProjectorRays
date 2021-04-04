@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
 
@@ -114,6 +115,36 @@ void Handler::registerGlobal(const std::string &name) {
             && std::find(globalNames.begin(), globalNames.end(), name) == globalNames.end()) {
         globalNames.push_back(name);
     }
+}
+
+std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Datum> id) {
+	switch (varType) {
+	case 0x1: // global
+	case 0x2: // global
+	case 0x3: // property/instance
+		return std::make_shared<LiteralNode>(std::move(id));
+	case 0x4: // arg
+        {
+            std::string name = argumentNames[id->i / variableMultiplier()];
+            auto ref = std::make_shared<Datum>(kDatumVarRef, name);
+            return std::make_shared<LiteralNode>(std::move(ref));
+        }
+	case 0x5: // local
+        {
+            std::string name = localNames[id->i / variableMultiplier()];
+            auto ref = std::make_shared<Datum>(kDatumVarRef, name);
+            return std::make_shared<LiteralNode>(std::move(ref));
+        }
+	case 0x6: // field
+        {
+            auto fieldName = std::make_shared<LiteralNode>(id);
+            return std::make_shared<FieldExprNode>(std::move(fieldName));
+        }
+	default:
+		std::cout << boost::format("findVar: unhandled var type %d") % varType;
+		break;
+	}
+	return std::make_shared<ErrorNode>();
 }
 
 std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index, const std::vector<std::string> &names) {
@@ -516,9 +547,18 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index, const std::v
         /* let argList = */ pop();
         // TODO
         break;
-    case kOp59XX:
-        pop();
-        // TODO
+    case kOpPut:
+        {
+            PutType putType = static_cast<PutType>((bytecode.obj >> 4) & 0xF);
+            uint32_t varType = bytecode.obj & 0xF;
+            if (varType == 6 && script->movie->version >= 500)
+                auto castID = pop(); // field cast ID
+
+            auto varId = pop()->getValue();
+            auto var = findVar(varType, std::move(varId));
+            auto val = pop();
+            translation = std::make_shared<PutStmtNode>(putType, var, val);
+        }
         break;
     case kOp5BXX:
         pop();

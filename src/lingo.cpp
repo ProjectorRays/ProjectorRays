@@ -63,7 +63,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpCallLocal,         "localcall" },
     { kOpCallExt,           "extcall" },
     { kOpCallObjOld,        "oldobjcall" },
-    { kOp59XX,              "op59xx" },
+    { kOpPut,               "put" },
     { kOp5BXX,              "op5Bxx" },
     { kOpGet,               "get" },
     { kOpSet,               "set" },
@@ -118,6 +118,12 @@ std::map<uint, std::string> Lingo::chunkTypeNames = {
     { kChunkWord, "word" },
     { kChunkItem, "item" },
     { kChunkLine, "line" }
+};
+
+std::map<uint, std::string> Lingo::putTypeNames = {
+    { kPutInto,     "into" },
+    { kPutAfter,    "after" },
+    { kPutBefore,   "before" }
 };
 
 std::map<uint, std::string> Lingo::menuPropertyNames = {
@@ -731,6 +737,13 @@ std::string ExitRepeatStmtNode::toString(bool summary) {
 
 std::string NextRepeatStmtNode::toString(bool summary) {
     return "next repeat";
+}
+
+/* PutStmtNode */
+
+std::string PutStmtNode::toString(bool summary) {
+    auto typeString = Lingo::getName(Lingo::putTypeNames, type);
+    return "put " + value->toString(summary) + " " + typeString + " " + variable->toString(summary);
 }
 
 }

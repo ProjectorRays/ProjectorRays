@@ -78,7 +78,7 @@ enum OpCode {
     kOpCallLocal        = 0x56,
     kOpCallExt          = 0x57,
     kOpCallObjOld       = 0x58,
-    kOp59XX             = 0x59,
+    kOpPut              = 0x59,
     kOp5BXX             = 0x5b,
     kOpGet              = 0x5c,
     kOpSet              = 0x5d,
@@ -111,6 +111,12 @@ enum ChunkType {
     kChunkWord  = 0x02,
     kChunkItem  = 0x03,
     kChunkLine  = 0x04
+};
+
+enum PutType {
+    kPutInto    = 0x01,
+    kPutAfter   = 0x02,
+    kPutBefore  = 0x03
 };
 
 enum NodeType {
@@ -149,7 +155,8 @@ enum NodeType {
     kFieldPropExprNode,
     kObjPropExprNode,
     kExitRepeatStmtNode,
-    kNextRepeatStmtNode
+    kNextRepeatStmtNode,
+    kPutStmtNode
 };
 
 enum CaseExpect {
@@ -260,6 +267,7 @@ struct Handler {
     std::shared_ptr<Node> pop();
     int variableMultiplier();
     void registerGlobal(const std::string &name);
+    std::shared_ptr<Node> findVar(int varType, std::shared_ptr<Datum> id);
     std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index, const std::vector<std::string> &names);
     void translate(const std::vector<std::string> &names);
     size_t translateBytecode(Bytecode &bytecode, size_t pos, const std::vector<std::string> &names);
@@ -836,6 +844,24 @@ struct ExitRepeatStmtNode : StmtNode {
 struct NextRepeatStmtNode : StmtNode {
     NextRepeatStmtNode() : StmtNode(kNextRepeatStmtNode) {}
     virtual ~NextRepeatStmtNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+/* PutStmtNode */
+
+struct PutStmtNode : StmtNode {
+    PutType type;
+    std::shared_ptr<Node> variable;
+    std::shared_ptr<Node> value;
+
+    PutStmtNode(PutType t, std::shared_ptr<Node> var, std::shared_ptr<Node> val)
+        : StmtNode(kPutStmtNode), type(t) {
+        variable = std::move(var);
+        variable->parent = this;
+        value = std::move(val);
+        value->parent = this;
+    }
+    virtual ~PutStmtNode() = default;
     virtual std::string toString(bool summary);
 };
 
