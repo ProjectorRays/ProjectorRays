@@ -43,7 +43,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpPushPropList,      "pushproplist" },
 
     // multi-byte
-    { kOpPushInt41,         "pushint41" },
+    { kOpPushInt8,          "pushint8" },
     { kOpPushArgListNoRet,  "pusharglistnoret" },
     { kOpPushArgList,       "pusharglist" },
     { kOpPushCons,          "pushcons" },
@@ -75,7 +75,9 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpPop,               "pop" },
     { kOpGetMovieInfo,      "getmovieinfo" },
     { kOpCallObj,           "objcall" },
-    { kOpPushInt6E,         "pushint6E" }
+    { kOpPushInt16,         "pushint16" },
+    { kOpPushInt32,         "pushint32" },
+    { kOpPushFloat32,       "pushfloat32" }
 };
 
 std::map<uint, std::string> Lingo::binaryOpNames = {

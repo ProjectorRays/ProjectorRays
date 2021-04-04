@@ -170,7 +170,7 @@ std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index) {
         return nullptr;
     if (!(bytecodeArray[index + 2].opcode == kOpCallExt && getName(bytecodeArray[index + 2].obj) == "count"))
         return nullptr;
-    if (!(bytecodeArray[index + 3].opcode == kOpPushInt41 && bytecodeArray[index + 3].obj == 1))
+    if (!(bytecodeArray[index + 3].opcode == kOpPushInt8 && bytecodeArray[index + 3].obj == 1))
         return nullptr;
     if (!(bytecodeArray[index + 4].opcode == kOpPeek && bytecodeArray[index + 4].obj == 0))
         return nullptr;
@@ -400,11 +400,18 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             translation = list;
         }
         break;
-    case kOpPushInt41:
-    case kOpPushInt6E:
+    case kOpPushInt8:
+    case kOpPushInt16:
+    case kOpPushInt32:
         {
-            auto i = std::make_shared<Datum>((int)bytecode.obj);
+            auto i = std::make_shared<Datum>(bytecode.obj);
             translation = std::make_shared<LiteralNode>(std::move(i));
+        }
+        break;
+    case kOpPushFloat32:
+        {
+            auto f = std::make_shared<Datum>(*(float *)(&bytecode.obj));
+            translation = std::make_shared<LiteralNode>(std::move(f));
         }
         break;
     case kOpPushArgListNoRet:
