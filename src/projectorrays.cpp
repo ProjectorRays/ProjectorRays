@@ -44,6 +44,9 @@ int main(int argc, char *argv[]) {
     movie->read(stream.get());
 
     for (const auto &cast : movie->casts) {
+        if (!cast->lctx)
+            continue;
+
         for (auto it = cast->lctx->scripts.begin(); it != cast->lctx->scripts.end(); ++it) {
             std::string scriptType;
             std::string id;
