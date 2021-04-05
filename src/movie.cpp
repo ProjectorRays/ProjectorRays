@@ -275,6 +275,16 @@ const ChunkInfo *Movie::getFirstChunkInfo(uint32_t fourCC) {
     return nullptr;
 }
 
+bool Movie::chunkExists(uint32_t fourCC, int32_t id) {
+    if (chunkInfo.find(id) == chunkInfo.end())
+        return false;
+    
+    if (fourCC != chunkInfo[id].fourCC)
+        return false;
+
+    return true;
+}
+
 std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
     if (deserializedChunks.find(id) != deserializedChunks.end())
         return deserializedChunks[id];

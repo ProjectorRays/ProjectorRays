@@ -21,7 +21,9 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
     name = castName;
 
     for (const auto &entry : movie->keyTable->entries) {
-        if (entry.castID == id && (entry.fourCC == FOURCC('L', 'c', 't', 'x') || entry.fourCC == FOURCC('L', 'c', 't', 'X'))) {
+        if (entry.castID == id
+                && (entry.fourCC == FOURCC('L', 'c', 't', 'x') || entry.fourCC == FOURCC('L', 'c', 't', 'X'))
+                && movie->chunkExists(entry.fourCC, entry.sectionID)) {
             lctx = std::static_pointer_cast<ScriptContextChunk>(movie->getChunk(entry.fourCC, entry.sectionID));
             break;
         }
