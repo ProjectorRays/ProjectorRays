@@ -79,7 +79,8 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpPushInt16,         "pushint16" },
     { kOpPushInt32,         "pushint32" },
     { kOpGetChainedProp,    "getchainedprop" },
-    { kOpPushFloat32,       "pushfloat32" }
+    { kOpPushFloat32,       "pushfloat32" },
+    { kOpGetTopLevelProp,   "gettoplevelprop" }
 };
 
 std::map<uint, std::string> Lingo::binaryOpNames = {

@@ -907,6 +907,12 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             translation = std::make_shared<ObjCallNode>(getName(bytecode.obj), std::move(argList));
         }
         break;
+    case kOpGetTopLevelProp:
+        {
+            auto name = getName(bytecode.obj);
+            translation = std::make_shared<VarNode>(name);
+        }
+        break;
     default:
         {
             auto commentText = Lingo::getOpcodeName(bytecode.opID);
