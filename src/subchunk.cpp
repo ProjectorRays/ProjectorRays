@@ -34,8 +34,11 @@ void KeyTableEntry::read(ReadStream &stream) {
 
 /* LiteralStore */
 
-void LiteralStore::readRecord(ReadStream &stream) {
-    type = static_cast<LiteralType>(stream.readUint32());
+void LiteralStore::readRecord(ReadStream &stream, int version) {
+    if (version >= 500)
+        type = static_cast<LiteralType>(stream.readUint32());
+    else
+        type = static_cast<LiteralType>(stream.readUint16());
     offset = stream.readUint32();
 }
 

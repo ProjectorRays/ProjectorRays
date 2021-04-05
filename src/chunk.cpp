@@ -318,7 +318,7 @@ void ScriptChunk::read(ReadStream &stream) {
     stream.seek(literalsOffset);
     literals.resize(literalsCount);
     for (auto &literal : literals) {
-        literal.readRecord(stream);
+        literal.readRecord(stream, movie->version);
     }
     for (auto &literal : literals) {
         literal.readData(stream, literalsDataOffset);

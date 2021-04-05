@@ -61,7 +61,7 @@ struct LiteralStore {
     uint32_t offset;
     std::shared_ptr<Datum> value;
 
-    void readRecord(ReadStream &stream);
+    void readRecord(ReadStream &stream, int version);
     void readData(ReadStream &stream, uint32_t startOffset);
 };
 
