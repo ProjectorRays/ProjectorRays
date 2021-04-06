@@ -1004,6 +1004,9 @@ std::string Handler::bytecodeText() {
         case kOpEndRepeat:
             line += " " + posToString(bytecode.pos - bytecode.obj);
             break;
+        case kOpPushFloat32:
+            line += " " + floatToString(*(float *)(&bytecode.obj));
+            break;
         default:
             if (bytecode.opID > 0x40)
                 line += " " + std::to_string(bytecode.obj);
