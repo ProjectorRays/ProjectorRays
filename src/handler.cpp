@@ -472,7 +472,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         translation = std::make_shared<VarNode>(getName(bytecode.obj));
         break;
     case kOpGetParam:
-        translation = std::make_shared<VarNode>(getName(bytecode.obj / variableMultiplier()));
+        translation = std::make_shared<VarNode>(getArgumentName(bytecode.obj / variableMultiplier()));
         break;
     case kOpGetLocal:
         translation = std::make_shared<VarNode>(getLocalName(bytecode.obj / variableMultiplier()));
