@@ -1,3 +1,7 @@
+#include <iomanip>
+#include <limits>
+#include <sstream>
+
 #include "util.h"
 
 namespace ProjectorRays {
@@ -77,6 +81,16 @@ std::string cleanFileName(const std::string &fileName) {
             res += ch;
             break;
         }
+    }
+    return res;
+}
+
+std::string floatToString(double f) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(std::numeric_limits<double>::max_digits10) << f;
+    std::string res = ss.str();
+    while (res[res.size() - 1] == '0' && res[res.size() - 2] != '.') {
+        res.pop_back();
     }
     return res;
 }

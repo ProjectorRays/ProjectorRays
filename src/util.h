@@ -12,6 +12,7 @@ std::string fourCCToString(uint32_t fourcc);
 std::string indent(std::string str);
 int humanVersion(int ver);
 std::string cleanFileName(const std::string &fileName);
+std::string floatToString(double f);
 
 }
 

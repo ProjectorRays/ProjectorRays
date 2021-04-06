@@ -1,7 +1,3 @@
-#include <iomanip>
-#include <limits>
-#include <sstream>
-
 #include "lingo.h"
 #include "util.h"
 
@@ -293,15 +289,7 @@ std::string Datum::toString(bool summary) {
     case kDatumInt:
         return std::to_string(i);
     case kDatumFloat:
-        {
-            std::stringstream ss;
-            ss << std::fixed << std::setprecision(std::numeric_limits<double>::max_digits10) << f;
-            std::string res = ss.str();
-            while (res[res.size() - 1] == '0' && res[res.size() - 2] != '.') {
-                res.pop_back();
-            }
-            return res;
-        }
+        return floatToString(f);
     case kDatumList:
     case kDatumArgList:
     case kDatumArgListNoRet:
