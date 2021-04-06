@@ -924,9 +924,9 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 // obj.getProp(#prop, i, i2) => obj.prop[i..i2]
                 auto obj = rawArgList[0];
                 std::string propName  = rawArgList[1]->getValue()->s;
-                auto i1 = rawArgList[2];
+                auto i = rawArgList[2];
                 auto i2 = (nargs == 4) ? rawArgList[3] : nullptr;
-                translation = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i1), std::move(i2));
+                translation = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i), std::move(i2));
             } else if (method == "setProp" && (nargs == 4 || nargs == 5) && rawArgList[1]->getValue()->type == kDatumSymbol) {
                 // obj.setProp(#prop, i, val) => obj.prop[i] = val
                 // obj.setProp(#prop, i, i2, val) => obj.prop[i..i2] = val
