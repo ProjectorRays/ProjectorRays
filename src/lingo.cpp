@@ -732,6 +732,22 @@ std::string ObjPropExprNode::toString(bool summary) {
     return obj->toString(summary) + "." + prop;
 }
 
+/* ObjBracketExprNode */
+
+std::string ObjBracketExprNode::toString(bool summary) {
+    return obj->toString(summary) + "[" + prop->toString(summary) + "]";
+}
+
+/* ObjPropIndexExprNode */
+
+std::string ObjPropIndexExprNode::toString(bool summary) {
+    std::string res = obj->toString(summary) + "." + prop + "[" + index->toString(summary);
+    if (index2)
+        res += ".." + index2->toString(summary);
+    res += "]";
+    return res;
+}
+
 /* ExitRepeatStmtNode */
 
 std::string ExitRepeatStmtNode::toString(bool summary) {

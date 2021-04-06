@@ -159,6 +159,8 @@ enum NodeType {
     kCastPropExprNode,
     kFieldPropExprNode,
     kObjPropExprNode,
+    kObjBracketExprNode,
+    kObjPropIndexExprNode,
     kExitRepeatStmtNode,
     kNextRepeatStmtNode,
     kPutStmtNode
@@ -837,6 +839,46 @@ struct ObjPropExprNode : ExprNode {
         obj->parent = this;
     }
     virtual ~ObjPropExprNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+/* ObjBracketExprNode */
+
+struct ObjBracketExprNode : ExprNode {
+    std::shared_ptr<Node> obj;
+    std::shared_ptr<Node> prop;
+
+    ObjBracketExprNode(std::shared_ptr<Node> o, std::shared_ptr<Node> p)
+        : ExprNode(kObjBracketExprNode) {
+        obj = std::move(o);
+        obj->parent = this;
+        prop = std::move(p);
+        prop->parent = this;
+    }
+    virtual ~ObjBracketExprNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+/* ObjPropIndexExprNode */
+
+struct ObjPropIndexExprNode : ExprNode {
+    std::shared_ptr<Node> obj;
+    std::string prop;
+    std::shared_ptr<Node> index;
+    std::shared_ptr<Node> index2;
+
+    ObjPropIndexExprNode(std::shared_ptr<Node> o, std::string p, std::shared_ptr<Node> i, std::shared_ptr<Node> i2)
+        : ExprNode(kObjPropIndexExprNode), prop(p) {
+        obj = std::move(o);
+        obj->parent = this;
+        index = std::move(i);
+        index->parent = this;
+        if (index2) {
+            index2 = std::move(i2);
+            index2->parent = this;
+        }
+    }
+    virtual ~ObjPropIndexExprNode() = default;
     virtual std::string toString(bool summary);
 };
 

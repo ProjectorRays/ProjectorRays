@@ -903,8 +903,43 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         break;
     case kOpCallObj:
         {
+            std::string method = getName(bytecode.obj);
             auto argList = pop();
-            translation = std::make_shared<ObjCallNode>(getName(bytecode.obj), std::move(argList));
+            auto &rawArgList = argList->getValue()->l;
+            size_t nargs = rawArgList.size();
+            if (method == "getAt" && nargs == 2)  {
+                // obj.getAt(i) => obj[i]
+                auto obj = rawArgList[0];
+                auto prop = rawArgList[1];
+                translation = std::make_shared<ObjBracketExprNode>(std::move(obj), std::move(prop));
+            } else if (method == "setAt" && nargs == 3) {
+                // obj.setAt(i) => obj[i] = val
+                auto obj = rawArgList[0];
+                auto prop = rawArgList[1];
+                auto val = rawArgList[2];
+                std::shared_ptr<Node> propExpr = std::make_shared<ObjBracketExprNode>(std::move(obj), std::move(prop));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(propExpr), std::move(val));
+            } else if ((method == "getProp" || method == "getPropRef") && (nargs == 3 || nargs == 4) && rawArgList[1]->getValue()->type == kDatumSymbol) {
+                // obj.getProp(#prop, i) => obj.prop[i]
+                // obj.getProp(#prop, i, i2) => obj.prop[i..i2]
+                auto obj = rawArgList[0];
+                std::string propName  = rawArgList[1]->getValue()->s;
+                auto i1 = rawArgList[2];
+                auto i2 = (nargs == 4) ? rawArgList[3] : nullptr;
+                translation = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i1), std::move(i2));
+            } else if (method == "setProp" && (nargs == 4 || nargs == 5) && rawArgList[1]->getValue()->type == kDatumSymbol) {
+                // obj.setProp(#prop, i, val) => obj.prop[i] = val
+                // obj.setProp(#prop, i, i2, val) => obj.prop[i..i2] = val
+                auto obj = rawArgList[0];
+                std::string propName  = rawArgList[1]->getValue()->s;
+                auto i = rawArgList[2];
+                auto i2 = (nargs == 5) ? rawArgList[3] : nullptr;
+                auto propExpr = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i), std::move(i2));
+                auto val = rawArgList[nargs - 1];
+                translation = std::make_shared<AssignmentStmtNode>(std::move(propExpr), std::move(val));
+            } else {
+                translation = std::make_shared<ObjCallNode>(method, std::move(argList));
+            }
         }
         break;
     case kOpGetTopLevelProp:
