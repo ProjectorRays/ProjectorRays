@@ -258,7 +258,6 @@ void Handler::translate() {
 }
 
 size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
-    std::shared_ptr<Node> comment = nullptr;
     std::shared_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
 
@@ -328,7 +327,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             } else if (firstLine->getValue()->toInt()) {
                 translation = std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
             } else {
-                translation = std::make_shared<ErrorNode>();
+                translation = std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
             }
         }
         break;
@@ -354,7 +353,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             } else if (firstLine->getValue()->toInt()) {
                 translation = std::make_shared<ChunkHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(fieldID));
             } else {
-                translation = std::make_shared<ErrorNode>();
+                translation = std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
             }
         }
         break;
@@ -680,7 +679,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             }
             break;
         default:
-            translation = std::make_shared<ErrorNode>();
+            translation = std::make_shared<CommentNode>("ERROR: Unknown option " + std::to_string(bytecode.obj));
         }
         break;
     case kOpSet:
@@ -694,7 +693,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                     std::shared_ptr<Node> prop = std::make_shared<TheExprNode>(propName);
                     translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
                 } else {
-                    translation = std::make_shared<ErrorNode>();
+                    translation = std::make_shared<CommentNode>("ERROR: Unknown property ID " + std::to_string(id));
                 }
             }
             break;
@@ -764,7 +763,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             }
             break;
         default:
-            translation = std::make_shared<ErrorNode>();
+            translation = std::make_shared<CommentNode>("ERROR: Unknown option " + std::to_string(bytecode.obj));
         }
         break;
     case kOpGetMovieProp:
@@ -828,7 +827,9 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 && !(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq))
             );
             if (currIndex >= bytecodeArray.size()) {
-                throw new std::runtime_error("kOpPeek: Out of bounds!");
+                bytecode.translation = std::make_shared<CommentNode>("ERROR: Expected eq or nteq!");
+                ast->addStatement(bytecode.translation);
+                return currIndex - index + 1;
             }
 
             // If the comparison is <>, this is followed by another, equivalent case.
@@ -837,14 +838,11 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             std::shared_ptr<Node> caseValue = pop(); // This is the value the switch expression is compared against.
 
             currIndex += 1;
-            if (currIndex >= bytecodeArray.size()) {
-                throw new std::runtime_error("kOpPeek: Out of bounds!");
-            }
             currBytecode = &bytecodeArray[currIndex];
-            if (currBytecode->opcode != kOpJmpIfZ) {
-                throw new std::runtime_error(boost::str(
-                    boost::format("Expected jmpifz at index %zu") % currIndex
-                ));
+            if (currIndex >= bytecodeArray.size() || currBytecode->opcode != kOpJmpIfZ) {
+                bytecode.translation = std::make_shared<CommentNode>("ERROR: Expected jmpifz!");
+                ast->addStatement(bytecode.translation);
+                return currIndex - index + 1;
             }
 
             auto &jmpifz = *currBytecode;
@@ -953,14 +951,11 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             auto commentText = Lingo::getOpcodeName(bytecode.opID);
             if (bytecode.opcode >= 0x40)
                 commentText += " " + std::to_string(bytecode.obj);
-            comment = std::make_shared<CommentNode>(commentText);
-            translation = std::make_shared<ErrorNode>();
+            translation = std::make_shared<CommentNode>(commentText);
             stack.clear(); // Clear stack so later bytecode won't be too screwed up
         }
     }
 
-    if (comment)
-        ast->addStatement(std::move(comment));
     if (!translation)
         translation = std::make_shared<ErrorNode>();
 
