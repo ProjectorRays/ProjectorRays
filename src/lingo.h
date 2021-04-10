@@ -361,10 +361,10 @@ struct TempNode : ExprNode {
 
 /* CommentNode */
 
-struct CommentNode : ExprNode {
+struct CommentNode : Node {
     std::string text;
 
-    CommentNode(std::string t) : ExprNode(kCommentNode), text(t) {}
+    CommentNode(std::string t) : Node(kCommentNode), text(t) {}
     virtual ~CommentNode() = default;
     virtual std::string toString(bool summary);
 };
