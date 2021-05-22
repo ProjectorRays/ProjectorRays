@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
                 id = std::to_string(it->first);
             }
             std::string fileName = cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
-            writeFile(fileName + ".lingo", it->second->scriptText());
+            writeFile(fileName + ".ls", it->second->scriptText());
             writeFile(fileName + ".lasm", it->second->bytecodeText());
         }
     }
