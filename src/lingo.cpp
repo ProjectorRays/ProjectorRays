@@ -487,7 +487,7 @@ std::string ChunkHiliteStmtNode::toString(bool summary) {
     if (last->getValue()->toInt()) {
         res += " to " + last->toString(summary);
     }
-    res += " of field " + fieldID->toString(summary);
+    res += " of " + field->toString(summary);
     return res;
 }
 
@@ -506,7 +506,25 @@ std::string SpriteWithinExprNode::toString(bool summary) {
 /* FieldExprNode */
 
 std::string FieldExprNode::toString(bool summary) {
-    return "field(" + fieldID->toString(summary) + ")";
+    std::string res = "field";
+    if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
+        res += "(" + fieldID->toString(summary) + ")";
+    } else {
+        res += "(" + fieldID->toString(summary) + ", " + castID->toString(summary) + ")";
+    }
+    return res;
+}
+
+/* MemberExprNode */
+
+std::string MemberExprNode::toString(bool summary) {
+    std::string res = "member"; // TODO: cast in D4
+    if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
+        res += "(" + memberID->toString(summary) + ")";
+    } else {
+        res += "(" + memberID->toString(summary) + ", " + castID->toString(summary) + ")";
+    }
+    return res;
 }
 
 /* VarNode */
@@ -701,17 +719,10 @@ std::string SpritePropExprNode::toString(bool summary) {
     return "sprite(" + spriteID->toString(summary) + ")." + propString;
 }
 
-/* CastPropExprNode */
+/* ThePropExprNode */
 
-std::string CastPropExprNode::toString(bool summary) {
-    return "cast(" + castID->toString(summary) + ")." + prop;
-}
-
-/* FieldPropExprNode */
-
-std::string FieldPropExprNode::toString(bool summary) {
-    auto propString = Lingo::getName(Lingo::fieldPropertyNames, prop);
-    return "field(" + fieldID->toString(summary) + ")." + propString;
+std::string ThePropExprNode::toString(bool summary) {
+    return "the " + prop + " of " + obj->toString(summary);
 }
 
 /* ObjPropExprNode */

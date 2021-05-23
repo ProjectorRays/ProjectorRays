@@ -133,29 +133,26 @@ void Handler::registerGlobal(const std::string &name) {
     }
 }
 
-std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Datum> id) {
+std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Node> id, std::shared_ptr<Node> castID) {
 	switch (varType) {
 	case 0x1: // global
 	case 0x2: // global
 	case 0x3: // property/instance
-		return std::make_shared<LiteralNode>(std::move(id));
+		return id;
 	case 0x4: // arg
         {
-            std::string name = getArgumentName(id->i / variableMultiplier());
+            std::string name = getArgumentName(id->getValue()->i / variableMultiplier());
             auto ref = std::make_shared<Datum>(kDatumVarRef, name);
             return std::make_shared<LiteralNode>(std::move(ref));
         }
 	case 0x5: // local
         {
-            std::string name = getLocalName(id->i / variableMultiplier());
+            std::string name = getLocalName(id->getValue()->i / variableMultiplier());
             auto ref = std::make_shared<Datum>(kDatumVarRef, name);
             return std::make_shared<LiteralNode>(std::move(ref));
         }
 	case 0x6: // field
-        {
-            auto fieldName = std::make_shared<LiteralNode>(id);
-            return std::make_shared<FieldExprNode>(std::move(fieldName));
-        }
+        return std::make_shared<FieldExprNode>(std::move(id), std::move(castID));
 	default:
 		std::cout << boost::format("findVar: unhandled var type %d\n") % varType;
 		break;
@@ -333,9 +330,11 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         break;
     case kOpHiliteChunk:
         {
+            std::shared_ptr<Node> castID;
             if (script->movie->version >= 500)
-                auto castID = pop();
+                castID = pop();
             auto fieldID = pop();
+            auto field = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
             auto lastLine = pop();
             auto firstLine = pop();
             auto lastItem = pop();
@@ -345,13 +344,13 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             auto lastChar = pop();
             auto firstChar = pop();
             if (firstChar->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(fieldID));
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(field));
             } else if (firstWord->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(fieldID));
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(field));
             } else if (firstItem->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(fieldID));
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(field));
             } else if (firstLine->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(fieldID));
+                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(field));
             } else {
                 translation = std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
             }
@@ -373,10 +372,11 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         break;
     case kOpGetField:
         {
+            std::shared_ptr<Node> castID;
             if (script->movie->version >= 500)
-                auto castID = pop();
+                castID = pop();
             auto fieldID = pop();
-            translation = std::make_shared<FieldExprNode>(std::move(fieldID));
+            translation = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
         }
         break;
     case kOpStartObj:
@@ -579,11 +579,11 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         {
             PutType putType = static_cast<PutType>((bytecode.obj >> 4) & 0xF);
             uint32_t varType = bytecode.obj & 0xF;
+            std::shared_ptr<Node> castID;
             if (varType == 6 && script->movie->version >= 500)
-                auto castID = pop(); // field cast ID
-
-            auto varId = pop()->getValue();
-            auto var = findVar(varType, std::move(varId));
+                castID = pop(); // field cast ID
+            auto varID = pop();
+            auto var = findVar(varType, std::move(varID), std::move(castID));
             auto val = pop();
             translation = std::make_shared<PutStmtNode>(putType, var, val);
         }
@@ -659,23 +659,36 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto propName = Lingo::getName(Lingo::castPropertyNames09, propertyID);
-                auto castID = pop();
-                translation = std::make_shared<CastPropExprNode>(std::move(castID), propName);
+                std::shared_ptr<Node> castID;
+                if (script->movie->version >= 500)
+                    castID = pop();
+                auto memberID = pop();
+                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                translation = std::make_shared<ThePropExprNode>(std::move(member), propName);
             }
             break;
-        case 0x0c:
+        case 0x0b:
             {
                 auto propertyID = pop()->getValue()->toInt();
+                auto propName = Lingo::getName(Lingo::fieldPropertyNames, propertyID);
+                std::shared_ptr<Node> castID;
+                if (script->movie->version >= 500)
+                    castID = pop();
                 auto fieldID = pop();
-                translation = std::make_shared<FieldPropExprNode>(std::move(fieldID), propertyID);
+                auto field = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
+                translation = std::make_shared<ThePropExprNode>(std::move(field), propName);
             }
             break;
         case 0x0d:
             {
                 auto propertyID = pop()->getValue()->toInt();
                 auto propName = Lingo::getName(Lingo::castPropertyNames0D, propertyID);
-                auto castID = pop();
-                translation = std::make_shared<CastPropExprNode>(std::move(castID), propName);
+                std::shared_ptr<Node> castID;
+                if (script->movie->version >= 500)
+                    castID = pop();
+                auto memberID = pop();
+                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                translation = std::make_shared<ThePropExprNode>(std::move(member), propName);
             }
             break;
         default:
@@ -736,29 +749,42 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         case 0x09:
             {
                 auto propertyID = pop()->getValue()->toInt();
-                auto value = pop();
                 auto propName = Lingo::getName(Lingo::castPropertyNames09, propertyID);
-                auto castID = pop();
-                auto prop = std::make_shared<CastPropExprNode>(std::move(castID), propName);
+                auto value = pop();
+                std::shared_ptr<Node> castID;
+                if (script->movie->version >= 500)
+                    castID = pop();
+                auto memberID = pop();
+                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
-        case 0x0c:
+        case 0x0b:
             {
                 auto propertyID = pop()->getValue()->toInt();
+                auto propName = Lingo::getName(Lingo::fieldPropertyNames, propertyID);
                 auto value = pop();
+                std::shared_ptr<Node> castID;
+                if (script->movie->version >= 500)
+                    castID = pop();
                 auto fieldID = pop();
-                auto prop = std::make_shared<FieldPropExprNode>(std::move(fieldID), propertyID);
+                auto field = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
+                auto prop = std::make_shared<ThePropExprNode>(std::move(field), propName);
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;
         case 0x0d:
             {
                 auto propertyID = pop()->getValue()->toInt();
-                auto value = pop();
                 auto propName = Lingo::getName(Lingo::castPropertyNames0D, propertyID);
-                auto castID = pop();
-                auto prop = std::make_shared<CastPropExprNode>(std::move(castID), propName);
+                auto value = pop();
+                std::shared_ptr<Node> castID;
+                if (script->movie->version >= 500)
+                    castID = pop();
+                auto memberID = pop();
+                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
             break;

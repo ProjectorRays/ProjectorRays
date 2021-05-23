@@ -141,6 +141,7 @@ enum NodeType {
     kSpriteIntersectsExprNode,
     kSpriteWithinExprNode,
     kFieldExprNode,
+    kMemberExprNode,
     kVarNode,
     kAssignmentStmtNode,
     kIfStmtNode,
@@ -156,8 +157,7 @@ enum NodeType {
     kMenuItemPropExprNode,
     kSoundPropExprNode,
     kSpritePropExprNode,
-    kCastPropExprNode,
-    kFieldPropExprNode,
+    kThePropExprNode,
     kObjPropExprNode,
     kObjBracketExprNode,
     kObjPropIndexExprNode,
@@ -278,7 +278,7 @@ struct Handler {
     std::shared_ptr<Node> pop();
     int variableMultiplier();
     void registerGlobal(const std::string &name);
-    std::shared_ptr<Node> findVar(int varType, std::shared_ptr<Datum> id);
+    std::shared_ptr<Node> findVar(int varType, std::shared_ptr<Node> id, std::shared_ptr<Node> castID);
     std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index);
     void translate();
     size_t translateBytecode(Bytecode &bytecode, size_t pos);
@@ -491,7 +491,7 @@ struct ChunkHiliteStmtNode : StmtNode {
     ChunkType type;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> last;
-    std::shared_ptr<Node> fieldID;
+    std::shared_ptr<Node> field;
 
     ChunkHiliteStmtNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> f)
         : StmtNode(kChunkHiliteStmtNode), type(t) {
@@ -499,8 +499,8 @@ struct ChunkHiliteStmtNode : StmtNode {
         first->parent = this;
         last = std::move(b);
         last->parent = this;
-        fieldID = std::move(f);
-        fieldID->parent = this;
+        field = std::move(f);
+        field->parent = this;
     }
     virtual ~ChunkHiliteStmtNode() = default;
     virtual std::string toString(bool summary);
@@ -544,12 +544,35 @@ struct SpriteWithinExprNode : ExprNode {
 
 struct FieldExprNode : ExprNode {
     std::shared_ptr<Node> fieldID;
+    std::shared_ptr<Node> castID;
 
-    FieldExprNode(std::shared_ptr<Node> f) : ExprNode(kFieldExprNode) {
-        fieldID = std::move(f);
-        fieldID->parent = this;
+    FieldExprNode(std::shared_ptr<Node> fieldID, std::shared_ptr<Node> castID) : ExprNode(kFieldExprNode) {
+        this->fieldID = std::move(fieldID);
+        this->fieldID->parent = this;
+        if (castID) {
+            this->castID = std::move(castID);
+            this->castID->parent = this;
+        }
     }
     virtual ~FieldExprNode() = default;
+    virtual std::string toString(bool summary);
+};
+
+/* MemberExprNode */
+
+struct MemberExprNode : ExprNode {
+    std::shared_ptr<Node> memberID;
+    std::shared_ptr<Node> castID;
+
+    MemberExprNode(std::shared_ptr<Node> memberID, std::shared_ptr<Node> castID) : ExprNode(kMemberExprNode) {
+        this->memberID = std::move(memberID);
+        this->memberID->parent = this;
+        if (castID) {
+            this->castID = std::move(castID);
+            this->castID->parent = this;
+        }
+    }
+    virtual ~MemberExprNode() = default;
     virtual std::string toString(bool summary);
 };
 
@@ -797,33 +820,18 @@ struct SpritePropExprNode : ExprNode {
     virtual std::string toString(bool summary);
 };
 
-/* CastPropExprNode */
+/* ThePropExprNode */
 
-struct CastPropExprNode : ExprNode {
-    std::shared_ptr<Node> castID;
+struct ThePropExprNode : ExprNode {
+    std::shared_ptr<Node> obj;
     std::string prop;
 
-    CastPropExprNode(std::shared_ptr<Node> c, std::string p)
-        : ExprNode(kCastPropExprNode), prop(p) {
-        castID = std::move(c);
-        castID->parent = this;
+    ThePropExprNode(std::shared_ptr<Node> o, std::string p)
+        : ExprNode(kThePropExprNode), prop(p) {
+        obj = std::move(o);
+        obj->parent = this;
     }
-    virtual ~CastPropExprNode() = default;
-    virtual std::string toString(bool summary);
-};
-
-/* FieldPropExprNode */
-
-struct FieldPropExprNode : ExprNode {
-    std::shared_ptr<Node> fieldID;
-    uint prop;
-
-    FieldPropExprNode(std::shared_ptr<Node> f, uint p)
-        : ExprNode(kFieldPropExprNode), prop(p) {
-        fieldID = std::move(f);
-        fieldID->parent = this;
-    }
-    virtual ~FieldPropExprNode() = default;
+    virtual ~ThePropExprNode() = default;
     virtual std::string toString(bool summary);
 };
 
