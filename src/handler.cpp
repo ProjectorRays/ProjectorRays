@@ -135,7 +135,7 @@ void Handler::registerGlobal(const std::string &name) {
 
 std::shared_ptr<Node> Handler::readVar(int varType) {
     std::shared_ptr<Node> castID;
-    if (varType == 0x6) // field
+    if (varType == 0x6 && script->movie->version >= 500) // field cast ID
         castID = pop();
     std::shared_ptr<Node> id = pop();
 
