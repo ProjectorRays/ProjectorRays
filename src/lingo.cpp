@@ -476,7 +476,8 @@ std::string ChunkExprNode::toString(bool dot, bool sum) {
     if (last->getValue()->toInt()) {
         res += " to " + last->toString(dot, sum);
     }
-    res += " of " + string->toString(dot, sum);
+    // we want the string to always be verbose
+    res += " of " + string->toString(false, sum);
     return res;
 }
 
@@ -488,7 +489,6 @@ std::string ChunkHiliteStmtNode::toString(bool dot, bool sum) {
         res += " to " + last->toString(dot, sum);
     }
     // we want the field to always be verbose
-    // e.g. field "name" instead of field("name")
     res += " of " + field->toString(false, sum);
     return res;
 }
@@ -530,8 +530,10 @@ std::string VarNode::toString(bool dot, bool sum) {
 /* AssignmentStmtNode */
 
 std::string AssignmentStmtNode::toString(bool dot, bool sum) {
-    if (!dot || forceVerbose)
-        return "set " + variable->toString(dot, sum) + " to " + value->toString(dot, sum);
+    if (!dot || forceVerbose) {
+        // we want the variable to always be verbose
+        return "set " + variable->toString(false, sum) + " to " + value->toString(dot, sum);
+    }
     
     return variable->toString(dot, sum) + " = " + value->toString(dot, sum);
 }
@@ -678,14 +680,16 @@ std::string TheExprNode::toString(bool dot, bool sum) {
 
 std::string LastStringChunkExprNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    return "the last " + typeString + " in " + string->toString(dot, sum);
+    // we want the string to always be verbose
+    return "the last " + typeString + " in " + string->toString(false, sum);
 }
 
 /* StringChunkCountExprNode */
 
 std::string StringChunkCountExprNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    return "the number of " + typeString + " in " + string->toString(dot, sum);
+    // we want the string to always be verbose
+    return "the number of " + typeString + " in " + string->toString(false, sum);
 }
 
 /* MenuPropExprNode */
@@ -720,7 +724,6 @@ std::string SpritePropExprNode::toString(bool dot, bool sum) {
 
 std::string ThePropExprNode::toString(bool dot, bool sum) {
     // we want the object to always be verbose
-    // e.g. field "name" instead of field("name")
     return "the " + prop + " of " + obj->toString(false, sum);
 }
 
@@ -763,7 +766,6 @@ std::string NextRepeatStmtNode::toString(bool dot, bool sum) {
 std::string PutStmtNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::putTypeNames, type);
     // we want the variable to always be verbose
-    // e.g. field "name" instead of field("name")
     return "put " + value->toString(dot, sum) + " " + typeString + " " + variable->toString(false, sum);
 }
 
