@@ -99,6 +99,19 @@ std::map<uint, std::string> Lingo::binaryOpNames = {
     { kOpContains0Str,  "starts" }
 };
 
+std::map<uint, std::string> Lingo::chunkTypeNames = {
+    { kChunkChar, "char" },
+    { kChunkWord, "word" },
+    { kChunkItem, "item" },
+    { kChunkLine, "line" }
+};
+
+std::map<uint, std::string> Lingo::putTypeNames = {
+    { kPutInto,     "into" },
+    { kPutAfter,    "after" },
+    { kPutBefore,   "before" }
+};
+
 std::map<uint, std::string> Lingo::moviePropertyNames00 = {
     { 0x00, "floatPrecision" },
     { 0x01, "mouseDownScript" },
@@ -112,19 +125,6 @@ std::map<uint, std::string> Lingo::moviePropertyNames00 = {
     { 0x09, "short date" },
     { 0x0a, "abbr date" },
     { 0x0b, "long date" }
-};
-
-std::map<uint, std::string> Lingo::chunkTypeNames = {
-    { kChunkChar, "char" },
-    { kChunkWord, "word" },
-    { kChunkItem, "item" },
-    { kChunkLine, "line" }
-};
-
-std::map<uint, std::string> Lingo::putTypeNames = {
-    { kPutInto,     "into" },
-    { kPutAfter,    "after" },
-    { kPutBefore,   "before" }
 };
 
 std::map<uint, std::string> Lingo::menuPropertyNames = {
@@ -159,6 +159,7 @@ std::map<uint, std::string> Lingo::spritePropertyNames = {
     { 0x0e, "locV" },
     { 0x0f, "movieRate" },
     { 0x10, "movieTime" },
+    { 0x11, "pattern" },
     { 0x12, "puppet" },
     { 0x13, "right" },
     { 0x14, "startTime" },
@@ -171,7 +172,10 @@ std::map<uint, std::string> Lingo::spritePropertyNames = {
     { 0x1b, "width" },
     { 0x1d, "scriptNum" },
     { 0x1e, "moveableSprite" },
-    { 0x20, "scoreColor" }
+    { 0x1f, "editableText" },
+    { 0x20, "scoreColor" },
+    { 0x21, "loc" },
+    { 0x22, "rect" }
 };
 
 std::map<uint, std::string> Lingo::moviePropertyNames07 = {
@@ -181,20 +185,35 @@ std::map<uint, std::string> Lingo::moviePropertyNames07 = {
     { 0x04, "checkBoxAccess" },
     { 0x05, "checkboxType" },
     { 0x06, "colorDepth" },
+    { 0x07, "colorQD" },
     { 0x08, "exitLock" },
     { 0x09, "fixStageSize" },
+    { 0x0a, "fullColorPermit" },
+    { 0x0b, "imageDirect" },
+    { 0x0c, "doubleClick" },
+//  { 0x0d, ??? },
+    { 0x0e, "lastClick" },
+    { 0x0f, "lastEvent" },
+//  { 0x10, ??? },
+    { 0x11, "lastKey" },
+    { 0x12, "lastRoll"},
     { 0x13, "timeoutLapsed" },
+    { 0x14, "multiSound" },
+    { 0x15, "pauseState" },
+    { 0x16, "quickTimePresent" },
     { 0x17, "selEnd" },
     { 0x18, "selStart" },
     { 0x19, "soundEnabled" },
     { 0x1a, "soundLevel" },
     { 0x1b, "stageColor" },
+//  { 0x1c, ??? },
     { 0x1d, "stillDown" },
     { 0x1e, "timeoutKeyDown" },
     { 0x1f, "timeoutLength" },
     { 0x20, "timeoutMouse" },
     { 0x21, "timeoutPlay" },
-    { 0x22, "timer" }
+    { 0x22, "timer" },
+    { 0x23, "preLoadRAM" }
 };
 
 std::map<uint, std::string> Lingo::moviePropertyNames08 = {
@@ -203,26 +222,25 @@ std::map<uint, std::string> Lingo::moviePropertyNames08 = {
     { 0x03, "number of menus" }
 };
 
-std::map<uint, std::string> Lingo::castPropertyNames09 = {
+std::map<uint, std::string> Lingo::memberPropertyNames = {
     { 0x01, "name" },
     { 0x02, "text" },
-    { 0x08, "picture" },
-    { 0x0a, "number" },
-    { 0x0b, "size" },
-    { 0x11, "foreColor" },
-    { 0x12, "backColor" }
-};
-
-std::map<uint, std::string> Lingo::fieldPropertyNames = {
     { 0x03, "textStyle" },
     { 0x04, "textFont" },
     { 0x05, "textHeight" },
     { 0x06, "textAlign" },
-    { 0x07, "textSize" }
-};
-
-std::map<uint, std::string> Lingo::castPropertyNames0D = {
-    { 0x01, "sound" }
+    { 0x07, "textSize" },
+    { 0x08, "picture" },
+    { 0x09, "hilite" },
+    { 0x0a, "number" },
+    { 0x0b, "size" },
+    { 0x0c, "loop" },
+    { 0x0d, "duration" },
+    { 0x0e, "controller" },
+    { 0x0f, "directToStage" },
+    { 0x10, "sound" },
+    { 0x11, "foreColor" },
+    { 0x12, "backColor" }
 };
 
 std::string Lingo::getOpcodeName(uint8_t id) {
@@ -696,28 +714,28 @@ std::string StringChunkCountExprNode::toString(bool dot, bool sum) {
 
 std::string MenuPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::menuPropertyNames, prop);
-    return "menu(" + menuID->toString(dot, sum) + ")." + propString;
+    return "the " + propString + " of menu " + menuID->toString(dot, sum);
 }
 
 /* MenuItemPropExprNode */
 
 std::string MenuItemPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
-    return "menu(" + menuID->toString(dot, sum) + ").item(" + itemID->toString(dot, sum) + ")." + propString;
+    return "the " + propString + "of menuItem " + itemID->toString(dot, sum) + " of menu " + menuID->toString(dot, sum);
 }
 
 /* SoundPropExprNode */
 
 std::string SoundPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::soundPropertyNames, prop);
-    return "sound(" + soundID->toString(dot, sum) + ")." + propString;
+    return "the " + propString + " of sound " + soundID->toString(dot, sum);
 }
 
 /* SpritePropExprNode */
 
 std::string SpritePropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::spritePropertyNames, prop);
-    return "sprite(" + spriteID->toString(dot, sum) + ")." + propString;
+    return "the " + propString + " of sprite " + spriteID->toString(dot, sum);
 }
 
 /* ThePropExprNode */

@@ -177,19 +177,17 @@ enum CaseExpect {
 struct Lingo {
     static std::map<uint, std::string> opcodeNames;
     static std::map<uint, std::string> binaryOpNames;
-    static std::map<uint, std::string> moviePropertyNames00;
-    static std::map<uint, std::string> timeNames;
     static std::map<uint, std::string> chunkTypeNames;
     static std::map<uint, std::string> putTypeNames;
+    static std::map<uint, std::string> moviePropertyNames00;
+    static std::map<uint, std::string> timeNames;
     static std::map<uint, std::string> menuPropertyNames;
     static std::map<uint, std::string> menuItemPropertyNames;
     static std::map<uint, std::string> soundPropertyNames;
     static std::map<uint, std::string> spritePropertyNames;
     static std::map<uint, std::string> moviePropertyNames07;
     static std::map<uint, std::string> moviePropertyNames08;
-    static std::map<uint, std::string> castPropertyNames09;
-    static std::map<uint, std::string> fieldPropertyNames;
-    static std::map<uint, std::string> castPropertyNames0D;
+    static std::map<uint, std::string> memberPropertyNames;
 
     static std::string getOpcodeName(uint8_t id);
     static std::string getName(const std::map<uint, std::string> &nameMap, uint id);
@@ -279,6 +277,7 @@ struct Handler {
     void registerGlobal(const std::string &name);
     std::shared_ptr<Node> findVar(int varType, std::shared_ptr<Node> id, std::shared_ptr<Node> castID);
     std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index);
+    std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
     void translate();
     size_t translateBytecode(Bytecode &bytecode, size_t pos);
     std::string bytecodeText();

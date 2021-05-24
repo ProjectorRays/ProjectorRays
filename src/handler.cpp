@@ -213,6 +213,82 @@ std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index) {
     return res;
 }
 
+std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) {
+    switch (propertyType) {
+    case 0x00:
+        {
+            if (propertyID <= 0x0b) { // movie property
+                auto propName = Lingo::getName(Lingo::moviePropertyNames00, propertyID);
+                return std::make_shared<TheExprNode>(propName);
+            } else { // last chunk
+                auto string = pop();
+                auto chunkType = static_cast<ChunkType>(propertyID - 0x0b);
+                return std::make_shared<LastStringChunkExprNode>(chunkType, std::move(string));
+            }
+        }
+        break;
+    case 0x01: // number of chunks
+        {
+            auto chunkType = static_cast<ChunkType>(pop()->getValue()->toInt());
+            auto string = pop();
+            return std::make_shared<StringChunkCountExprNode>(chunkType, std::move(string));
+        }
+        break;
+    case 0x02: // menu property
+        {
+            auto menuID = pop();
+            return std::make_shared<MenuPropExprNode>(std::move(menuID), propertyID);
+        }
+        break;
+    case 0x03: // menu item property
+        {
+            auto menuID = pop();
+            auto itemID = pop();
+            return std::make_shared<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
+        }
+        break;
+    case 0x04: // sound property
+        {
+            auto soundID = pop();
+            return std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
+        }
+        break;
+    case 0x06: // sprite property
+        {
+            auto spriteID = pop();
+            return std::make_shared<SpritePropExprNode>(std::move(spriteID), propertyID);
+        }
+        break;
+    case 0x07: // movie property
+        return std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
+    case 0x08: // movie property
+        return std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames08, propertyID));
+    case 0x09: // generic cast member
+    case 0x0b: // field
+    case 0x0d: // digital video
+        {
+            auto propName = Lingo::getName(Lingo::memberPropertyNames, propertyID);
+            std::shared_ptr<Node> castID;
+            if (script->movie->version >= 500) {
+                castID = pop();
+            }
+            auto memberID = pop();
+            std::string prefix;
+            if (propertyType == 0x0b) {
+                prefix = "field";
+            } else {
+                prefix = (script->movie->version >= 500) ? "member" : "cast";
+            }
+            auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
+            return std::make_shared<ThePropExprNode>(std::move(member), propName);
+        }
+        break;
+    default:
+        break;
+    }
+    return std::make_shared<CommentNode>("ERROR: Unknown property type " + std::to_string(propertyType));
+}
+
 void Handler::translate() {
     stack.clear();
     ast = std::make_unique<AST>(this);
@@ -593,207 +669,21 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         // TODO
         break;
     case kOpGet:
-        switch (bytecode.obj) {
-        case 0x00:
-            {
-                auto id = pop()->getValue()->toInt();
-                if (id <= 0x0b) {
-                    auto propName = Lingo::getName(Lingo::moviePropertyNames00, id);
-                    translation = std::make_shared<TheExprNode>(propName);
-                } else {
-                    auto string = pop();
-                    auto chunkType = static_cast<ChunkType>(id - 0x0b);
-                    translation = std::make_shared<LastStringChunkExprNode>(chunkType, std::move(string));
-                }
-            }
-            break;
-        case 0x01:
-            {
-                auto chunkType = static_cast<ChunkType>(pop()->getValue()->toInt());
-                auto string = pop();
-                translation = std::make_shared<StringChunkCountExprNode>(chunkType, std::move(string));
-            }
-            break;
-        case 0x02:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto menuID = pop();
-                translation = std::make_shared<MenuPropExprNode>(std::move(menuID), propertyID);
-            }
-            break;
-        case 0x03:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto menuID = pop();
-                auto itemID = pop();
-                translation = std::make_shared<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
-            }
-            break;
-        case 0x04:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto soundID = pop();
-                translation = std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
-            }
-            break;
-        case 0x06:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto spriteID = pop();
-                translation = std::make_shared<SoundPropExprNode>(std::move(spriteID), propertyID);
-            }
-            break;
-        case 0x07:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                translation = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
-            }
-            break;
-        case 0x08:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                translation = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames08, propertyID));
-            }
-            break;
-        case 0x09:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto propName = Lingo::getName(Lingo::castPropertyNames09, propertyID);
-                std::shared_ptr<Node> castID;
-                if (script->movie->version >= 500)
-                    castID = pop();
-                auto memberID = pop();
-                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
-                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
-                translation = std::make_shared<ThePropExprNode>(std::move(member), propName);
-            }
-            break;
-        case 0x0b:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto propName = Lingo::getName(Lingo::fieldPropertyNames, propertyID);
-                std::shared_ptr<Node> castID;
-                if (script->movie->version >= 500)
-                    castID = pop();
-                auto fieldID = pop();
-                auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
-                translation = std::make_shared<ThePropExprNode>(std::move(field), propName);
-            }
-            break;
-        case 0x0d:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto propName = Lingo::getName(Lingo::castPropertyNames0D, propertyID);
-                std::shared_ptr<Node> castID;
-                if (script->movie->version >= 500)
-                    castID = pop();
-                auto memberID = pop();
-                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
-                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
-                translation = std::make_shared<ThePropExprNode>(std::move(member), propName);
-            }
-            break;
-        default:
-            translation = std::make_shared<CommentNode>("ERROR: Unknown option " + std::to_string(bytecode.obj));
+        {
+            int propertyID = pop()->getValue()->toInt();
+            translation = readV4Property(bytecode.obj, propertyID);
         }
         break;
     case kOpSet:
-        switch (bytecode.obj) {
-        case 0x00:
-            {
-                auto id = pop()->getValue()->toInt();
-                auto value = pop();
-                if (id <= 0x05) {
-                    auto propName = Lingo::getName(Lingo::moviePropertyNames00, id);
-                    std::shared_ptr<Node> prop = std::make_shared<TheExprNode>(propName);
-                    translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-                } else {
-                    translation = std::make_shared<CommentNode>("ERROR: Unknown property ID " + std::to_string(id));
-                }
-            }
-            break;
-        case 0x03:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto value = pop();
-                auto menuID = pop();
-                auto itemID = pop();
-                auto prop = std::make_shared<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
+        {
+            int propertyID = pop()->getValue()->toInt();
+            auto value = pop();
+            auto prop = readV4Property(bytecode.obj, propertyID);
+            if (prop->type == kCommentNode) { // error comment
+                translation = prop;
+            } else {
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
-            break;
-        case 0x04:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto value = pop();
-                auto soundID = pop();
-                auto prop = std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-            }
-            break;
-        case 0x06:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto value = pop();
-                auto spriteID = pop();
-                auto prop = std::make_shared<SoundPropExprNode>(std::move(spriteID), propertyID);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-            }
-            break;
-        case 0x07:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto value = pop();
-                auto prop = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-            }
-            break;
-        case 0x09:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto propName = Lingo::getName(Lingo::castPropertyNames09, propertyID);
-                auto value = pop();
-                std::shared_ptr<Node> castID;
-                if (script->movie->version >= 500)
-                    castID = pop();
-                auto memberID = pop();
-                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
-                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
-                auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-            }
-            break;
-        case 0x0b:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto propName = Lingo::getName(Lingo::fieldPropertyNames, propertyID);
-                auto value = pop();
-                std::shared_ptr<Node> castID;
-                if (script->movie->version >= 500)
-                    castID = pop();
-                auto fieldID = pop();
-                auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
-                auto prop = std::make_shared<ThePropExprNode>(std::move(field), propName);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-            }
-            break;
-        case 0x0d:
-            {
-                auto propertyID = pop()->getValue()->toInt();
-                auto propName = Lingo::getName(Lingo::castPropertyNames0D, propertyID);
-                auto value = pop();
-                std::shared_ptr<Node> castID;
-                if (script->movie->version >= 500)
-                    castID = pop();
-                auto memberID = pop();
-                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
-                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
-                auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
-            }
-            break;
-        default:
-            translation = std::make_shared<CommentNode>("ERROR: Unknown option " + std::to_string(bytecode.obj));
         }
         break;
     case kOpGetMovieProp:
