@@ -706,7 +706,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (id <= 0x05) {
                     auto propName = Lingo::getName(Lingo::moviePropertyNames00, id);
                     std::shared_ptr<Node> prop = std::make_shared<TheExprNode>(propName);
-                    translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                    translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
                 } else {
                     translation = std::make_shared<CommentNode>("ERROR: Unknown property ID " + std::to_string(id));
                 }
@@ -719,7 +719,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 auto menuID = pop();
                 auto itemID = pop();
                 auto prop = std::make_shared<MenuItemPropExprNode>(std::move(menuID), std::move(itemID), propertyID);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         case 0x04:
@@ -728,7 +728,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 auto value = pop();
                 auto soundID = pop();
                 auto prop = std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         case 0x06:
@@ -737,7 +737,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 auto value = pop();
                 auto spriteID = pop();
                 auto prop = std::make_shared<SoundPropExprNode>(std::move(spriteID), propertyID);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         case 0x07:
@@ -745,7 +745,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 auto propertyID = pop()->getValue()->toInt();
                 auto value = pop();
                 auto prop = std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         case 0x09:
@@ -760,7 +760,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
                 auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
                 auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         case 0x0b:
@@ -774,7 +774,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 auto fieldID = pop();
                 auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
                 auto prop = std::make_shared<ThePropExprNode>(std::move(field), propName);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         case 0x0d:
@@ -789,7 +789,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
                 auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
                 auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
-                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
+                translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
             }
             break;
         default:

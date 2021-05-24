@@ -530,6 +530,9 @@ std::string VarNode::toString(bool dot, bool sum) {
 /* AssignmentStmtNode */
 
 std::string AssignmentStmtNode::toString(bool dot, bool sum) {
+    if (!dot || forceVerbose)
+        return "set " + variable->toString(dot, sum) + " to " + value->toString(dot, sum);
+    
     return variable->toString(dot, sum) + " = " + value->toString(dot, sum);
 }
 

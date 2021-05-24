@@ -574,9 +574,10 @@ struct VarNode : ExprNode {
 struct AssignmentStmtNode : StmtNode {
     std::shared_ptr<Node> variable;
     std::shared_ptr<Node> value;
+    bool forceVerbose;
 
-    AssignmentStmtNode(std::shared_ptr<Node> var, std::shared_ptr<Node> val)
-        : StmtNode(kAssignmentStmtNode) {
+    AssignmentStmtNode(std::shared_ptr<Node> var, std::shared_ptr<Node> val, bool forceVerbose = false)
+        : StmtNode(kAssignmentStmtNode), forceVerbose(forceVerbose) {
         variable = std::move(var);
         variable->parent = this;
         value = std::move(val);
