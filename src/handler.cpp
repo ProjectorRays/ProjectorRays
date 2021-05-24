@@ -183,7 +183,7 @@ std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index) {
     if (!(bytecodeArray[index + 7].opcode == kOpJmpIfZ))
         return nullptr;
 
-    size_t endPos = bytecodeArray[index + 7].pos + 8 + bytecodeArray[index + 7].obj;
+    size_t endPos = bytecodeArray[index + 7].pos + bytecodeArray[index + 7].obj;
 
     if (!(bytecodeArray[index + 8].opcode == kOpPeek && bytecodeArray[index + 8].obj == 2))
         return nullptr;
