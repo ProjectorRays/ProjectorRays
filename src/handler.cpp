@@ -133,7 +133,12 @@ void Handler::registerGlobal(const std::string &name) {
     }
 }
 
-std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Node> id, std::shared_ptr<Node> castID) {
+std::shared_ptr<Node> Handler::readVar(int varType) {
+    std::shared_ptr<Node> castID;
+    if (varType == 0x6) // field
+        castID = pop();
+    std::shared_ptr<Node> id = pop();
+
 	switch (varType) {
 	case 0x1: // global
 	case 0x2: // global
@@ -645,21 +650,24 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             translation = std::make_shared<CallNode>(getName(bytecode.obj), std::move(argList));
         }
         break;
-    case kOpCallObjOld:
-        // Possibly used by old Director versions?
-        /* auto object = */ pop();
-        /* let argList = */ pop();
-        // TODO
+    case kOpCallObjV4:
+        {
+            auto object = readVar(bytecode.obj);
+            auto argList = pop();
+            auto &rawArgList = argList->getValue()->l;
+            if (rawArgList.size() > 0) {
+                // first arg is a symbol
+                // replace it with a variable
+                rawArgList[0] = std::make_shared<VarNode>(rawArgList[0]->getValue()->s);
+            }
+            translation = std::make_shared<ObjCallV4Node>(std::move(object), std::move(argList));
+        }
         break;
     case kOpPut:
         {
             PutType putType = static_cast<PutType>((bytecode.obj >> 4) & 0xF);
             uint32_t varType = bytecode.obj & 0xF;
-            std::shared_ptr<Node> castID;
-            if (varType == 6 && script->movie->version >= 500)
-                castID = pop(); // field cast ID
-            auto varID = pop();
-            auto var = findVar(varType, std::move(varID), std::move(castID));
+            auto var = readVar(varType);
             auto val = pop();
             translation = std::make_shared<PutStmtNode>(putType, var, val);
         }

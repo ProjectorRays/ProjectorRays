@@ -78,7 +78,7 @@ enum OpCode {
     kOpJmpIfZ           = 0x55,
     kOpCallLocal        = 0x56,
     kOpCallExt          = 0x57,
-    kOpCallObjOld       = 0x58,
+    kOpCallObjV4        = 0x58,
     kOpPut              = 0x59,
     kOp5BXX             = 0x5b,
     kOpGet              = 0x5c,
@@ -149,6 +149,7 @@ enum NodeType {
     kCaseNode,
     kCallNode,
     kObjCallNode,
+    kObjCallV4Node,
     kTheExprNode,
     kLastStringChunkExprNode,
     kStringChunkCountExprNode,
@@ -275,7 +276,7 @@ struct Handler {
     std::shared_ptr<Node> pop();
     int variableMultiplier();
     void registerGlobal(const std::string &name);
-    std::shared_ptr<Node> findVar(int varType, std::shared_ptr<Node> id, std::shared_ptr<Node> castID);
+    std::shared_ptr<Node> readVar(int varType);
     std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index);
     std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
     void translate();
@@ -697,6 +698,25 @@ struct ObjCallNode : Node {
             isExpression = true;
     }
     virtual ~ObjCallNode() = default;
+    virtual std::string toString(bool dot, bool sum);
+};
+
+/* ObjCallV4Node */
+
+struct ObjCallV4Node : Node {
+    std::shared_ptr<Node> obj;
+    std::shared_ptr<Node> argList;
+
+    ObjCallV4Node(std::shared_ptr<Node> o, std::shared_ptr<Node> a) : Node(kObjCallV4Node) {
+        obj = o;
+        argList = std::move(a);
+        argList->parent = this;
+        if (argList->getValue()->type == kDatumArgListNoRet)
+            isStatement = true;
+        else
+            isExpression = true;
+    }
+    virtual ~ObjCallV4Node() = default;
     virtual std::string toString(bool dot, bool sum);
 };
 

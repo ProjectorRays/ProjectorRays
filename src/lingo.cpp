@@ -59,7 +59,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpJmpIfZ,            "jmpifz" },
     { kOpCallLocal,         "localcall" },
     { kOpCallExt,           "extcall" },
-    { kOpCallObjOld,        "oldobjcall" },
+    { kOpCallObjV4,         "objcallv4" },
     { kOpPut,               "put" },
     { kOp5BXX,              "op5Bxx" },
     { kOpGet,               "get" },
@@ -686,6 +686,12 @@ std::string ObjCallNode::toString(bool dot, bool sum) {
     }
     res += ")";
     return res;
+}
+
+/* ObjCallV4Node */
+
+std::string ObjCallV4Node::toString(bool dot, bool sum) {
+    return obj->toString(dot, sum) + "(" + argList->toString(dot, sum) + ")";
 }
 
 /* TheExprNode */
