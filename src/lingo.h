@@ -140,7 +140,6 @@ enum NodeType {
     kChunkHiliteStmtNode,
     kSpriteIntersectsExprNode,
     kSpriteWithinExprNode,
-    kFieldExprNode,
     kMemberExprNode,
     kVarNode,
     kAssignmentStmtNode,
@@ -540,31 +539,15 @@ struct SpriteWithinExprNode : ExprNode {
     virtual std::string toString(bool dot, bool sum);
 };
 
-/* FieldExprNode */
-
-struct FieldExprNode : ExprNode {
-    std::shared_ptr<Node> fieldID;
-    std::shared_ptr<Node> castID;
-
-    FieldExprNode(std::shared_ptr<Node> fieldID, std::shared_ptr<Node> castID) : ExprNode(kFieldExprNode) {
-        this->fieldID = std::move(fieldID);
-        this->fieldID->parent = this;
-        if (castID) {
-            this->castID = std::move(castID);
-            this->castID->parent = this;
-        }
-    }
-    virtual ~FieldExprNode() = default;
-    virtual std::string toString(bool dot, bool sum);
-};
-
 /* MemberExprNode */
 
 struct MemberExprNode : ExprNode {
+    std::string type;
     std::shared_ptr<Node> memberID;
     std::shared_ptr<Node> castID;
 
-    MemberExprNode(std::shared_ptr<Node> memberID, std::shared_ptr<Node> castID) : ExprNode(kMemberExprNode) {
+    MemberExprNode(std::string type, std::shared_ptr<Node> memberID, std::shared_ptr<Node> castID)
+        : ExprNode(kMemberExprNode), type(type) {
         this->memberID = std::move(memberID);
         this->memberID->parent = this;
         if (castID) {

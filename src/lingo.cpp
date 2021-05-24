@@ -487,7 +487,9 @@ std::string ChunkHiliteStmtNode::toString(bool dot, bool sum) {
     if (last->getValue()->toInt()) {
         res += " to " + last->toString(dot, sum);
     }
-    res += " of " + field->toString(dot, sum);
+    // we want the field to always be verbose
+    // e.g. field "name" instead of field("name")
+    res += " of " + field->toString(false, sum);
     return res;
 }
 
@@ -503,24 +505,16 @@ std::string SpriteWithinExprNode::toString(bool dot, bool sum) {
     return "sprite(" + firstSprite->toString(dot, sum) + ").within(" + secondSprite->toString(dot, sum) + ")";
 }
 
-/* FieldExprNode */
-
-std::string FieldExprNode::toString(bool dot, bool sum) {
-    std::string res = "field";
-    if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
-        res += "(" + fieldID->toString(dot, sum) + ")";
-    } else {
-        res += "(" + fieldID->toString(dot, sum) + ", " + castID->toString(dot, sum) + ")";
-    }
-    return res;
-}
-
 /* MemberExprNode */
 
 std::string MemberExprNode::toString(bool dot, bool sum) {
-    std::string res = "member"; // TODO: cast in D4
+    std::string res = type;
     if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
-        res += "(" + memberID->toString(dot, sum) + ")";
+        if (dot) {
+            res += "(" + memberID->toString(dot, sum) + ")";
+        } else {
+            res += " " + memberID->toString(dot, sum);
+        }
     } else {
         res += "(" + memberID->toString(dot, sum) + ", " + castID->toString(dot, sum) + ")";
     }
@@ -722,7 +716,9 @@ std::string SpritePropExprNode::toString(bool dot, bool sum) {
 /* ThePropExprNode */
 
 std::string ThePropExprNode::toString(bool dot, bool sum) {
-    return "the " + prop + " of " + obj->toString(dot, sum);
+    // we want the object to always be verbose
+    // e.g. field "name" instead of field("name")
+    return "the " + prop + " of " + obj->toString(false, sum);
 }
 
 /* ObjPropExprNode */
@@ -763,7 +759,9 @@ std::string NextRepeatStmtNode::toString(bool dot, bool sum) {
 
 std::string PutStmtNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::putTypeNames, type);
-    return "put " + value->toString(dot, sum) + " " + typeString + " " + variable->toString(dot, sum);
+    // we want the variable to always be verbose
+    // e.g. field "name" instead of field("name")
+    return "put " + value->toString(dot, sum) + " " + typeString + " " + variable->toString(false, sum);
 }
 
 }

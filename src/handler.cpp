@@ -152,7 +152,7 @@ std::shared_ptr<Node> Handler::findVar(int varType, std::shared_ptr<Node> id, st
             return std::make_shared<LiteralNode>(std::move(ref));
         }
 	case 0x6: // field
-        return std::make_shared<FieldExprNode>(std::move(id), std::move(castID));
+        return std::make_shared<MemberExprNode>("field", std::move(id), std::move(castID));
 	default:
 		std::cout << boost::format("findVar: unhandled var type %d\n") % varType;
 		break;
@@ -334,7 +334,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             if (script->movie->version >= 500)
                 castID = pop();
             auto fieldID = pop();
-            auto field = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
+            auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
             auto lastLine = pop();
             auto firstLine = pop();
             auto lastItem = pop();
@@ -376,7 +376,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             if (script->movie->version >= 500)
                 castID = pop();
             auto fieldID = pop();
-            translation = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
+            translation = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
         }
         break;
     case kOpStartObj:
@@ -663,7 +663,8 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (script->movie->version >= 500)
                     castID = pop();
                 auto memberID = pop();
-                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
+                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
                 translation = std::make_shared<ThePropExprNode>(std::move(member), propName);
             }
             break;
@@ -675,7 +676,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (script->movie->version >= 500)
                     castID = pop();
                 auto fieldID = pop();
-                auto field = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
+                auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
                 translation = std::make_shared<ThePropExprNode>(std::move(field), propName);
             }
             break;
@@ -687,7 +688,8 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (script->movie->version >= 500)
                     castID = pop();
                 auto memberID = pop();
-                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
+                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
                 translation = std::make_shared<ThePropExprNode>(std::move(member), propName);
             }
             break;
@@ -755,7 +757,8 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (script->movie->version >= 500)
                     castID = pop();
                 auto memberID = pop();
-                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
+                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
                 auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
@@ -769,7 +772,7 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (script->movie->version >= 500)
                     castID = pop();
                 auto fieldID = pop();
-                auto field = std::make_shared<FieldExprNode>(std::move(fieldID), std::move(castID));
+                auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
                 auto prop = std::make_shared<ThePropExprNode>(std::move(field), propName);
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
@@ -783,7 +786,8 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                 if (script->movie->version >= 500)
                     castID = pop();
                 auto memberID = pop();
-                auto member = std::make_shared<FieldExprNode>(std::move(memberID), std::move(castID));
+                std::string prefix = (script->movie->version >= 500) ? "member" : "cast";
+                auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
                 auto prop = std::make_shared<ThePropExprNode>(std::move(member), propName);
                 translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value));
             }
