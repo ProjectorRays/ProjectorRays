@@ -38,14 +38,29 @@ void Handler::readData(ReadStream &stream) {
     while (stream.pos() < compiledOffset + compiledLen) {
         size_t pos = stream.pos();
         uint8_t op = stream.readUint8();
+        OpCode opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
         // instructions can be one, two or three bytes
         int32_t obj = 0;
         if (op >= 0xc0) {
+            // three bytes
             obj = stream.readInt32();
         } else if (op >= 0x80) {
-            obj = stream.readUint16();
+            // two bytes
+            if (opcode == kOpPushInt16 || opcode == kOpPushInt8) {
+                // treat pushint's arg as signed
+                // pushint8 may be used to push a 16-bit int in older Lingo
+                obj = stream.readInt16();
+            } else {
+                obj = stream.readUint16();
+            }
         } else if (op >= 0x40) {
-            obj = stream.readUint8();
+            // one byte
+            if (opcode == kOpPushInt8) {
+                // treat pushint's arg as signed
+                obj = stream.readInt8();
+            } else {
+                obj = stream.readUint8();
+            }
         }
         // read the first byte to convert to an opcode
         Bytecode bytecode(op, obj, pos - compiledOffset);
