@@ -35,6 +35,7 @@ public:
 
     int version;
     bool capitalX;
+    bool dotSyntax;
     uint32_t codec;
     bool afterburned;
 

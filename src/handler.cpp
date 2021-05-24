@@ -1005,6 +1005,8 @@ std::string posToString(int32_t pos) {
 }
 
 std::string Handler::bytecodeText() {
+    bool dotSyntax = script->movie->dotSyntax;
+
     std::string res = "on " + name;
     if (argumentNames.size() > 0) {
         res += " ";
@@ -1040,9 +1042,9 @@ std::string Handler::bytecodeText() {
             }
             line += " ";
             if (bytecode.translation->isExpression)
-                line += "<" + bytecode.translation->toString(true) + ">";
+                line += "<" + bytecode.translation->toString(dotSyntax, true) + ">";
             else
-                line += bytecode.translation->toString(true);
+                line += bytecode.translation->toString(dotSyntax, true);
         }
         line += "\n";
         res += line;

@@ -216,6 +216,7 @@ bool Movie::readConfig() {
         config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
         version = humanVersion(config->directorVersion);
         std::cout << "Director version: " + std::to_string(version) + "\n";
+        dotSyntax = (version >= 700); // TODO: Check for verbose/dot syntax opcodes, allow users to toggle this
 
         return true;
     }

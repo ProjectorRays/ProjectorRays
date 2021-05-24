@@ -387,7 +387,7 @@ std::string ScriptChunk::scriptText() {
     for (size_t i = 0; i < handlers.size(); i++) {
         if (res.size() > 0)
             res += "\n";
-        res += handlers[i]->ast->toString(false);
+        res += handlers[i]->ast->toString(movie->dotSyntax, false);
     }
     return res;
 }

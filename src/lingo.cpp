@@ -260,7 +260,7 @@ int Datum::toInt() {
     return 0;
 }
 
-std::string Datum::toString(bool summary) {
+std::string Datum::toString(bool dot, bool sum) {
     switch (type) {
     case kDatumVoid:
         return "VOID";
@@ -300,7 +300,7 @@ std::string Datum::toString(bool summary) {
             for (size_t i = 0; i < l.size(); i++) {
                 if (i > 0)
                     res += ", ";
-                res += l[i]->toString(summary);
+                res += l[i]->toString(dot, sum);
             }
             if (type == kDatumList)
                 res += "]";
@@ -315,7 +315,7 @@ std::string Datum::toString(bool summary) {
                 for (size_t i = 0; i < l.size(); i += 2) {
                     if (i > 0)
                         res += ", ";
-                    res += l[i]->toString(summary) + ": " + l[i + 1]->toString(summary);
+                    res += l[i]->toString(dot, sum) + ": " + l[i + 1]->toString(dot, sum);
                 }
             }
             res += "]";
@@ -328,8 +328,8 @@ std::string Datum::toString(bool summary) {
 
 /* AST */
 
-std::string AST::toString(bool summary) {
-    return root->toString(summary);
+std::string AST::toString(bool dot, bool sum) {
+    return root->toString(dot, sum);
 }
 
 void AST::addStatement(std::shared_ptr<Node> statement) {
@@ -358,7 +358,7 @@ void AST::exitBlock() {
 
 /* Node */
 
-std::string Node::toString(bool summary) {
+std::string Node::toString(bool dot, bool sum) {
     return "";
 }
 
@@ -376,26 +376,26 @@ Node *Node::ancestorStatement() {
 
 /* ErrorNode */
 
-std::string ErrorNode::toString(bool summary) {
+std::string ErrorNode::toString(bool dot, bool sum) {
     return "ERROR";
 }
 
 /* TempNode */
 
-std::string TempNode::toString(bool summary) {
+std::string TempNode::toString(bool dot, bool sum) {
     return "TEMP";
 }
 
 /* CommentNode */
 
-std::string CommentNode::toString(bool summary) {
+std::string CommentNode::toString(bool dot, bool sum) {
     return "-- " + text;
 }
 
 /* LiteralNode */
 
-std::string LiteralNode::toString(bool summary) {
-    return value->toString(summary);
+std::string LiteralNode::toString(bool dot, bool sum) {
+    return value->toString(dot, sum);
 }
 
 std::shared_ptr<Datum> LiteralNode::getValue() {
@@ -404,10 +404,10 @@ std::shared_ptr<Datum> LiteralNode::getValue() {
 
 /* BlockNode */
 
-std::string BlockNode::toString(bool summary) {
+std::string BlockNode::toString(bool dot, bool sum) {
     std::string res = "";
     for (const auto &child : children) {
-        res += indent(child->toString(summary) + "\n");
+        res += indent(child->toString(dot, sum) + "\n");
     }
     return res;
 }
@@ -419,7 +419,7 @@ void BlockNode::addChild(std::shared_ptr<Node> child) {
 
 /* HandlerNode */
 
-std::string HandlerNode::toString(bool summary) {
+std::string HandlerNode::toString(bool dot, bool sum) {
     std::string res = "on " + handler->name;
     if (handler->argumentNames.size() > 0) {
         res += " ";
@@ -439,130 +439,130 @@ std::string HandlerNode::toString(bool summary) {
         }
         res += "\n";
     }
-    res += block->toString(summary);
+    res += block->toString(dot, sum);
     res += "end\n";
     return res;
 }
 
 /* ExitStmtNode */
 
-std::string ExitStmtNode::toString(bool summary) {
+std::string ExitStmtNode::toString(bool dot, bool sum) {
     return "exit";
 }
 
 /* InverseOpNode */
 
-std::string InverseOpNode::toString(bool summary) {
-    return "-" + operand->toString(summary);
+std::string InverseOpNode::toString(bool dot, bool sum) {
+    return "-" + operand->toString(dot, sum);
 }
 
 /* NotOpNode */
 
-std::string NotOpNode::toString(bool summary) {
-    return "not " + operand->toString(summary);
+std::string NotOpNode::toString(bool dot, bool sum) {
+    return "not " + operand->toString(dot, sum);
 }
 
 /* BinaryOpNode */
 
-std::string BinaryOpNode::toString(bool summary) {
+std::string BinaryOpNode::toString(bool dot, bool sum) {
     auto opString = Lingo::getName(Lingo::binaryOpNames, opcode);
-    return left->toString(summary) + " " +  opString + " " + right->toString(summary);
+    return left->toString(dot, sum) + " " +  opString + " " + right->toString(dot, sum);
 }
 
 /* ChunkExprNode */
 
-std::string ChunkExprNode::toString(bool summary) {
-    auto res = Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(summary);
+std::string ChunkExprNode::toString(bool dot, bool sum) {
+    auto res = Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(dot, sum);
     if (last->getValue()->toInt()) {
-        res += " to " + last->toString(summary);
+        res += " to " + last->toString(dot, sum);
     }
-    res += " of " + string->toString(summary);
+    res += " of " + string->toString(dot, sum);
     return res;
 }
 
 /* ChunkHiliteStmtNode */
 
-std::string ChunkHiliteStmtNode::toString(bool summary) {
-    auto res = "hilite " + Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(summary);
+std::string ChunkHiliteStmtNode::toString(bool dot, bool sum) {
+    auto res = "hilite " + Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(dot, sum);
     if (last->getValue()->toInt()) {
-        res += " to " + last->toString(summary);
+        res += " to " + last->toString(dot, sum);
     }
-    res += " of " + field->toString(summary);
+    res += " of " + field->toString(dot, sum);
     return res;
 }
 
 /* SpriteIntersectsExprNode */
 
-std::string SpriteIntersectsExprNode::toString(bool summary) {
-    return "sprite(" + firstSprite->toString(summary) + ").intersects(" + secondSprite->toString(summary) + ")";
+std::string SpriteIntersectsExprNode::toString(bool dot, bool sum) {
+    return "sprite(" + firstSprite->toString(dot, sum) + ").intersects(" + secondSprite->toString(dot, sum) + ")";
 }
 
 /* SpriteWithinExprNode */
 
-std::string SpriteWithinExprNode::toString(bool summary) {
-    return "sprite(" + firstSprite->toString(summary) + ").within(" + secondSprite->toString(summary) + ")";
+std::string SpriteWithinExprNode::toString(bool dot, bool sum) {
+    return "sprite(" + firstSprite->toString(dot, sum) + ").within(" + secondSprite->toString(dot, sum) + ")";
 }
 
 /* FieldExprNode */
 
-std::string FieldExprNode::toString(bool summary) {
+std::string FieldExprNode::toString(bool dot, bool sum) {
     std::string res = "field";
     if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
-        res += "(" + fieldID->toString(summary) + ")";
+        res += "(" + fieldID->toString(dot, sum) + ")";
     } else {
-        res += "(" + fieldID->toString(summary) + ", " + castID->toString(summary) + ")";
+        res += "(" + fieldID->toString(dot, sum) + ", " + castID->toString(dot, sum) + ")";
     }
     return res;
 }
 
 /* MemberExprNode */
 
-std::string MemberExprNode::toString(bool summary) {
+std::string MemberExprNode::toString(bool dot, bool sum) {
     std::string res = "member"; // TODO: cast in D4
     if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
-        res += "(" + memberID->toString(summary) + ")";
+        res += "(" + memberID->toString(dot, sum) + ")";
     } else {
-        res += "(" + memberID->toString(summary) + ", " + castID->toString(summary) + ")";
+        res += "(" + memberID->toString(dot, sum) + ", " + castID->toString(dot, sum) + ")";
     }
     return res;
 }
 
 /* VarNode */
 
-std::string VarNode::toString(bool summary) {
+std::string VarNode::toString(bool dot, bool sum) {
     return varName;
 }
 
 /* AssignmentStmtNode */
 
-std::string AssignmentStmtNode::toString(bool summary) {
-    return variable->toString(summary) + " = " + value->toString(summary);
+std::string AssignmentStmtNode::toString(bool dot, bool sum) {
+    return variable->toString(dot, sum) + " = " + value->toString(dot, sum);
 }
 
 /* IfStmtNode */
 
-std::string IfStmtNode::toString(bool summary) {
+std::string IfStmtNode::toString(bool dot, bool sum) {
     std::string res;
     switch (ifType) {
     case kIf:
-        res = "if " + condition->toString(summary) + " then";
+        res = "if " + condition->toString(dot, sum) + " then";
         break;
     case kIfElse:
-        res = "if " + condition->toString(summary) + " then";
+        res = "if " + condition->toString(dot, sum) + " then";
         break;
     case kRepeatWhile:
-        res = "repeat while " + condition->toString(summary);
+        res = "repeat while " + condition->toString(dot, sum);
         break;
     }
-    if (summary) {
+    if (sum) {
         if (ifType == kIfElse) {
             res += " / else";
         }
     } else {
         res += "\n";
-        res += block1->toString(summary);
+        res += block1->toString(dot, sum);
         if (ifType == kIfElse) {
-            res += "else\n" + block2->toString(summary);
+            res += "else\n" + block2->toString(dot, sum);
         }
         if (ifType == kRepeatWhile) {
             res += "end repeat";
@@ -575,19 +575,19 @@ std::string IfStmtNode::toString(bool summary) {
 
 /* RepeatWithInStmtNode */
 
-std::string RepeatWithInStmtNode::toString(bool summary) {
-    std::string res = "repeat with " + varName + " in " + list->toString(summary);
-    if (!summary) {
-        res += "\n" + block->toString(summary) + "end repeat";
+std::string RepeatWithInStmtNode::toString(bool dot, bool sum) {
+    std::string res = "repeat with " + varName + " in " + list->toString(dot, sum);
+    if (!sum) {
+        res += "\n" + block->toString(dot, sum) + "end repeat";
     }
     return res;
 }
 
 /* CaseNode */
 
-std::string CaseNode::toString(bool summary) {
+std::string CaseNode::toString(bool dot, bool sum) {
     std::string res;
-    if (summary) {
+    if (sum) {
         res += "(case) ";
         if (parent->type == kCaseNode) {
             auto parentCase = static_cast<CaseNode *>(parent);
@@ -595,23 +595,23 @@ std::string CaseNode::toString(bool summary) {
                 res += "..., ";
             }
         }
-        res += value->toString(summary);
+        res += value->toString(dot, sum);
         if (nextOr) {
             res += ", ...";
         } else {
             res += ":";
         }
     } else {
-        res += value->toString(summary);
+        res += value->toString(dot, sum);
         if (nextOr) {
-            res += ", " + nextOr->toString(summary);
+            res += ", " + nextOr->toString(dot, sum);
         } else {
-            res += ":\n" + block->toString(summary);
+            res += ":\n" + block->toString(dot, sum);
         }
         if (nextCase) {
-            res += nextCase->toString(summary);
+            res += nextCase->toString(dot, sum);
         } else if (otherwise) {
-            res += "otherwise:\n" + otherwise->toString(summary);
+            res += "otherwise:\n" + otherwise->toString(dot, sum);
         }
     }
     return res;
@@ -619,10 +619,10 @@ std::string CaseNode::toString(bool summary) {
 
 /* CasesStmtNode */
 
-std::string CasesStmtNode::toString(bool summary) {
-    std::string res = "case " + value->toString(summary) + " of";
-    if (!summary) {
-        res += "\n" + indent(firstCase->toString(summary)) + "end case";
+std::string CasesStmtNode::toString(bool dot, bool sum) {
+    std::string res = "case " + value->toString(dot, sum) + " of";
+    if (!sum) {
+        res += "\n" + indent(firstCase->toString(dot, sum)) + "end case";
     }
     return res;
 }
@@ -641,7 +641,7 @@ bool CallNode::noParens() {
     return false;
 }
 
-std::string CallNode::toString(bool summary) {
+std::string CallNode::toString(bool dot, bool sum) {
     if (isExpression && argList->getValue()->l.size() == 0) {
         if (name == "pi")
             return "PI";
@@ -652,20 +652,20 @@ std::string CallNode::toString(bool summary) {
     }
 
     if (noParens())
-        return name + " " + argList->toString(summary);
+        return name + " " + argList->toString(dot, sum);
 
-    return name + "(" + argList->toString(summary) + ")";
+    return name + "(" + argList->toString(dot, sum) + ")";
 }
 
 /* ObjCallNode */
 
-std::string ObjCallNode::toString(bool summary) {
+std::string ObjCallNode::toString(bool dot, bool sum) {
     auto rawArgs = argList->getValue()->l;
-    std::string res = rawArgs[0]->toString(summary) + "." + name + "(";
+    std::string res = rawArgs[0]->toString(dot, sum) + "." + name + "(";
     for (size_t i = 1; i < rawArgs.size(); i++) {
         if (i > 1)
             res += ", ";
-        res += rawArgs[i]->toString(summary);
+        res += rawArgs[i]->toString(dot, sum);
     }
     res += ")";
     return res;
@@ -673,97 +673,97 @@ std::string ObjCallNode::toString(bool summary) {
 
 /* TheExprNode */
 
-std::string TheExprNode::toString(bool summary) {
+std::string TheExprNode::toString(bool dot, bool sum) {
     return "the " + prop;
 }
 
 /* LastStringChunkExprNode */
 
-std::string LastStringChunkExprNode::toString(bool summary) {
+std::string LastStringChunkExprNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    return "the last " + typeString + " in " + string->toString(summary);
+    return "the last " + typeString + " in " + string->toString(dot, sum);
 }
 
 /* StringChunkCountExprNode */
 
-std::string StringChunkCountExprNode::toString(bool summary) {
+std::string StringChunkCountExprNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-    return "the number of " + typeString + " in " + string->toString(summary);
+    return "the number of " + typeString + " in " + string->toString(dot, sum);
 }
 
 /* MenuPropExprNode */
 
-std::string MenuPropExprNode::toString(bool summary) {
+std::string MenuPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::menuPropertyNames, prop);
-    return "menu(" + menuID->toString(summary) + ")." + propString;
+    return "menu(" + menuID->toString(dot, sum) + ")." + propString;
 }
 
 /* MenuItemPropExprNode */
 
-std::string MenuItemPropExprNode::toString(bool summary) {
+std::string MenuItemPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
-    return "menu(" + menuID->toString(summary) + ").item(" + itemID->toString(summary) + ")." + propString;
+    return "menu(" + menuID->toString(dot, sum) + ").item(" + itemID->toString(dot, sum) + ")." + propString;
 }
 
 /* SoundPropExprNode */
 
-std::string SoundPropExprNode::toString(bool summary) {
+std::string SoundPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::soundPropertyNames, prop);
-    return "sound(" + soundID->toString(summary) + ")." + propString;
+    return "sound(" + soundID->toString(dot, sum) + ")." + propString;
 }
 
 /* SpritePropExprNode */
 
-std::string SpritePropExprNode::toString(bool summary) {
+std::string SpritePropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::spritePropertyNames, prop);
-    return "sprite(" + spriteID->toString(summary) + ")." + propString;
+    return "sprite(" + spriteID->toString(dot, sum) + ")." + propString;
 }
 
 /* ThePropExprNode */
 
-std::string ThePropExprNode::toString(bool summary) {
-    return "the " + prop + " of " + obj->toString(summary);
+std::string ThePropExprNode::toString(bool dot, bool sum) {
+    return "the " + prop + " of " + obj->toString(dot, sum);
 }
 
 /* ObjPropExprNode */
 
-std::string ObjPropExprNode::toString(bool summary) {
-    return obj->toString(summary) + "." + prop;
+std::string ObjPropExprNode::toString(bool dot, bool sum) {
+    return obj->toString(dot, sum) + "." + prop;
 }
 
 /* ObjBracketExprNode */
 
-std::string ObjBracketExprNode::toString(bool summary) {
-    return obj->toString(summary) + "[" + prop->toString(summary) + "]";
+std::string ObjBracketExprNode::toString(bool dot, bool sum) {
+    return obj->toString(dot, sum) + "[" + prop->toString(dot, sum) + "]";
 }
 
 /* ObjPropIndexExprNode */
 
-std::string ObjPropIndexExprNode::toString(bool summary) {
-    std::string res = obj->toString(summary) + "." + prop + "[" + index->toString(summary);
+std::string ObjPropIndexExprNode::toString(bool dot, bool sum) {
+    std::string res = obj->toString(dot, sum) + "." + prop + "[" + index->toString(dot, sum);
     if (index2)
-        res += ".." + index2->toString(summary);
+        res += ".." + index2->toString(dot, sum);
     res += "]";
     return res;
 }
 
 /* ExitRepeatStmtNode */
 
-std::string ExitRepeatStmtNode::toString(bool summary) {
+std::string ExitRepeatStmtNode::toString(bool dot, bool sum) {
     return "exit repeat";
 }
 
 /* NextRepeatStmtNode */
 
-std::string NextRepeatStmtNode::toString(bool summary) {
+std::string NextRepeatStmtNode::toString(bool dot, bool sum) {
     return "next repeat";
 }
 
 /* PutStmtNode */
 
-std::string PutStmtNode::toString(bool summary) {
+std::string PutStmtNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::putTypeNames, type);
-    return "put " + value->toString(summary) + " " + typeString + " " + variable->toString(summary);
+    return "put " + value->toString(dot, sum) + " " + typeString + " " + variable->toString(dot, sum);
 }
 
 }
