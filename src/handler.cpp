@@ -36,7 +36,7 @@ void Handler::readRecord(ReadStream &stream) {
 void Handler::readData(ReadStream &stream) {
     stream.seek(compiledOffset);
     while (stream.pos() < compiledOffset + compiledLen) {
-        size_t pos = stream.pos();
+        size_t pos = stream.pos() - compiledOffset;
         uint8_t op = stream.readUint8();
         OpCode opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
         // instructions can be one, two or three bytes
@@ -62,10 +62,9 @@ void Handler::readData(ReadStream &stream) {
                 obj = stream.readUint8();
             }
         }
-        // read the first byte to convert to an opcode
-        Bytecode bytecode(op, obj, pos - compiledOffset);
+        Bytecode bytecode(op, obj, pos);
         bytecodeArray.push_back(bytecode);
-        bytecodePosMap[pos - compiledOffset] = bytecodeArray.size() - 1;
+        bytecodePosMap[pos] = bytecodeArray.size() - 1;
     }
 
     argumentNameIDs = readVarnamesTable(stream, argumentCount, argumentOffset);
