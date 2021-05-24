@@ -234,9 +234,8 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
         break;
     case 0x01: // number of chunks
         {
-            auto chunkType = static_cast<ChunkType>(pop()->getValue()->toInt());
             auto string = pop();
-            return std::make_shared<StringChunkCountExprNode>(chunkType, std::move(string));
+            return std::make_shared<StringChunkCountExprNode>(static_cast<ChunkType>(propertyID), std::move(string));
         }
         break;
     case 0x02: // menu property

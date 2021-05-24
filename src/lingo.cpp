@@ -713,7 +713,7 @@ std::string LastStringChunkExprNode::toString(bool dot, bool sum) {
 std::string StringChunkCountExprNode::toString(bool dot, bool sum) {
     auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
     // we want the string to always be verbose
-    return "the number of " + typeString + " in " + string->toString(false, sum);
+    return "the number of " + typeString + "s in " + string->toString(false, sum);
 }
 
 /* MenuPropExprNode */
