@@ -491,7 +491,7 @@ std::string BinaryOpNode::toString(bool dot, bool sum) {
 
 std::string ChunkExprNode::toString(bool dot, bool sum) {
     auto res = Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(dot, sum);
-    if (last->getValue()->toInt()) {
+    if (!(last->type == kLiteralNode && last->getValue()->type == kDatumInt && last->getValue()->i == 0)) {
         res += " to " + last->toString(dot, sum);
     }
     // we want the string to always be verbose
@@ -503,7 +503,7 @@ std::string ChunkExprNode::toString(bool dot, bool sum) {
 
 std::string ChunkHiliteStmtNode::toString(bool dot, bool sum) {
     auto res = "hilite " + Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(dot, sum);
-    if (last->getValue()->toInt()) {
+    if (!(last->type == kLiteralNode && last->getValue()->type == kDatumInt && last->getValue()->i == 0)) {
         res += " to " + last->toString(dot, sum);
     }
     // we want the field to always be verbose
