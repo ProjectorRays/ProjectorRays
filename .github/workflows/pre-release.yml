@@ -1,0 +1,32 @@
+name: pre-release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  win:
+    name: Windows Pre-release
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            git
+            base-devel
+            mingw-w64-zlib
+            mingw-w64-boost
+      - uses: actions/checkout@v2
+      - run: mingw32-make
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: Development Build
+          files: projectorrays.exe
