@@ -22,7 +22,7 @@ jobs:
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-boost
       - uses: actions/checkout@v2
-      - run: mingw32-make
+      - run: make
       - uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
