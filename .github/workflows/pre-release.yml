@@ -18,12 +18,11 @@ jobs:
           update: true
           install: >-
             git
-            gcc
-            make
+            mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-boost
       - uses: actions/checkout@v2
-      - run: make
+      - run: mingw32-make
       - uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
