@@ -24,12 +24,13 @@ jobs:
             mingw-w64-x86_64-boost
       - name: Checkout ProjectorRays
         uses: actions/checkout@v2
-      - name: Get short SHA
-        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - id: sha-short
+        name: Get short SHA
+        run: echo "::set-output name=sha-short::$(git rev-parse --short HEAD)"
       - name: Build
         run: |
           mingw32-make
-          cp projectorrays.exe projectorrays-${SHA_SHORT}.exe
+          cp projectorrays.exe projectorrays-${{ steps.sha-short.outputs.sha-short }}.exe
       - name: Upload pre-release
         uses: marvinpinto/action-automatic-releases@latest
         with:
@@ -37,4 +38,4 @@ jobs:
           automatic_release_tag: latest
           prerelease: true
           title: Development Build
-          files: projectorrays-${SHA_SHORT}.exe
+          files: projectorrays-${{ steps.sha-short.outputs.sha-short }}.exe
