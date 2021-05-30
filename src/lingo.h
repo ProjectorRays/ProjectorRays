@@ -8,15 +8,10 @@
 
 namespace ProjectorRays {
 
-enum IfType {
-    kIf,
-    kIfElse,
-    kRepeatWhile
-};
-
 struct AST;
 struct Bytecode;
 struct CaseNode;
+struct LoopNode;
 struct Node;
 class ReadStream;
 struct RepeatWithInStmtNode;
@@ -144,7 +139,9 @@ enum NodeType {
     kVarNode,
     kAssignmentStmtNode,
     kIfStmtNode,
+    kRepeatWhileStmtNode,
     kRepeatWithInStmtNode,
+    kRepeatWithToStmtNode,
     kCasesStmtNode,
     kCaseNode,
     kCallNode,
@@ -164,6 +161,16 @@ enum NodeType {
     kExitRepeatStmtNode,
     kNextRepeatStmtNode,
     kPutStmtNode
+};
+
+enum BytecodeTag {
+    kTagNone,
+    kTagSkip,
+    kTagRepeatWhile,
+    kTagRepeatWithIn,
+    kTagRepeatWithTo,
+    kTagRepeatWithDownTo,
+    kTagNextRepeatTarget
 };
 
 enum CaseExpect {
@@ -277,10 +284,13 @@ struct Handler {
     int variableMultiplier();
     void registerGlobal(const std::string &name);
     std::shared_ptr<Node> readVar(int varType);
-    std::shared_ptr<RepeatWithInStmtNode> buildRepeatWithIn(size_t index);
+    std::string getVarNameFromSet(const Bytecode &bytecode);
     std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
+    void tagLoops();
+    bool isRepeatWithIn(uint32_t startIndex, uint32_t endIndex);
+    BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
     void translate();
-    size_t translateBytecode(Bytecode &bytecode, size_t pos);
+    uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
     std::string bytecodeText();
 };
 
@@ -290,11 +300,13 @@ struct Bytecode {
     uint8_t opID;
     OpCode opcode;
     int32_t obj;
-    int32_t pos;
+    uint32_t pos;
+    BytecodeTag tag;
+    uint32_t ownerLoop;
     std::shared_ptr<Node> translation;
 
-    Bytecode(uint8_t op, uint32_t o, int32_t p)
-        : opID(op), obj(o), pos(p) {
+    Bytecode(uint8_t op, int32_t o, uint32_t p)
+        : opID(op), obj(o), pos(p), tag(kTagNone), ownerLoop(UINT32_MAX) {
         opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
     }
 };
@@ -306,13 +318,15 @@ struct Node {
     bool isExpression;
     bool isStatement;
     bool isLabel;
+    bool isLoop;
     Node *parent;
 
-    Node(NodeType t) : type(t), isExpression(false), isStatement(false), isLabel(false), parent(nullptr) {}
+    Node(NodeType t) : type(t), isExpression(false), isStatement(false), isLabel(false), isLoop(false), parent(nullptr) {}
     virtual ~Node() = default;
     virtual std::string toString(bool dot, bool sum);
     virtual std::shared_ptr<Datum> getValue();
     Node *ancestorStatement();
+    LoopNode *ancestorLoop();
 };
 
 /* ExprNode */
@@ -340,6 +354,17 @@ struct LabelNode : Node {
         isLabel = true;
     }
     virtual ~LabelNode() = default;
+};
+
+/* LoopNode */
+
+struct LoopNode : StmtNode {
+    uint32_t startIndex;
+
+    LoopNode(NodeType t, uint32_t startIndex) : StmtNode(t), startIndex(startIndex) {
+        isLoop = true;
+    }
+    virtual ~LoopNode() = default;
 };
 
 /* ErrorNode */
@@ -387,7 +412,7 @@ struct BlockNode : ExprNode {
     std::vector<std::shared_ptr<Node>> children;
 
     // for use during translation:
-    int32_t endPos;
+    uint32_t endPos;
     CaseNode *currentCase;
 
     BlockNode() : ExprNode(kBlockNode), endPos(-1), currentCase(nullptr) {}
@@ -591,12 +616,12 @@ struct AssignmentStmtNode : StmtNode {
 /* IfStmtNode */
 
 struct IfStmtNode : StmtNode {
-    IfType ifType;
+    bool hasElse;
     std::shared_ptr<Node> condition;
     std::shared_ptr<BlockNode> block1;
     std::shared_ptr<BlockNode> block2;
 
-    IfStmtNode(std::shared_ptr<Node> c) : StmtNode(kIfStmtNode), ifType(kIf) {
+    IfStmtNode(std::shared_ptr<Node> c) : StmtNode(kIfStmtNode), hasElse(false) {
         condition = std::move(c);
         condition->parent = this;
         block1 = std::make_shared<BlockNode>();
@@ -608,19 +633,62 @@ struct IfStmtNode : StmtNode {
     virtual std::string toString(bool dot, bool sum);
 };
 
+/* RepeatWhileStmtNode */
+
+struct RepeatWhileStmtNode : LoopNode {
+    std::shared_ptr<Node> condition;
+    std::shared_ptr<BlockNode> block;
+
+    RepeatWhileStmtNode(uint32_t startIndex, std::shared_ptr<Node> c)
+        : LoopNode(kRepeatWhileStmtNode, startIndex) {
+        condition = std::move(c);
+        condition->parent = this;
+        block = std::make_shared<BlockNode>();
+        block->parent = this;
+    }
+    virtual ~RepeatWhileStmtNode() = default;
+    virtual std::string toString(bool dot, bool sum);
+};
+
 /* RepeatWithInStmtNode */
 
-struct RepeatWithInStmtNode : StmtNode {
+struct RepeatWithInStmtNode : LoopNode {
     std::string varName;
     std::shared_ptr<Node> list;
     std::shared_ptr<BlockNode> block;
 
-    RepeatWithInStmtNode(std::string v) : StmtNode(kRepeatWithInStmtNode) {
+    RepeatWithInStmtNode(uint32_t startIndex, std::string v, std::shared_ptr<Node> l)
+        : LoopNode(kRepeatWithInStmtNode, startIndex) {
         varName = v;
+        list = std::move(l);
+        list->parent = this;
         block = std::make_shared<BlockNode>();
         block->parent = this;
     }
     virtual ~RepeatWithInStmtNode() = default;
+    virtual std::string toString(bool dot, bool sum);
+};
+
+/* RepeatWithToStmtNode */
+
+struct RepeatWithToStmtNode : LoopNode {
+    std::string varName;
+    std::shared_ptr<Node> start;
+    bool up;
+    std::shared_ptr<Node> end;
+    std::shared_ptr<BlockNode> block;
+
+    RepeatWithToStmtNode(uint32_t startIndex, std::string v, std::shared_ptr<Node> s, bool up, std::shared_ptr<Node> e)
+        : LoopNode(kRepeatWithToStmtNode, startIndex), up(up) {
+        varName = v;
+        start = std::move(s);
+        start->parent = this;
+        end = std::move(e);
+        end->parent = this;
+        block = std::make_shared<BlockNode>();
+        block->parent = this;
+    }
+    virtual ~RepeatWithToStmtNode() = default;
     virtual std::string toString(bool dot, bool sum);
 };
 

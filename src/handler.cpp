@@ -36,7 +36,7 @@ void Handler::readRecord(ReadStream &stream) {
 void Handler::readData(ReadStream &stream) {
     stream.seek(compiledOffset);
     while (stream.pos() < compiledOffset + compiledLen) {
-        size_t pos = stream.pos() - compiledOffset;
+        uint32_t pos = stream.pos() - compiledOffset;
         uint8_t op = stream.readUint8();
         OpCode opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
         // instructions can be one, two or three bytes
@@ -179,57 +179,27 @@ std::shared_ptr<Node> Handler::readVar(int varType) {
 	return std::make_shared<ErrorNode>();
 }
 
-std::shared_ptr<RepeatWithInStmtNode> Handler::buildRepeatWithIn(size_t index) {
-    if (index >= bytecodeArray.size() - 12)
-        return nullptr;
-    if (!(bytecodeArray[index + 1].opcode == kOpPushArgList && bytecodeArray[index + 1].obj == 1))
-        return nullptr;
-    if (!(bytecodeArray[index + 2].opcode == kOpCallExt && getName(bytecodeArray[index + 2].obj) == "count"))
-        return nullptr;
-    if (!(bytecodeArray[index + 3].opcode == kOpPushInt8 && bytecodeArray[index + 3].obj == 1))
-        return nullptr;
-    if (!(bytecodeArray[index + 4].opcode == kOpPeek && bytecodeArray[index + 4].obj == 0))
-        return nullptr;
-    if (!(bytecodeArray[index + 5].opcode == kOpPeek && bytecodeArray[index + 5].obj == 2))
-        return nullptr;
-    if (!(bytecodeArray[index + 6].opcode == kOpLtEq))
-        return nullptr;
-    if (!(bytecodeArray[index + 7].opcode == kOpJmpIfZ))
-        return nullptr;
-
-    size_t endPos = bytecodeArray[index + 7].pos + bytecodeArray[index + 7].obj;
-
-    if (!(bytecodeArray[index + 8].opcode == kOpPeek && bytecodeArray[index + 8].obj == 2))
-        return nullptr;
-    if (!(bytecodeArray[index + 9].opcode == kOpPeek && bytecodeArray[index + 9].obj == 1))
-        return nullptr;
-    if (!(bytecodeArray[index + 10].opcode == kOpPushArgList && bytecodeArray[index + 10].obj == 2))
-        return nullptr;
-    if (!(bytecodeArray[index + 11].opcode == kOpCallExt && getName(bytecodeArray[index + 11].obj) == "getAt"))
-        return nullptr;
-
+std::string Handler::getVarNameFromSet(const Bytecode &bytecode) {
     std::string varName;
-    switch (bytecodeArray[index + 12].opcode) {
-        case kOpSetGlobal:
-            varName = getName(bytecodeArray[index + 12].obj);
-            registerGlobal(varName);
-            break;
-        case kOpSetProp:
-            varName = getName(bytecodeArray[index + 12].obj);
-            break;
-        case kOpSetParam:
-            varName = getArgumentName(bytecodeArray[index + 12].obj / variableMultiplier());
-            break;
-        case kOpSetLocal:
-            varName = getLocalName(bytecodeArray[index + 12].obj / variableMultiplier());
-            break;
-        default:
-            return nullptr;
+    switch (bytecode.opcode) {
+    case kOpSetGlobal:
+        varName = getName(bytecode.obj);
+        registerGlobal(varName);
+        break;
+    case kOpSetProp:
+        varName = getName(bytecode.obj);
+        break;
+    case kOpSetParam:
+        varName = getArgumentName(bytecode.obj / variableMultiplier());
+        break;
+    case kOpSetLocal:
+        varName = getLocalName(bytecode.obj / variableMultiplier());
+        break;
+    default:
+        varName = "ERROR";
+        break;
     }
-
-    auto res = std::make_shared<RepeatWithInStmtNode>(varName);
-    res->block->endPos = endPos;
-    return res;
+    return varName;
 }
 
 std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) {
@@ -307,13 +277,179 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
     return std::make_shared<CommentNode>("ERROR: Unknown property type " + std::to_string(propertyType));
 }
 
+void Handler::tagLoops() {
+    // Tag any jmpifz which is a loop with the loop type
+    // (kTagRepeatWhile, kTagRepeatWithIn, kTagRepeatWithTo, kTagRepeatWithDownTo).
+    // Tag the instruction which `next repeat` jumps to with kTagNextRepeatTarget.
+    // Tag any instructions which are internal loop logic with kTagSkip, so that
+    // they will be skipped during translation.
+
+    for (uint32_t startIndex = 0; startIndex < bytecodeArray.size(); startIndex++) {
+        // All loops begin with jmpifz...
+        auto &jmpifz = bytecodeArray[startIndex];
+        if (jmpifz.opcode != kOpJmpIfZ)
+            continue;
+        
+        // ...and end with endrepeat.
+        uint32_t jmpPos = jmpifz.pos + jmpifz.obj;
+        uint32_t endIndex = bytecodePosMap[jmpPos];
+        auto &endRepeat = bytecodeArray[endIndex - 1];
+        if (endRepeat.opcode != kOpEndRepeat)
+            continue;
+
+        BytecodeTag loopType = identifyLoop(startIndex, endIndex);
+        bytecodeArray[startIndex].tag = loopType;
+
+        if (loopType == kTagRepeatWithIn) {
+            for (uint32_t i = startIndex - 7, end = startIndex - 1; i <= end; i++)
+                bytecodeArray[i].tag = kTagSkip;
+            for (uint32_t i = startIndex + 1, end = startIndex + 5; i <= end; i++)
+                bytecodeArray[i].tag = kTagSkip;
+            bytecodeArray[endIndex - 3].tag = kTagNextRepeatTarget; // pushint8 1
+            bytecodeArray[endIndex - 3].ownerLoop = startIndex;
+            bytecodeArray[endIndex - 2].tag = kTagSkip; // add
+            bytecodeArray[endIndex - 1].tag = kTagSkip; // endrepeat
+            bytecodeArray[endIndex - 1].ownerLoop = startIndex;
+            bytecodeArray[endIndex].tag = kTagSkip; // pop 3
+        } else if (loopType == kTagRepeatWithTo || loopType == kTagRepeatWithDownTo) {
+            uint32_t conditionStartIndex = bytecodePosMap[endRepeat.pos - endRepeat.obj];
+            bytecodeArray[conditionStartIndex - 1].tag = kTagSkip; // set
+            bytecodeArray[conditionStartIndex].tag = kTagSkip; // get
+            bytecodeArray[startIndex - 1].tag = kTagSkip; // lteq / gteq
+            bytecodeArray[endIndex - 5].tag = kTagNextRepeatTarget; // pushint8 1 / pushint8 -1
+            bytecodeArray[endIndex - 5].ownerLoop = startIndex;
+            bytecodeArray[endIndex - 4].tag = kTagSkip; // get
+            bytecodeArray[endIndex - 3].tag = kTagSkip; // add
+            bytecodeArray[endIndex - 2].tag = kTagSkip; // set
+            bytecodeArray[endIndex - 1].tag = kTagSkip; // endrepeat
+            bytecodeArray[endIndex - 1].ownerLoop = startIndex;
+        } else if (loopType == kTagRepeatWhile) {
+            bytecodeArray[endIndex - 1].tag = kTagNextRepeatTarget; // endrepeat
+            bytecodeArray[endIndex - 1].ownerLoop = startIndex;
+        }
+    }
+}
+
+bool Handler::isRepeatWithIn(uint32_t startIndex, uint32_t endIndex) {
+    if (startIndex < 7 || startIndex > bytecodeArray.size() - 6)
+        return false;
+    if (!(bytecodeArray[startIndex - 7].opcode == kOpPeek && bytecodeArray[startIndex - 7].obj == 0))
+        return false;
+    if (!(bytecodeArray[startIndex - 6].opcode == kOpPushArgList && bytecodeArray[startIndex - 6].obj == 1))
+        return false;
+    if (!(bytecodeArray[startIndex - 5].opcode == kOpCallExt && getName(bytecodeArray[startIndex - 5].obj) == "count"))
+        return false;
+    if (!(bytecodeArray[startIndex - 4].opcode == kOpPushInt8 && bytecodeArray[startIndex - 4].obj == 1))
+        return false;
+    if (!(bytecodeArray[startIndex - 3].opcode == kOpPeek && bytecodeArray[startIndex - 3].obj == 0))
+        return false;
+    if (!(bytecodeArray[startIndex - 2].opcode == kOpPeek && bytecodeArray[startIndex - 2].obj == 2))
+        return false;
+    if (!(bytecodeArray[startIndex - 1].opcode == kOpLtEq))
+        return false;
+    // if (!(bytecodeArray[startIndex].opcode == kOpJmpIfZ))
+    //     return false;
+    if (!(bytecodeArray[startIndex + 1].opcode == kOpPeek && bytecodeArray[startIndex + 1].obj == 2))
+        return false;
+    if (!(bytecodeArray[startIndex + 2].opcode == kOpPeek && bytecodeArray[startIndex + 2].obj == 1))
+        return false;
+    if (!(bytecodeArray[startIndex + 3].opcode == kOpPushArgList && bytecodeArray[startIndex + 3].obj == 2))
+        return false;
+    if (!(bytecodeArray[startIndex + 4].opcode == kOpCallExt && getName(bytecodeArray[startIndex + 4].obj) == "getAt"))
+        return false;
+    if (!(bytecodeArray[startIndex + 5].opcode == kOpSetGlobal || bytecodeArray[startIndex + 5].opcode == kOpSetProp
+            || bytecodeArray[startIndex + 5].opcode == kOpSetParam || bytecodeArray[startIndex + 5].opcode == kOpSetLocal))
+        return false;
+
+    if (endIndex < 3)
+        return false;
+    if (!(bytecodeArray[endIndex - 3].opcode == kOpPushInt8 && bytecodeArray[endIndex - 3].obj == 1))
+        return false;
+    if (!(bytecodeArray[endIndex - 2].opcode == kOpAdd))
+        return false;
+    // if (!(bytecodeArray[startIndex - 1].opcode == kOpEndRepeat))
+    //     return false;
+    if (!(bytecodeArray[endIndex].opcode == kOpPop && bytecodeArray[endIndex].obj == 3))
+        return false;
+
+    return true;
+}
+
+BytecodeTag Handler::identifyLoop(uint32_t startIndex, uint32_t endIndex) {
+    if (isRepeatWithIn(startIndex, endIndex))
+        return kTagRepeatWithIn;
+
+    if (startIndex < 1)
+        return kTagRepeatWhile;
+
+    bool up;
+    switch (bytecodeArray[startIndex - 1].opcode) {
+    case kOpLtEq:
+        up = true;
+        break;
+    case kOpGtEq:
+        up = false;
+        break;
+    default:
+        return kTagRepeatWhile;
+    }
+
+    auto &endRepeat = bytecodeArray[endIndex - 1];
+    uint32_t conditionStartIndex = bytecodePosMap[endRepeat.pos - endRepeat.obj];
+
+    if (conditionStartIndex < 1)
+        return kTagRepeatWhile;
+
+    OpCode getOp;
+    switch (bytecodeArray[conditionStartIndex - 1].opcode) {
+    case kOpSetGlobal:
+        getOp = kOpGetGlobal;
+        break;
+    case kOpSetProp:
+        getOp = kOpGetProp;
+        break;
+    case kOpSetParam:
+        getOp = kOpGetParam;
+        break;
+    case kOpSetLocal:
+        getOp = kOpGetLocal;
+        break;
+    default:
+        return kTagRepeatWhile;
+    }
+    OpCode setOp = bytecodeArray[conditionStartIndex - 1].opcode;
+    int32_t varID = bytecodeArray[conditionStartIndex - 1].obj;
+
+    if (!(bytecodeArray[conditionStartIndex].opcode == getOp && bytecodeArray[conditionStartIndex].obj == varID))
+        return kTagRepeatWhile;
+
+    if (endIndex < 5)
+        return kTagRepeatWhile;
+    if (up) {
+        if (!(bytecodeArray[endIndex - 5].opcode == kOpPushInt8 && bytecodeArray[endIndex - 5].obj == 1))
+            return kTagRepeatWhile;
+    } else {
+        if (!(bytecodeArray[endIndex - 5].opcode == kOpPushInt8 && bytecodeArray[endIndex - 5].obj == -1))
+            return kTagRepeatWhile;
+    }
+    if (!(bytecodeArray[endIndex - 4].opcode == getOp && bytecodeArray[endIndex - 4].obj == varID))
+        return kTagRepeatWhile;
+    if (!(bytecodeArray[endIndex - 3].opcode == kOpAdd))
+        return kTagRepeatWhile;
+    if (!(bytecodeArray[endIndex - 2].opcode == setOp && bytecodeArray[endIndex - 2].obj == varID))
+        return kTagRepeatWhile;
+    
+    return up ? kTagRepeatWithTo : kTagRepeatWithDownTo;
+}
+
 void Handler::translate() {
+    tagLoops();
     stack.clear();
     ast = std::make_unique<AST>(this);
-    size_t i = 0;
+    uint32_t i = 0;
     while (i < bytecodeArray.size()) {
         auto &bytecode = bytecodeArray[i];
-        auto pos = bytecode.pos;
+        uint32_t pos = bytecode.pos;
         // exit last block if at end
         while (pos == ast->currentBlock->endPos) {
             auto exitedBlock = ast->currentBlock;
@@ -322,7 +458,7 @@ void Handler::translate() {
             if (ancestorStmt) {
                 if (ancestorStmt->type == kIfStmtNode) {
                     auto ifStatement = static_cast<IfStmtNode *>(ancestorStmt);
-                    if (ifStatement->ifType == kIfElse && exitedBlock == ifStatement->block1.get()) {
+                    if (ifStatement->hasElse && exitedBlock == ifStatement->block1.get()) {
                         ast->enterBlock(ifStatement->block2.get());
                     }
                 } else if (ancestorStmt->type == kCasesStmtNode) {
@@ -348,7 +484,12 @@ void Handler::translate() {
     }
 }
 
-size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
+uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
+    if (bytecode.tag == kTagSkip || bytecode.tag == kTagNextRepeatTarget) {
+        // This is internal loop logic. Skip it.
+        return 1;
+    }
+
     std::shared_ptr<Node> translation = nullptr;
     BlockNode *nextBlock = nullptr;
 
@@ -602,21 +743,15 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
         break;
     case kOpJmp:
         {
-            auto targetPos = bytecode.pos + bytecode.obj;
+            uint32_t targetPos = bytecode.pos + bytecode.obj;
+            uint32_t targetIndex = bytecodePosMap[targetPos];
             auto &nextBytecode = bytecodeArray[index + 1];
-            auto &targetBytecode = bytecodeArray[bytecodePosMap[targetPos]];
-            auto &targetPrevBytecode = bytecodeArray[index - 1];
             auto ancestorStatement = ast->currentBlock->ancestorStatement();
-
-            if (ancestorStatement) {
+            if (ancestorStatement && nextBytecode.pos == ast->currentBlock->endPos) {
                 if (ancestorStatement->type == kIfStmtNode) {
-                    if (nextBytecode.pos == ast->currentBlock->endPos && targetPrevBytecode.opcode == kOpEndRepeat) {
-                        translation = std::make_shared<ExitRepeatStmtNode>();
-                    } else if (targetBytecode.opcode == kOpEndRepeat) {
-                        translation = std::make_shared<NextRepeatStmtNode>();
-                    } else if (nextBytecode.pos == ast->currentBlock->endPos) {
-                        auto ifStmt = static_cast<IfStmtNode *>(ancestorStatement);
-                        ifStmt->ifType = kIfElse;
+                    auto ifStmt = static_cast<IfStmtNode *>(ancestorStatement);
+                    if (ast->currentBlock == ifStmt->block1.get()) {
+                        ifStmt->hasElse = true;
                         ifStmt->block2->endPos = targetPos;
                         return 1; // if statement amended, nothing to push
                     }
@@ -626,29 +761,72 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
                     return 1;
                 }
             }
+            auto ancestorLoop = ast->currentBlock->ancestorLoop();
+            if (ancestorLoop) {
+                if (bytecodeArray[targetIndex - 1].opcode == kOpEndRepeat && bytecodeArray[targetIndex - 1].ownerLoop == ancestorLoop->startIndex) {
+                    translation = std::make_shared<ExitRepeatStmtNode>();
+                } else if (bytecodeArray[targetIndex].tag == kTagNextRepeatTarget && bytecodeArray[targetIndex].ownerLoop == ancestorLoop->startIndex) {
+                    translation = std::make_shared<NextRepeatStmtNode>();
+                }
+            }
+            if (!translation) {
+                translation = std::make_shared<CommentNode>("ERROR: Could not identify jmp");
+            }
         }
         break;
     case kOpEndRepeat:
-        {
-            auto targetPos = bytecode.pos - bytecode.obj;
-            auto i = bytecodePosMap[targetPos];
-            while (bytecodeArray[i].opcode != kOpJmpIfZ) i++; // TODO: See if this can be removed
-            auto &targetBytecode = bytecodeArray[i];
-            if (targetBytecode.translation && targetBytecode.translation->type == kIfStmtNode) {
-                auto ifStmt = std::static_pointer_cast<IfStmtNode>(targetBytecode.translation);
-                ifStmt->ifType = kRepeatWhile;
-            }
-            return 1; // if statement amended, nothing to push
-        }
+        // This should normally be tagged kTagSkip or kTagNextRepeatTarget and skipped.
+        translation = std::make_shared<CommentNode>("ERROR: Stray endrepeat");
         break;
     case kOpJmpIfZ:
         {
-            auto endPos = bytecode.pos + bytecode.obj;
-            auto condition = pop();
-            auto ifStmt = std::make_shared<IfStmtNode>(std::move(condition));
-            ifStmt->block1->endPos = endPos;
-            translation = ifStmt;
-            nextBlock = ifStmt->block1.get();
+            uint32_t endPos = bytecode.pos + bytecode.obj;
+            uint32_t endIndex = bytecodePosMap[endPos];
+            switch (bytecode.tag) {
+            case kTagRepeatWhile:
+                {
+                    auto condition = pop();
+                    auto loop = std::make_shared<RepeatWhileStmtNode>(index, std::move(condition));
+                    loop->block->endPos = endPos;
+                    translation = loop;
+                    nextBlock = loop->block.get();
+                }
+                break;
+            case kTagRepeatWithIn:
+                {
+                    auto list = pop();
+                    std::string varName = getVarNameFromSet(bytecodeArray[index + 5]);
+                    auto loop = std::make_shared<RepeatWithInStmtNode>(index, varName, std::move(list));
+                    loop->block->endPos = endPos;
+                    translation = loop;
+                    nextBlock = loop->block.get();
+                }
+                break;
+            case kTagRepeatWithTo:
+            case kTagRepeatWithDownTo:
+                {
+                    bool up = (bytecode.tag == kTagRepeatWithTo);
+                    auto end = pop();
+                    auto start = pop();
+                    auto endRepeat = bytecodeArray[endIndex - 1];
+                    uint32_t conditionStartIndex = bytecodePosMap[endRepeat.pos - endRepeat.obj];
+                    std::string varName = getVarNameFromSet(bytecodeArray[conditionStartIndex - 1]);
+                    auto loop = std::make_shared<RepeatWithToStmtNode>(index, varName, std::move(start), up, std::move(end));
+                    loop->block->endPos = endPos;
+                    translation = loop;
+                    nextBlock = loop->block.get();
+                }
+                break;
+            default:
+                {
+                    auto condition = pop();
+                    auto ifStmt = std::make_shared<IfStmtNode>(std::move(condition));
+                    ifStmt->block1->endPos = endPos;
+                    translation = ifStmt;
+                    nextBlock = ifStmt->block1.get();
+                }
+                break;
+            }
         }
         break;
     case kOpCallLocal:
@@ -741,23 +919,10 @@ size_t Handler::translateBytecode(Bytecode &bytecode, size_t index) {
             auto peekedValue = peek();
 
             auto prevCase = ast->currentBlock->currentCase;
-            if (!prevCase) {
-                // Try to a build a 'repeat with ... in list' statement with the following bytecode.
-                auto repeatWithIn = buildRepeatWithIn(index);
-                if (repeatWithIn) {
-                    stack.push_back(std::make_shared<TempNode>());
-                    stack.push_back(std::make_shared<TempNode>());
-                    repeatWithIn->list = std::move(peekedValue);
-                    bytecode.translation = repeatWithIn;
-                    ast->addStatement(repeatWithIn);
-                    ast->enterBlock(repeatWithIn->block.get());
-                    return 13;
-                }
-            }
 
             // This must be a case. Find the comparison against the switch expression.
             auto originalStackSize = stack.size();
-            size_t currIndex = index + 1;
+            uint32_t currIndex = index + 1;
             Bytecode *currBytecode = &bytecodeArray[currIndex];
             do {
                 translateBytecode(*currBytecode, currIndex);

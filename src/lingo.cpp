@@ -392,6 +392,14 @@ Node *Node::ancestorStatement() {
     return ancestor;
 }
 
+LoopNode *Node::ancestorLoop() {
+    Node *ancestor = parent;
+    while (ancestor && !ancestor->isLoop) {
+        ancestor = ancestor->parent;
+    }
+    return static_cast<LoopNode *>(ancestor);
+}
+
 /* ErrorNode */
 
 std::string ErrorNode::toString(bool dot, bool sum) {
@@ -559,33 +567,28 @@ std::string AssignmentStmtNode::toString(bool dot, bool sum) {
 /* IfStmtNode */
 
 std::string IfStmtNode::toString(bool dot, bool sum) {
-    std::string res;
-    switch (ifType) {
-    case kIf:
-        res = "if " + condition->toString(dot, sum) + " then";
-        break;
-    case kIfElse:
-        res = "if " + condition->toString(dot, sum) + " then";
-        break;
-    case kRepeatWhile:
-        res = "repeat while " + condition->toString(dot, sum);
-        break;
-    }
+    std::string res = "if " + condition->toString(dot, sum) + " then";
     if (sum) {
-        if (ifType == kIfElse) {
+        if (hasElse) {
             res += " / else";
         }
     } else {
         res += "\n";
         res += block1->toString(dot, sum);
-        if (ifType == kIfElse) {
+        if (hasElse) {
             res += "else\n" + block2->toString(dot, sum);
         }
-        if (ifType == kRepeatWhile) {
-            res += "end repeat";
-        } else {
-            res += "end if";
-        }
+        res += "end if";
+    }
+    return res;
+}
+
+/* RepeatWhileStmtNode */
+
+std::string RepeatWhileStmtNode::toString(bool dot, bool sum) {
+    std::string res = "repeat while " + condition->toString(dot, sum);
+    if (!sum) {
+        res += "\n" + block->toString(dot, sum) + "end repeat";
     }
     return res;
 }
@@ -594,6 +597,22 @@ std::string IfStmtNode::toString(bool dot, bool sum) {
 
 std::string RepeatWithInStmtNode::toString(bool dot, bool sum) {
     std::string res = "repeat with " + varName + " in " + list->toString(dot, sum);
+    if (!sum) {
+        res += "\n" + block->toString(dot, sum) + "end repeat";
+    }
+    return res;
+}
+
+/* RepeatWithToStmtNode */
+
+std::string RepeatWithToStmtNode::toString(bool dot, bool sum) {
+    std::string res = "repeat with " + varName + " = " + start->toString(dot, sum);
+    if (up) {
+        res += " to ";
+    } else {
+        res += " down to ";
+    }
+    res += end->toString(dot, sum);
     if (!sum) {
         res += "\n" + block->toString(dot, sum) + "end repeat";
     }
