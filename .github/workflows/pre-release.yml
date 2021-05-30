@@ -7,13 +7,14 @@ on:
 
 jobs:
   win:
-    name: Windows Pre-release
+    name: Windows pre-release
     runs-on: windows-latest
     defaults:
       run:
         shell: msys2 {0}
     steps:
-      - uses: msys2/setup-msys2@v2
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
         with:
           update: true
           install: >-
@@ -21,12 +22,19 @@ jobs:
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-boost
-      - uses: actions/checkout@v2
-      - run: mingw32-make
-      - uses: marvinpinto/action-automatic-releases@latest
+      - name: Checkout ProjectorRays
+        uses: actions/checkout@v2
+      - name: Get short SHA
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          mingw32-make
+          cp projectorrays.exe projectorrays-${SHA_SHORT}.exe
+      - name: Upload pre-release
+        uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: latest
           prerelease: true
           title: Development Build
-          files: projectorrays.exe
+          files: projectorrays-${SHA_SHORT}.exe
