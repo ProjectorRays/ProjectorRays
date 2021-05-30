@@ -18,7 +18,8 @@ jobs:
           update: true
           install: >-
             git
-            base-devel
+            gcc
+            make
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-boost
       - uses: actions/checkout@v2
