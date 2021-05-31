@@ -609,12 +609,19 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
             translation = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
         }
         break;
-    case kOpStartObj:
-        pop();
-        // TODO
+    case kOpStartTell:
+        {
+            auto window = pop();
+            auto tellStmt = std::make_shared<TellStmtNode>(std::move(window));
+            translation = tellStmt;
+            nextBlock = tellStmt->block.get();
+        }
         break;
-    case kOpStopObj:
-        // TODO
+    case kOpEndTell:
+        {
+            ast->exitBlock();
+            return 1;
+        }
         break;
     case kOpPushList:
         {
@@ -833,6 +840,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
         }
         break;
     case kOpCallExt:
+    case kOpTellCall:
         {
             auto argList = pop();
             translation = std::make_shared<CallNode>(getName(bytecode.obj), std::move(argList));

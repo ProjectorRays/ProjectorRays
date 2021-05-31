@@ -48,8 +48,8 @@ enum OpCode {
     kOpOntoSpr          = 0x19,
     kOpIntoSpr          = 0x1a,
     kOpGetField         = 0x1b,
-    kOpStartObj         = 0x1c,
-    kOpStopObj          = 0x1d,
+    kOpStartTell        = 0x1c,
+    kOpEndTell          = 0x1d,
     kOpPushList         = 0x1e,
     kOpPushPropList     = 0x1f,
 
@@ -85,6 +85,7 @@ enum OpCode {
     kOpSetMovieProp     = 0x60,
     kOpGetObjProp       = 0x61,
     kOpSetObjProp       = 0x62,
+    kOpTellCall         = 0x63,
     kOpPeek             = 0x64,
     kOpPop              = 0x65,
     kOpGetMovieInfo     = 0x66,
@@ -148,6 +149,7 @@ enum NodeType {
     kRepeatWithToStmtNode,
     kCasesStmtNode,
     kCaseNode,
+    kTellStmtNode,
     kCallNode,
     kObjCallNode,
     kObjCallV4Node,
@@ -737,6 +739,22 @@ struct CasesStmtNode : StmtNode {
         value->parent = this;
     }
     virtual ~CasesStmtNode() = default;
+    virtual std::string toString(bool dot, bool sum);
+};
+
+/* TellStmtNode */
+
+struct TellStmtNode : StmtNode {
+    std::shared_ptr<Node> window;
+    std::shared_ptr<BlockNode> block;
+
+    TellStmtNode(std::shared_ptr<Node> w) : StmtNode(kTellStmtNode) {
+        window = std::move(w);
+        window->parent = this;
+        block = std::make_shared<BlockNode>();
+        block->parent = this;
+    }
+    virtual ~TellStmtNode() = default;
     virtual std::string toString(bool dot, bool sum);
 };
 

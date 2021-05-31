@@ -34,8 +34,8 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpOntoSpr,           "ontospr" },
     { kOpIntoSpr,           "intospr" },
     { kOpGetField,          "getfield" },
-    { kOpStartObj,          "startobj" },
-    { kOpStopObj,           "stopobj" },
+    { kOpStartTell,         "starttell" },
+    { kOpEndTell,           "endtell" },
     { kOpPushList,          "pushlist" },
     { kOpPushPropList,      "pushproplist" },
 
@@ -71,6 +71,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpSetMovieProp,      "setmovieprop" },
     { kOpGetObjProp,        "getobjprop" },
     { kOpSetObjProp,        "setobjprop" },
+    { kOpTellCall,          "tellcall" },
     { kOpPeek,              "peek" },
     { kOpPop,               "pop" },
     { kOpGetMovieInfo,      "getmovieinfo" },
@@ -662,6 +663,16 @@ std::string CasesStmtNode::toString(bool dot, bool sum) {
     std::string res = "case " + value->toString(dot, sum) + " of";
     if (!sum) {
         res += "\n" + indent(firstCase->toString(dot, sum)) + "end case";
+    }
+    return res;
+}
+
+/* TellStmtNode */
+
+std::string TellStmtNode::toString(bool dot, bool sum) {
+    std::string res = "tell " + window->toString(dot, sum);
+    if (!sum) {
+        res += "\n" + block->toString(dot, sum) + "end tell";
     }
     return res;
 }
