@@ -277,6 +277,28 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
     return std::make_shared<CommentNode>("ERROR: Unknown property type " + std::to_string(propertyType));
 }
 
+std::shared_ptr<Node> Handler::readChunkRef(std::shared_ptr<Node> string) {
+    auto lastLine = pop();
+    auto firstLine = pop();
+    auto lastItem = pop();
+    auto firstItem = pop();
+    auto lastWord = pop();
+    auto firstWord = pop();
+    auto lastChar = pop();
+    auto firstChar = pop();
+
+    if (!(firstChar->type == kLiteralNode && firstChar->getValue()->type == kDatumInt && firstChar->getValue()->toInt() == 0))
+        return std::make_shared<ChunkExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
+    if (!(firstWord->type == kLiteralNode && firstWord->getValue()->type == kDatumInt && firstWord->getValue()->toInt() == 0))
+        return std::make_shared<ChunkExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
+    if (!(firstItem->type == kLiteralNode && firstItem->getValue()->type == kDatumInt && firstItem->getValue()->toInt() == 0))
+        return std::make_shared<ChunkExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
+    if (!(firstLine->type == kLiteralNode && firstLine->getValue()->type == kDatumInt && firstLine->getValue()->toInt() == 0))
+        return std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+
+    return std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
+}
+
 void Handler::tagLoops() {
     // Tag any jmpifz which is a loop with the loop type
     // (kTagRepeatWhile, kTagRepeatWithIn, kTagRepeatWithTo, kTagRepeatWithDownTo).
@@ -542,25 +564,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
     case kOpGetChunk:
         {
             auto string = pop();
-            auto lastLine = pop();
-            auto firstLine = pop();
-            auto lastItem = pop();
-            auto firstItem = pop();
-            auto lastWord = pop();
-            auto firstWord = pop();
-            auto lastChar = pop();
-            auto firstChar = pop();
-            if (firstChar->getValue()->toInt()) {
-                translation = std::make_shared<ChunkExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
-            } else if (firstWord->getValue()->toInt()) {
-                translation = std::make_shared<ChunkExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
-            } else if (firstItem->getValue()->toInt()) {
-                translation = std::make_shared<ChunkExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
-            } else if (firstLine->getValue()->toInt()) {
-                translation = std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
-            } else {
-                translation = std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
-            }
+            translation = readChunkRef(string);
         }
         break;
     case kOpHiliteChunk:
@@ -570,24 +574,11 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
                 castID = pop();
             auto fieldID = pop();
             auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
-            auto lastLine = pop();
-            auto firstLine = pop();
-            auto lastItem = pop();
-            auto firstItem = pop();
-            auto lastWord = pop();
-            auto firstWord = pop();
-            auto lastChar = pop();
-            auto firstChar = pop();
-            if (firstChar->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(field));
-            } else if (firstWord->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(field));
-            } else if (firstItem->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(field));
-            } else if (firstLine->getValue()->toInt()) {
-                translation = std::make_shared<ChunkHiliteStmtNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(field));
+            auto chunk = readChunkRef(field);
+            if (chunk->type == kCommentNode) { // error comment
+                translation = chunk;
             } else {
-                translation = std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
+                translation = std::make_shared<ChunkHiliteStmtNode>(std::move(chunk));
             }
         }
         break;
@@ -863,9 +854,30 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
             translation = std::make_shared<PutStmtNode>(putType, std::move(var), std::move(val));
         }
         break;
-    case kOp5BXX:
-        pop();
-        // TODO
+    case kOpPutChunk:
+        {
+            PutType putType = static_cast<PutType>((bytecode.obj >> 4) & 0xF);
+            uint32_t varType = bytecode.obj & 0xF;
+            auto var = readVar(varType);
+            auto chunk = readChunkRef(var);
+            auto val = pop();
+            if (chunk->type == kCommentNode) { // error comment
+                translation = chunk;
+            } else {
+                translation = std::make_shared<PutStmtNode>(putType, std::move(chunk), std::move(val));
+            }
+        }
+        break;
+    case kOpDeleteChunk:
+        {
+            auto var = readVar(bytecode.obj);
+            auto chunk = readChunkRef(var);
+            if (chunk->type == kCommentNode) { // error comment
+                translation = chunk;
+            } else {
+                translation = std::make_shared<ChunkDeleteStmtNode>(std::move(chunk));
+            }
+        }
         break;
     case kOpGet:
         {

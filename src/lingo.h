@@ -75,7 +75,8 @@ enum OpCode {
     kOpCallExt          = 0x57,
     kOpCallObjV4        = 0x58,
     kOpPut              = 0x59,
-    kOp5BXX             = 0x5b,
+    kOpPutChunk         = 0x5a,
+    kOpDeleteChunk      = 0x5b,
     kOpGet              = 0x5c,
     kOpSet              = 0x5d,
     kOpGetMovieProp     = 0x5f,
@@ -133,6 +134,7 @@ enum NodeType {
     kBinaryOpNode,
     kChunkExprNode,
     kChunkHiliteStmtNode,
+    kChunkDeleteStmtNode,
     kSpriteIntersectsExprNode,
     kSpriteWithinExprNode,
     kMemberExprNode,
@@ -286,6 +288,7 @@ struct Handler {
     std::shared_ptr<Node> readVar(int varType);
     std::string getVarNameFromSet(const Bytecode &bytecode);
     std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
+    std::shared_ptr<Node> readChunkRef(std::shared_ptr<Node> string);
     void tagLoops();
     bool isRepeatWithIn(uint32_t startIndex, uint32_t endIndex);
     BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
@@ -512,21 +515,26 @@ struct ChunkExprNode : ExprNode {
 /* ChunkHiliteStmtNode */
 
 struct ChunkHiliteStmtNode : StmtNode {
-    ChunkType type;
-    std::shared_ptr<Node> first;
-    std::shared_ptr<Node> last;
-    std::shared_ptr<Node> field;
+    std::shared_ptr<Node> chunk;
 
-    ChunkHiliteStmtNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> f)
-        : StmtNode(kChunkHiliteStmtNode), type(t) {
-        first = std::move(a);
-        first->parent = this;
-        last = std::move(b);
-        last->parent = this;
-        field = std::move(f);
-        field->parent = this;
+    ChunkHiliteStmtNode(std::shared_ptr<Node> c) : StmtNode(kChunkHiliteStmtNode) {
+        chunk = std::move(c);
+        chunk->parent = this;
     }
     virtual ~ChunkHiliteStmtNode() = default;
+    virtual std::string toString(bool dot, bool sum);
+};
+
+/* ChunkDeleteStmtNode */
+
+struct ChunkDeleteStmtNode : StmtNode {
+    std::shared_ptr<Node> chunk;
+
+    ChunkDeleteStmtNode(std::shared_ptr<Node> c) : StmtNode(kChunkDeleteStmtNode) {
+        chunk = std::move(c);
+        chunk->parent = this;
+    }
+    virtual ~ChunkDeleteStmtNode() = default;
     virtual std::string toString(bool dot, bool sum);
 };
 

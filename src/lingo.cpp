@@ -61,7 +61,8 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpCallExt,           "extcall" },
     { kOpCallObjV4,         "objcallv4" },
     { kOpPut,               "put" },
-    { kOp5BXX,              "op5Bxx" },
+    { kOpPutChunk,          "putchunk" },
+    { kOpDeleteChunk,       "deletechunk" },
     { kOpGet,               "get" },
     { kOpSet,               "set" },
     { kOpGetMovieProp,      "getmovieprop" },
@@ -510,13 +511,13 @@ std::string ChunkExprNode::toString(bool dot, bool sum) {
 /* ChunkHiliteStmtNode */
 
 std::string ChunkHiliteStmtNode::toString(bool dot, bool sum) {
-    auto res = "hilite " + Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(dot, sum);
-    if (!(last->type == kLiteralNode && last->getValue()->type == kDatumInt && last->getValue()->i == 0)) {
-        res += " to " + last->toString(dot, sum);
-    }
-    // we want the field to always be verbose
-    res += " of " + field->toString(false, sum);
-    return res;
+    return "hilite " + chunk->toString(dot, sum);
+}
+
+/* ChunkDeleteStmtNode */
+
+std::string ChunkDeleteStmtNode::toString(bool dot, bool sum) {
+    return "delete " + chunk->toString(dot, sum);
 }
 
 /* SpriteIntersectsExprNode */
