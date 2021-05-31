@@ -74,7 +74,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
     { kOpTellCall,          "tellcall" },
     { kOpPeek,              "peek" },
     { kOpPop,               "pop" },
-    { kOpGetMovieInfo,      "getmovieinfo" },
+    { kOpTheBuiltin,        "thebuiltin" },
     { kOpObjCall,           "objcall" },
     { kOpPushInt16,         "pushint16" },
     { kOpPushInt32,         "pushint32" },

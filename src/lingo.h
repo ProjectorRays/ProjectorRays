@@ -88,7 +88,7 @@ enum OpCode {
     kOpTellCall         = 0x63,
     kOpPeek             = 0x64,
     kOpPop              = 0x65,
-    kOpGetMovieInfo     = 0x66,
+    kOpTheBuiltin       = 0x66,
     kOpObjCall          = 0x67,
     kOpPushInt16        = 0x6e,
     kOpPushInt32        = 0x6f,

@@ -1025,9 +1025,9 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
             pop();
         }
         return 1;
-    case kOpGetMovieInfo:
+    case kOpTheBuiltin:
         {
-            pop(); // FIXME: What is this?
+            pop(); // empty arglist
             translation = std::make_shared<TheExprNode>(getName(bytecode.obj));
         }
         break;
