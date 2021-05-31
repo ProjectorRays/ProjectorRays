@@ -183,6 +183,7 @@ std::string Handler::getVarNameFromSet(const Bytecode &bytecode) {
     std::string varName;
     switch (bytecode.opcode) {
     case kOpSetGlobal:
+    case kOpSetGlobal2:
         varName = getName(bytecode.obj);
         registerGlobal(varName);
         break;
@@ -426,6 +427,9 @@ BytecodeTag Handler::identifyLoop(uint32_t startIndex, uint32_t endIndex) {
     switch (bytecodeArray[conditionStartIndex - 1].opcode) {
     case kOpSetGlobal:
         getOp = kOpGetGlobal;
+        break;
+    case kOpSetGlobal2:
+        getOp = kOpGetGlobal2;
         break;
     case kOpSetProp:
         getOp = kOpGetProp;
@@ -687,6 +691,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
         }
         break;
     case kOpGetGlobal:
+    case kOpGetGlobal2:
         {
             auto name = getName(bytecode.obj);
             registerGlobal(name);
@@ -703,6 +708,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
         translation = std::make_shared<VarNode>(getLocalName(bytecode.obj / variableMultiplier()));
         break;
     case kOpSetGlobal:
+    case kOpSetGlobal2:
         {
             auto varName = getName(bytecode.obj);
             registerGlobal(varName);
