@@ -360,7 +360,7 @@ bool Handler::isRepeatWithIn(uint32_t startIndex, uint32_t endIndex) {
         return false;
     if (!(bytecodeArray[startIndex - 6].opcode == kOpPushArgList && bytecodeArray[startIndex - 6].obj == 1))
         return false;
-    if (!(bytecodeArray[startIndex - 5].opcode == kOpCallExt && getName(bytecodeArray[startIndex - 5].obj) == "count"))
+    if (!(bytecodeArray[startIndex - 5].opcode == kOpExtCall && getName(bytecodeArray[startIndex - 5].obj) == "count"))
         return false;
     if (!(bytecodeArray[startIndex - 4].opcode == kOpPushInt8 && bytecodeArray[startIndex - 4].obj == 1))
         return false;
@@ -378,7 +378,7 @@ bool Handler::isRepeatWithIn(uint32_t startIndex, uint32_t endIndex) {
         return false;
     if (!(bytecodeArray[startIndex + 3].opcode == kOpPushArgList && bytecodeArray[startIndex + 3].obj == 2))
         return false;
-    if (!(bytecodeArray[startIndex + 4].opcode == kOpCallExt && getName(bytecodeArray[startIndex + 4].obj) == "getAt"))
+    if (!(bytecodeArray[startIndex + 4].opcode == kOpExtCall && getName(bytecodeArray[startIndex + 4].obj) == "getAt"))
         return false;
     if (!(bytecodeArray[startIndex + 5].opcode == kOpSetGlobal || bytecodeArray[startIndex + 5].opcode == kOpSetProp
             || bytecodeArray[startIndex + 5].opcode == kOpSetParam || bytecodeArray[startIndex + 5].opcode == kOpSetLocal))
@@ -833,20 +833,20 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
             }
         }
         break;
-    case kOpCallLocal:
+    case kOpLocalCall:
         {
             auto argList = pop();
             translation = std::make_shared<CallNode>(script->handlers[bytecode.obj]->name, std::move(argList));
         }
         break;
-    case kOpCallExt:
+    case kOpExtCall:
     case kOpTellCall:
         {
             auto argList = pop();
             translation = std::make_shared<CallNode>(getName(bytecode.obj), std::move(argList));
         }
         break;
-    case kOpCallObjV4:
+    case kOpObjCallV4:
         {
             auto object = readVar(bytecode.obj);
             auto argList = pop();
@@ -1031,7 +1031,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
             translation = std::make_shared<TheExprNode>(getName(bytecode.obj));
         }
         break;
-    case kOpCallObj:
+    case kOpObjCall:
         {
             std::string method = getName(bytecode.obj);
             auto argList = pop();
