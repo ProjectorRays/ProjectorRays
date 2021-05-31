@@ -787,7 +787,10 @@ std::string ThePropExprNode::toString(bool dot, bool sum) {
 /* ObjPropExprNode */
 
 std::string ObjPropExprNode::toString(bool dot, bool sum) {
-    return obj->toString(dot, sum) + "." + prop;
+    if (dot)
+        return obj->toString(dot, sum) + "." + prop;
+    
+    return "the " + prop + " of " + obj->toString(dot, sum);
 }
 
 /* ObjBracketExprNode */
