@@ -523,13 +523,13 @@ std::string ChunkDeleteStmtNode::toString(bool dot, bool sum) {
 /* SpriteIntersectsExprNode */
 
 std::string SpriteIntersectsExprNode::toString(bool dot, bool sum) {
-    return "sprite(" + firstSprite->toString(dot, sum) + ").intersects(" + secondSprite->toString(dot, sum) + ")";
+    return "sprite " + firstSprite->toString(dot, sum) + " intersects " + secondSprite->toString(dot, sum);
 }
 
 /* SpriteWithinExprNode */
 
 std::string SpriteWithinExprNode::toString(bool dot, bool sum) {
-    return "sprite(" + firstSprite->toString(dot, sum) + ").within(" + secondSprite->toString(dot, sum) + ")";
+    return "sprite " + firstSprite->toString(dot, sum) + " within " + secondSprite->toString(dot, sum);
 }
 
 /* MemberExprNode */
