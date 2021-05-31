@@ -860,7 +860,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
             uint32_t varType = bytecode.obj & 0xF;
             auto var = readVar(varType);
             auto val = pop();
-            translation = std::make_shared<PutStmtNode>(putType, var, val);
+            translation = std::make_shared<PutStmtNode>(putType, std::move(var), std::move(val));
         }
         break;
     case kOp5BXX:
