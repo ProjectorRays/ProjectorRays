@@ -136,8 +136,12 @@ struct ConfigChunk : Chunk {
 };
 
 struct InitialMapChunk : Chunk {
-    uint32_t memoryMapCount;
-    uint32_t memoryMapOffset;
+    uint32_t one; // always 1
+    uint32_t mmapOffset;
+    uint32_t version;
+    uint32_t unused1;
+    uint32_t unused2;
+    uint32_t unused3;
 
     InitialMapChunk(Movie *m) : Chunk(m) {}
     virtual ~InitialMapChunk() = default;

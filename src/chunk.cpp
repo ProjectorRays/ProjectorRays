@@ -179,8 +179,12 @@ void ConfigChunk::read(ReadStream &stream) {
 /* InitialMapChunk */
 
 void InitialMapChunk::read(ReadStream &stream) {
-    memoryMapCount = stream.readUint32();
-    memoryMapOffset = stream.readUint32();
+    one = stream.readUint32();
+    mmapOffset = stream.readUint32();
+    version = stream.readUint32();
+    unused1 = stream.readUint32();
+    unused2 = stream.readUint32();
+    unused3 = stream.readUint32();
 }
 
 /* KeyTableChunk */

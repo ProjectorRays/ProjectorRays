@@ -49,7 +49,7 @@ void Movie::readMemoryMap() {
     std::shared_ptr<InitialMapChunk> imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
 
     // Memory map
-    stream->seek(imap->memoryMapOffset);
+    stream->seek(imap->mmapOffset);
     std::shared_ptr<MemoryMapChunk> mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
 
     for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
