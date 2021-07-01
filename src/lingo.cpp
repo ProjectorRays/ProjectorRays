@@ -156,6 +156,7 @@ std::map<uint, std::string> Lingo::spritePropertyNames = {
     { 0x06, "cursor" },
     { 0x07, "foreColor" },
     { 0x08, "height" },
+    { 0x09, "immediate" },
     { 0x0a, "ink" },
     { 0x0b, "left" },
     { 0x0c, "lineSize" },
@@ -174,6 +175,7 @@ std::map<uint, std::string> Lingo::spritePropertyNames = {
     { 0x19, "visible" },
     { 0x1a, "volume" },
     { 0x1b, "width" },
+    { 0x1c, "blend" },
     { 0x1d, "scriptNum" },
     { 0x1e, "moveableSprite" },
     { 0x1f, "editableText" },
@@ -211,7 +213,7 @@ std::map<uint, std::string> Lingo::moviePropertyNames07 = {
     { 0x1a, "soundLevel" },
     { 0x1b, "stageColor" },
 //  { 0x1c, ??? },
-    { 0x1d, "stillDown" },
+    { 0x1d, "switchColorDepth" },
     { 0x1e, "timeoutKeyDown" },
     { 0x1f, "timeoutLength" },
     { 0x20, "timeoutMouse" },
@@ -760,7 +762,7 @@ std::string MenuPropExprNode::toString(bool dot, bool sum) {
 
 std::string MenuItemPropExprNode::toString(bool dot, bool sum) {
     auto propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
-    return "the " + propString + "of menuItem " + itemID->toString(dot, sum) + " of menu " + menuID->toString(dot, sum);
+    return "the " + propString + " of menuItem " + itemID->toString(dot, sum) + " of menu " + menuID->toString(dot, sum);
 }
 
 /* SoundPropExprNode */
