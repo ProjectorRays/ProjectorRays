@@ -307,6 +307,11 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
         return deserializedChunks[id];
     
     std::unique_ptr<ReadStream> chunkData = getChunkData(fourCC, id);
+    if (!chunkData) {
+        throw std::runtime_error(boost::str(
+            boost::format("No data for chunk %d") % id
+        ));
+    }
     std::shared_ptr<Chunk> chunk = makeChunk(fourCC, *chunkData);
 
     // don't cache the deserialized map chunks
@@ -339,9 +344,8 @@ std::unique_ptr<ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t 
         unsigned long actualUncompLength = info.uncompressedLen;
         auto chunkStream = stream->readZlibBytes(info.len, &actualUncompLength);
         if (!chunkStream) {
-            throw std::runtime_error(boost::str(
-                boost::format("Could not uncompress chunk %d") % id
-            ));
+            std::cout << boost::format("Could not uncompress chunk %d\n") % id;
+            return nullptr;
         }
         if (info.uncompressedLen != actualUncompLength) {
             throw std::runtime_error(boost::str(
@@ -484,7 +488,9 @@ void DirectorFile::dumpChunks() {
 
         std::string fileName = cleanFileName(fourCCToString(it->second.fourCC) + "-" + std::to_string(it->second.id) + ".bin");
         std::shared_ptr<ReadStream> chunk = getChunkData(it->second.fourCC, it->second.id);
-        writeFile(fileName, chunk->getData(), chunk->len());
+        if (chunk) {
+            writeFile(fileName, chunk->getData(), chunk->len());
+        }
     }
 }
 
