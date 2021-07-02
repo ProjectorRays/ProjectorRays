@@ -3,6 +3,7 @@
 *.lasm
 *.ls
 *.o
+*.bin
 
 /projectorrays
 /projectorrays.exe
