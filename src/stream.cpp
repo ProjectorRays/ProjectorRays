@@ -31,6 +31,10 @@ bool ReadStream::pastEOF() {
     return  _pos > _len || _offset + _pos > _buf->size();
 }
 
+uint8_t *ReadStream::getData() {
+    return &_buf->data()[_offset];
+}
+
 std::shared_ptr<std::vector<uint8_t>> ReadStream::copyBytes(size_t len) {
     size_t p =  _offset + _pos;
     _pos += len;

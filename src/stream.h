@@ -35,6 +35,7 @@ public:
     bool eof();
     bool pastEOF();
 
+    std::uint8_t *getData();
     std::shared_ptr<std::vector<uint8_t>> copyBytes(size_t len);
 
     std::unique_ptr<ReadStream> readBytes(size_t len);
