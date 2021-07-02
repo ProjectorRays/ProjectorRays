@@ -205,7 +205,7 @@ bool DirectorFile::readKeyTable() {
     if (info) {
         keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(info->fourCC, info->id));
 
-        for (size_t i = 0; i < keyTable->entries.size(); i++) {
+        for (size_t i = 0; i < keyTable->usedCount; i++) {
             const KeyTableEntry &entry = keyTable->entries[i];
             uint32_t ownerTag = FOURCC('?', '?', '?', '?');
             if (chunkInfo.find(entry.castID) != chunkInfo.end()) {

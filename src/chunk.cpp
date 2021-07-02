@@ -195,7 +195,7 @@ void KeyTableChunk::read(ReadStream &stream) {
     entryCount = stream.readUint32();
     usedCount = stream.readUint32();
 
-    entries.resize(usedCount);
+    entries.resize(entryCount);
     for (auto &entry : entries) {
         entry.read(stream);
     }
