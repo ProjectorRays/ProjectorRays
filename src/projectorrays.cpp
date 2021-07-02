@@ -12,17 +12,38 @@
 using namespace ProjectorRays;
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        std::cout << "usage: " << argv[0] << " FILE\n";
+    bool dumpChunks = false;
+    std::string fileName;
+    bool foundFileName = false;
+
+    int argsUsed;
+    for (argsUsed = 1; argsUsed < argc; argsUsed++) {
+        std::string arg = argv[argsUsed];
+        if (arg == "--dump-chunks") {
+            dumpChunks = true;
+        } else if (!foundFileName) {
+            fileName = arg;
+            foundFileName = true;
+        } else {
+            break;
+        }
+    }
+
+    if (argsUsed != argc || !foundFileName) {
+        std::cout << "Usage: " << argv[0] << " [OPTIONS]... FILE\n";
+        std::cout << "  --dump-chunks\t\tDump chunk data\n";
         return 1;
     }
 
-    auto buf = readFile(argv[1]);
+    auto buf = readFile(fileName);
     auto stream = std::make_unique<ReadStream>(buf);
     auto dir = std::make_unique<DirectorFile>();
     dir->read(stream.get());
 
     dir->dumpScripts();
+    if (dumpChunks) {
+        dir->dumpChunks();
+    }
 
     return 0;
 }

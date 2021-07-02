@@ -476,4 +476,15 @@ void DirectorFile::dumpScripts() {
     }
 }
 
+void DirectorFile::dumpChunks() {
+    for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
+        if (it->second.offset == 0) // RIFX
+            continue;
+
+        std::string fileName = cleanFileName(fourCCToString(it->second.fourCC) + "-" + std::to_string(it->second.id) + ".bin");
+        std::shared_ptr<ReadStream> chunk = getChunkData(it->second.fourCC, it->second.id);
+        writeFile(fileName, chunk->getData(), chunk->len());
+    }
+}
+
 }

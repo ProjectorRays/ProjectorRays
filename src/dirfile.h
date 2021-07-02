@@ -62,6 +62,7 @@ public:
     std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, ReadStream &stream);
 
     void dumpScripts();
+    void dumpChunks();
 };
 
 }
