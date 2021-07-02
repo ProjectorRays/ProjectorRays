@@ -13,6 +13,9 @@ ProjectorRays currently supports these file types:
 | DCR | Shockwave movie |
 | DIR | Director movie |
 | DXR | Protected Director movie |
+| CCT | Shockwave cast |
+| CST | Director cast |
+| CXT | Protected Director cast |
 
 ## How do I use it?
 
@@ -20,13 +23,13 @@ ProjectorRays currently supports these file types:
 
 Development builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
 
-To use it, drop a movie file on `projectorrays.exe`. ProjectorRays will output `.ls` files with decompiled source code in the same folder as the movie.
+To use it, drop a movie or cast file on `projectorrays.exe`. ProjectorRays will output `.ls` files with decompiled source code in the same folder as the movie.
 
 ### *nix
 
 Install Boost 1.72.0 or later and zlib. Run `make` to build.
 
-To use it, run `./projectorrays MOVIE_FILE`. ProjectorRays will output `.ls` files with decompiled source code in the current working directory.
+To use it, run `./projectorrays FILE`. ProjectorRays will output `.ls` files with decompiled source code in the current working directory.
 
 ## Credits
 
