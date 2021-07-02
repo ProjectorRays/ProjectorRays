@@ -56,7 +56,9 @@ public:
     const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
     bool chunkExists(uint32_t fourCC, int32_t id);
     std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
+    std::unique_ptr<ReadStream> getChunkData(uint32_t fourCC, int32_t id);
     std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
+    std::unique_ptr<ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
     std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, ReadStream &stream);
 
     void dumpScripts();

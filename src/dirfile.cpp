@@ -5,6 +5,7 @@
 #include "chunk.h"
 #include "lingo.h"
 #include "dirfile.h"
+#include "fileio.h"
 #include "stream.h"
 #include "subchunk.h"
 #include "util.h"
@@ -303,7 +304,20 @@ bool DirectorFile::chunkExists(uint32_t fourCC, int32_t id) {
 std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
     if (deserializedChunks.find(id) != deserializedChunks.end())
         return deserializedChunks[id];
+    
+    std::unique_ptr<ReadStream> chunkData = getChunkData(fourCC, id);
+    std::shared_ptr<Chunk> chunk = makeChunk(fourCC, *chunkData);
 
+    // don't cache the deserialized map chunks
+    // we'll just generate a new one if we need to save
+    if (fourCC != FOURCC('i', 'm', 'a', 'p') && fourCC != FOURCC('m', 'm', 'a', 'p')) {
+        deserializedChunks[id] = chunk;
+    }
+
+    return chunk;
+}
+
+std::unique_ptr<ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
     if (chunkInfo.find(id) == chunkInfo.end())
         throw std::runtime_error("Could not find chunk " + std::to_string(id));
 
@@ -315,11 +329,10 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
         );
     }
 
-    std::shared_ptr<Chunk> chunk;
+    std::unique_ptr<ReadStream> chunk;
     if (_cachedChunkData.find(id) != _cachedChunkData.end()) {
         auto &data = _cachedChunkData[id];
-        auto chunkStream = std::make_unique<ReadStream>(data, stream->endianness, 0, data->size());
-        chunk = makeChunk(fourCC, *chunkStream);
+        chunk = std::make_unique<ReadStream>(data, stream->endianness, 0, data->size());
     } else if (afterburned) {
         stream->seek(info.offset + _ilsBodyOffset);
         unsigned long actualUncompLength = info.uncompressedLen;
@@ -335,22 +348,21 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
                     % id % info.uncompressedLen % actualUncompLength
             ));
         }
-        chunk = makeChunk(fourCC, *chunkStream);
+        return chunkStream;
     } else {
         stream->seek(info.offset);
-        chunk = readChunk(fourCC, info.len);
-    }
-
-    // don't cache the deserialized map chunks
-    // we'll just generate a new one if we need to save
-    if (fourCC != FOURCC('i', 'm', 'a', 'p') && fourCC != FOURCC('m', 'm', 'a', 'p')) {
-        deserializedChunks[id] = chunk;
+        chunk = readChunkData(fourCC, info.len);
     }
 
     return chunk;
 }
 
 std::shared_ptr<Chunk> DirectorFile::readChunk(uint32_t fourCC, uint32_t len) {
+    std::unique_ptr<ReadStream> chunkData = readChunkData(fourCC, len);
+    return makeChunk(fourCC, *chunkData);
+}
+
+std::unique_ptr<ReadStream> DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
     auto offset = stream->pos();
 
     auto validFourCC = stream->readUint32();
@@ -372,8 +384,7 @@ std::shared_ptr<Chunk> DirectorFile::readChunk(uint32_t fourCC, uint32_t len) {
         std::cout << "At offset " + std::to_string(offset) + " reading chunk '" + fourCCToString(fourCC) + "' with length " + std::to_string(len) + "\n";
     }
 
-    auto chunkStream = stream->readBytes(len);
-    return makeChunk(fourCC, *chunkStream);
+    return stream->readBytes(len);
 }
 
 std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, ReadStream &stream) {
