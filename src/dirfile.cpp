@@ -29,7 +29,7 @@ void DirectorFile::read(ReadStream *s) {
     // Codec-dependent map
     if (codec == FOURCC('M', 'V', '9', '3')) {
         readMemoryMap();
-    } else if (codec == FOURCC('F', 'G', 'D', 'M')) {
+    } else if (codec == FOURCC('F', 'G', 'D', 'M') || codec == FOURCC('F', 'G', 'D', 'C')) {
         afterburned = true;
         if (!readAfterburnerMap())
             return;
@@ -241,6 +241,8 @@ bool DirectorFile::readConfig() {
 }
 
 bool DirectorFile::readCasts() {
+    bool internal = true;
+
     if (version >= 500) {
         auto info = getFirstChunkInfo(FOURCC('M', 'C', 's', 'L'));
         if (info) {
@@ -262,23 +264,22 @@ bool DirectorFile::readCasts() {
             }
 
             return true;
+        } else {
+            internal = false;
         }
-
-        std::cout << "No cast list!\n";
-        return false;
-    } else {
-        auto info = getFirstChunkInfo(FOURCC('C', 'A', 'S', '*'));
-        if (info) {
-            auto cast = std::static_pointer_cast<CastChunk>(getChunk(info->fourCC, info->id));
-            cast->populate("Internal", 1024, config->minMember);
-            casts.push_back(std::move(cast));
-
-            return true;
-        }
-
-        std::cout << "No cast!\n";
-        return false;
     }
+
+    auto info = getFirstChunkInfo(FOURCC('C', 'A', 'S', '*'));
+    if (info) {
+        auto cast = std::static_pointer_cast<CastChunk>(getChunk(info->fourCC, info->id));
+        cast->populate(internal ? "Internal" : "External", 1024, config->minMember);
+        casts.push_back(std::move(cast));
+
+        return true;
+    }
+
+    std::cout << "No cast!\n";
+    return false;
 
     return false;
 }
