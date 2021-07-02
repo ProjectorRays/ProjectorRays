@@ -4,16 +4,16 @@
 
 #include "chunk.h"
 #include "lingo.h"
-#include "movie.h"
+#include "dirfile.h"
 #include "stream.h"
 #include "subchunk.h"
 #include "util.h"
 
 namespace ProjectorRays {
 
-/* Movie */
+/* DirectorFile */
 
-void Movie::read(ReadStream *s) {
+void DirectorFile::read(ReadStream *s) {
     stream = s;
     stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
 
@@ -44,7 +44,7 @@ void Movie::read(ReadStream *s) {
         return;
 }
 
-void Movie::readMemoryMap() {
+void DirectorFile::readMemoryMap() {
     // Initial map
     std::shared_ptr<InitialMapChunk> imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
 
@@ -74,7 +74,7 @@ void Movie::readMemoryMap() {
     }
 }
 
-bool Movie::readAfterburnerMap() {
+bool DirectorFile::readAfterburnerMap() {
     uint32_t start, end;
 
     // File version
@@ -199,7 +199,7 @@ bool Movie::readAfterburnerMap() {
     return true;
 }
 
-bool Movie::readKeyTable() {
+bool DirectorFile::readKeyTable() {
     auto info = getFirstChunkInfo(FOURCC('K', 'E', 'Y', '*'));
     if (info) {
         keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(info->fourCC, info->id));
@@ -221,7 +221,7 @@ bool Movie::readKeyTable() {
     return false;
 }
 
-bool Movie::readConfig() {
+bool DirectorFile::readConfig() {
     auto info = getFirstChunkInfo(FOURCC('V', 'W', 'C', 'F'));
     if (!info)
         info = getFirstChunkInfo(FOURCC('D', 'R', 'C', 'F'));
@@ -239,7 +239,7 @@ bool Movie::readConfig() {
     return false;
 }
 
-bool Movie::readCasts() {
+bool DirectorFile::readCasts() {
     if (version >= 500) {
         auto info = getFirstChunkInfo(FOURCC('M', 'C', 's', 'L'));
         if (info) {
@@ -282,7 +282,7 @@ bool Movie::readCasts() {
     return false;
 }
 
-const ChunkInfo *Movie::getFirstChunkInfo(uint32_t fourCC) {
+const ChunkInfo *DirectorFile::getFirstChunkInfo(uint32_t fourCC) {
     auto &chunkIDs = chunkIDsByFourCC[fourCC];
     if (chunkIDs.size() > 0) {
         return &chunkInfo[chunkIDs[0]];
@@ -290,7 +290,7 @@ const ChunkInfo *Movie::getFirstChunkInfo(uint32_t fourCC) {
     return nullptr;
 }
 
-bool Movie::chunkExists(uint32_t fourCC, int32_t id) {
+bool DirectorFile::chunkExists(uint32_t fourCC, int32_t id) {
     if (chunkInfo.find(id) == chunkInfo.end())
         return false;
     
@@ -300,7 +300,7 @@ bool Movie::chunkExists(uint32_t fourCC, int32_t id) {
     return true;
 }
 
-std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
+std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
     if (deserializedChunks.find(id) != deserializedChunks.end())
         return deserializedChunks[id];
 
@@ -350,7 +350,7 @@ std::shared_ptr<Chunk> Movie::getChunk(uint32_t fourCC, int32_t id) {
     return chunk;
 }
 
-std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
+std::shared_ptr<Chunk> DirectorFile::readChunk(uint32_t fourCC, uint32_t len) {
     auto offset = stream->pos();
 
     auto validFourCC = stream->readUint32();
@@ -376,7 +376,7 @@ std::shared_ptr<Chunk> Movie::readChunk(uint32_t fourCC, uint32_t len) {
     return makeChunk(fourCC, *chunkStream);
 }
 
-std::shared_ptr<Chunk> Movie::makeChunk(uint32_t fourCC, ReadStream &stream) {
+std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, ReadStream &stream) {
     std::shared_ptr<Chunk> res;
     switch (fourCC) {
     case FOURCC('i', 'm', 'a', 'p'):

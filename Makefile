@@ -15,9 +15,9 @@ debug: projectorrays
 OBJS = \
 	src/castmember.o \
 	src/chunk.o \
+	src/dirfile.o \
 	src/handler.o \
 	src/lingo.o \
-	src/movie.o \
 	src/projectorrays.o \
 	src/stream.o \
 	src/subchunk.o \

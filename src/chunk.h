@@ -16,7 +16,7 @@ namespace ProjectorRays {
 struct CastMember;
 struct Handler;
 struct LiteralStore;
-class Movie;
+class DirectorFile;
 
 struct CastInfoChunk;
 struct CastMemberChunk;
@@ -25,9 +25,9 @@ struct ScriptContextChunk;
 struct ScriptNamesChunk;
 
 struct Chunk {
-    Movie *movie;
+    DirectorFile *dir;
 
-    Chunk(Movie *m) : movie(m) {}
+    Chunk(DirectorFile *d) : dir(d) {}
     virtual ~Chunk() = default;
     virtual void read(ReadStream &stream) {}
 };
@@ -39,7 +39,7 @@ struct ListChunk : Chunk {
     uint32_t finalDataLen;
     uint32_t listOffset;
 
-    ListChunk(Movie *m) : Chunk(m) {}
+    ListChunk(DirectorFile *m) : Chunk(m) {}
     virtual void read(ReadStream &stream);
     void readOffsetTable(ReadStream &stream);
     std::unique_ptr<ReadStream> readBytes(ReadStream &stream, uint16_t index);
@@ -55,7 +55,7 @@ struct CastChunk : Chunk {
     std::map<uint16_t, std::shared_ptr<CastMemberChunk>> members;
     std::shared_ptr<ScriptContextChunk> lctx;
 
-    CastChunk(Movie *m) : Chunk(m) {}
+    CastChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~CastChunk() = default;
     virtual void read(ReadStream &stream);
     void populate(const std::string &castName, int32_t id, uint16_t minMember);
@@ -68,7 +68,7 @@ struct CastListChunk : ListChunk {
     uint16_t unk1;
     std::vector<CastListEntry> entries;
 
-    CastListChunk(Movie *m) : ListChunk(m) {}
+    CastListChunk(DirectorFile *m) : ListChunk(m) {}
     virtual ~CastListChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -83,7 +83,7 @@ struct CastMemberChunk : Chunk {
     uint16_t id;
     ScriptChunk *script;
 
-    CastMemberChunk(Movie *m) : Chunk(m), id(0), script(nullptr) {}
+    CastMemberChunk(DirectorFile *m) : Chunk(m), id(0), script(nullptr) {}
     virtual ~CastMemberChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -117,7 +117,7 @@ struct CastInfoChunk : ListChunk {
     // cProp20;
     // imageCompression;
 
-    CastInfoChunk(Movie *m) : ListChunk(m) {}
+    CastInfoChunk(DirectorFile *m) : ListChunk(m) {}
     virtual ~CastInfoChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -130,7 +130,7 @@ struct ConfigChunk : Chunk {
     uint16_t maxMember;
     uint16_t directorVersion;
 
-    ConfigChunk(Movie *m) : Chunk(m) {}
+    ConfigChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~ConfigChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -143,7 +143,7 @@ struct InitialMapChunk : Chunk {
     uint32_t unused2;
     uint32_t unused3;
 
-    InitialMapChunk(Movie *m) : Chunk(m) {}
+    InitialMapChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~InitialMapChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -155,7 +155,7 @@ struct KeyTableChunk : Chunk {
     uint32_t usedCount;
     std::vector<KeyTableEntry> entries;
 
-    KeyTableChunk(Movie *m) : Chunk(m) {}
+    KeyTableChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~KeyTableChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -170,7 +170,7 @@ struct MemoryMapChunk : Chunk {
     int32_t freeHead;
     std::vector<MemoryMapEntry> mapArray;
 
-    MemoryMapChunk(Movie *m) : Chunk(m) {}
+    MemoryMapChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~MemoryMapChunk() = default;
     virtual void read(ReadStream &stream);
 };
@@ -207,7 +207,7 @@ struct ScriptChunk : Chunk {
 
     CastMemberChunk *member;
 
-    ScriptChunk(Movie *m) : Chunk(m), context(nullptr), member(nullptr) {}
+    ScriptChunk(DirectorFile *m) : Chunk(m), context(nullptr), member(nullptr) {}
     virtual ~ScriptChunk() = default;
     virtual void read(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
@@ -238,7 +238,7 @@ struct ScriptContextChunk : Chunk {
     std::vector<ScriptContextMapEntry> sectionMap;
     std::map<uint32_t, std::shared_ptr<ScriptChunk>> scripts;
 
-    ScriptContextChunk(Movie *m) : Chunk(m) {}
+    ScriptContextChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~ScriptContextChunk() = default;
     virtual void read(ReadStream &stream);
     std::string getName(int id);
@@ -253,7 +253,7 @@ struct ScriptNamesChunk : Chunk {
     uint16_t namesCount;
     std::vector<std::string> names;
 
-    ScriptNamesChunk(Movie *m) : Chunk(m) {}
+    ScriptNamesChunk(DirectorFile *m) : Chunk(m) {}
     virtual ~ScriptNamesChunk() = default;
     virtual void read(ReadStream &stream);
     std::string getName(int id);

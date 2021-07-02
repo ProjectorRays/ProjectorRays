@@ -8,7 +8,7 @@
 #include "chunk.h"
 #include "lingo.h"
 #include "stream.h"
-#include "movie.h"
+#include "dirfile.h"
 #include "util.h"
 
 using namespace ProjectorRays;
@@ -40,10 +40,10 @@ int main(int argc, char *argv[]) {
 
     auto buf = readFile(argv[1]);
     auto stream = std::make_unique<ReadStream>(buf);
-    auto movie = std::make_unique<Movie>();
-    movie->read(stream.get());
+    auto dir = std::make_unique<DirectorFile>();
+    dir->read(stream.get());
 
-    for (const auto &cast : movie->casts) {
+    for (const auto &cast : dir->casts) {
         if (!cast->lctx)
             continue;
 
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
                     ScriptMember *scriptMember = static_cast<ScriptMember *>(member->member.get());
                     switch (scriptMember->scriptType) {
                     case kScoreScript:
-                        scriptType = (movie->version >= 600) ? "BehaviorScript" : "ScoreScript";
+                        scriptType = (dir->version >= 600) ? "BehaviorScript" : "ScoreScript";
                         break;
                     case kMovieScript:
                         scriptType = "MovieScript";

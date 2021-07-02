@@ -6,7 +6,7 @@
 
 #include "chunk.h"
 #include "lingo.h"
-#include "movie.h"
+#include "dirfile.h"
 #include "stream.h"
 
 namespace ProjectorRays {
@@ -29,7 +29,7 @@ void Handler::readRecord(ReadStream &stream) {
     lineCount = stream.readUint16();
     lineOffset = stream.readUint32();
     // yet to implement
-    if (script->movie->capitalX)
+    if (script->dir->capitalX)
         stackHeight = stream.readUint32();
 }
 
@@ -133,9 +133,9 @@ std::shared_ptr<Node> Handler::pop() {
 int Handler::variableMultiplier() {
     // TODO: Determine what version this changed to 1.
     // For now approximating it with the point at which Ltcx changed to LctX.
-    if (script->movie->capitalX)
+    if (script->dir->capitalX)
         return 1;
-    if (script->movie->version >= 500)
+    if (script->dir->version >= 500)
         return 8;
     return 6;
 }
@@ -149,7 +149,7 @@ void Handler::registerGlobal(const std::string &name) {
 
 std::shared_ptr<Node> Handler::readVar(int varType) {
     std::shared_ptr<Node> castID;
-    if (varType == 0x6 && script->movie->version >= 500) // field cast ID
+    if (varType == 0x6 && script->dir->version >= 500) // field cast ID
         castID = pop();
     std::shared_ptr<Node> id = pop();
 
@@ -258,7 +258,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
         {
             auto propName = Lingo::getName(Lingo::memberPropertyNames, propertyID);
             std::shared_ptr<Node> castID;
-            if (script->movie->version >= 500) {
+            if (script->dir->version >= 500) {
                 castID = pop();
             }
             auto memberID = pop();
@@ -266,7 +266,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
             if (propertyType == 0x0b) {
                 prefix = "field";
             } else {
-                prefix = (script->movie->version >= 500) ? "member" : "cast";
+                prefix = (script->dir->version >= 500) ? "member" : "cast";
             }
             auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
             return std::make_shared<ThePropExprNode>(std::move(member), propName);
@@ -574,7 +574,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
     case kOpHiliteChunk:
         {
             std::shared_ptr<Node> castID;
-            if (script->movie->version >= 500)
+            if (script->dir->version >= 500)
                 castID = pop();
             auto fieldID = pop();
             auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
@@ -603,7 +603,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
     case kOpGetField:
         {
             std::shared_ptr<Node> castID;
-            if (script->movie->version >= 500)
+            if (script->dir->version >= 500)
                 castID = pop();
             auto fieldID = pop();
             translation = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
@@ -1111,7 +1111,7 @@ std::string posToString(int32_t pos) {
 }
 
 std::string Handler::bytecodeText() {
-    bool dotSyntax = script->movie->dotSyntax;
+    bool dotSyntax = script->dir->dotSyntax;
 
     std::string res = "on " + name;
     if (argumentNames.size() > 0) {

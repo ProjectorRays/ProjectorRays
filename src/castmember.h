@@ -4,7 +4,7 @@
 namespace ProjectorRays {
 
 class ReadStream;
-class Movie;
+class DirectorFile;
 
 enum MemberType {
     kNullMember         = 0,
@@ -23,10 +23,10 @@ enum MemberType {
 };
 
 struct CastMember {
-    Movie *movie;
+    DirectorFile *dir;
     MemberType type;
 
-    CastMember(Movie *m, MemberType t) : movie(m), type(t) {}
+    CastMember(DirectorFile *d, MemberType t) : dir(d), type(t) {}
     virtual ~CastMember() = default;
     virtual void read(ReadStream &stream);
 };
@@ -41,7 +41,7 @@ enum ScriptType {
 struct ScriptMember : CastMember {
     ScriptType scriptType;
 
-    ScriptMember(Movie *m) : CastMember(m, kScriptMember) {}
+    ScriptMember(DirectorFile *m) : CastMember(m, kScriptMember) {}
     virtual ~ScriptMember() = default;
     virtual void read(ReadStream &stream);
 };

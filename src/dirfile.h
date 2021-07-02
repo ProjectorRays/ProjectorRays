@@ -23,7 +23,7 @@ struct ChunkInfo {
     uint32_t compressionType;
 };
 
-class Movie {
+class DirectorFile {
 private:
     std::map<int32_t, std::shared_ptr<std::vector<uint8_t>>> _cachedChunkData;
     size_t _ilsBodyOffset;
@@ -45,7 +45,7 @@ public:
 
     std::vector<std::shared_ptr<CastChunk>> casts;
 
-    Movie() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
+    DirectorFile() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
 
     void read(ReadStream *s);
     void readMemoryMap();

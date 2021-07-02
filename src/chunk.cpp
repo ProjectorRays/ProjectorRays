@@ -1,7 +1,7 @@
 #include "castmember.h"
 #include "chunk.h"
 #include "lingo.h"
-#include "movie.h"
+#include "dirfile.h"
 #include "stream.h"
 #include "subchunk.h"
 
@@ -20,11 +20,11 @@ void CastChunk::read(ReadStream &stream) {
 void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMember) {
     name = castName;
 
-    for (const auto &entry : movie->keyTable->entries) {
+    for (const auto &entry : dir->keyTable->entries) {
         if (entry.castID == id
                 && (entry.fourCC == FOURCC('L', 'c', 't', 'x') || entry.fourCC == FOURCC('L', 'c', 't', 'X'))
-                && movie->chunkExists(entry.fourCC, entry.sectionID)) {
-            lctx = std::static_pointer_cast<ScriptContextChunk>(movie->getChunk(entry.fourCC, entry.sectionID));
+                && dir->chunkExists(entry.fourCC, entry.sectionID)) {
+            lctx = std::static_pointer_cast<ScriptContextChunk>(dir->getChunk(entry.fourCC, entry.sectionID));
             break;
         }
     }
@@ -32,7 +32,7 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
     for (size_t i = 0; i < memberIDs.size(); i++) {
         int32_t sectionID = memberIDs[i];
         if (sectionID > 0) {
-            auto member = std::static_pointer_cast<CastMemberChunk>(movie->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
+            auto member = std::static_pointer_cast<CastMemberChunk>(dir->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
             member->id = i + minMember;
             if (lctx && (lctx->scripts.find(member->info->scriptId) != lctx->scripts.end())) {
                 member->script = lctx->scripts[member->info->scriptId].get();
@@ -80,14 +80,14 @@ void CastMemberChunk::read(ReadStream &stream) {
 
     std::unique_ptr<ReadStream> specificStream;
 
-    if (movie->version >= 500) {
+    if (dir->version >= 500) {
         type = static_cast<MemberType>(stream.readUint32());
         infoLen = stream.readUint32();
         specificDataLen = stream.readUint32();
 
         // info
         std::unique_ptr<ReadStream> infoStream = stream.readBytes(infoLen);
-        info = std::make_shared<CastInfoChunk>(movie);
+        info = std::make_shared<CastInfoChunk>(dir);
         info->read(*infoStream);
 
         // specific data
@@ -110,16 +110,16 @@ void CastMemberChunk::read(ReadStream &stream) {
 
         // info
         std::unique_ptr<ReadStream> infoStream = stream.readBytes(infoLen);
-        info = std::make_shared<CastInfoChunk>(movie);
+        info = std::make_shared<CastInfoChunk>(dir);
         info->read(*infoStream);
     }
 
     switch (type) {
     case kScriptMember:
-        member = std::make_unique<ScriptMember>(movie);
+        member = std::make_unique<ScriptMember>(dir);
         break;
     default:
-        member = std::make_unique<CastMember>(movie, type);
+        member = std::make_unique<CastMember>(dir, type);
         break;
     }
     member->read(*specificStream);
@@ -324,7 +324,7 @@ void ScriptChunk::read(ReadStream &stream) {
     stream.seek(literalsOffset);
     literals.resize(literalsCount);
     for (auto &literal : literals) {
-        literal.readRecord(stream, movie->version);
+        literal.readRecord(stream, dir->version);
     }
     for (auto &literal : literals) {
         literal.readData(stream, literalsDataOffset);
@@ -391,7 +391,7 @@ std::string ScriptChunk::scriptText() {
     for (size_t i = 0; i < handlers.size(); i++) {
         if (res.size() > 0)
             res += "\n";
-        res += handlers[i]->ast->toString(movie->dotSyntax, false);
+        res += handlers[i]->ast->toString(dir->dotSyntax, false);
     }
     return res;
 }
@@ -432,11 +432,11 @@ void ScriptContextChunk::read(ReadStream &stream) {
         entry.read(stream);
     }
 
-    lnam = std::static_pointer_cast<ScriptNamesChunk>(movie->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
+    lnam = std::static_pointer_cast<ScriptNamesChunk>(dir->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
     for (uint32_t i = 1; i <= entryCount; i++) {
         auto section = sectionMap[i - 1];
         if (section.sectionID > -1) {
-            auto script = std::static_pointer_cast<ScriptChunk>(movie->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
+            auto script = std::static_pointer_cast<ScriptChunk>(dir->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
             script->setContext(this);
             scripts[i] = script;
         }
