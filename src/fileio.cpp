@@ -24,4 +24,11 @@ void writeFile(const std::string &fileName, const std::string &contents) {
     f.close();
 }
 
+void writeFile(const std::string &fileName, const uint8_t *contents, size_t size) {
+    std::ofstream f;
+    f.open(fileName, std::ios::out);
+    f.write((char *)contents, size);
+    f.close();
+}
+
 }
