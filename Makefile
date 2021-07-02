@@ -16,6 +16,7 @@ OBJS = \
 	src/castmember.o \
 	src/chunk.o \
 	src/dirfile.o \
+	src/fileio.o \
 	src/handler.o \
 	src/lingo.o \
 	src/projectorrays.o \
