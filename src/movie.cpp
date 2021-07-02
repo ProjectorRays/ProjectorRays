@@ -57,7 +57,10 @@ void Movie::readMemoryMap() {
 
         if (mapEntry.fourCC == FOURCC('f', 'r', 'e', 'e') || mapEntry.fourCC == FOURCC('j', 'u', 'n', 'k'))
             continue;
-        
+
+        std::cout << boost::format("Found RIFX resource index %d: '%s', %d bytes @ pos 0x%08x (%d)\n")
+                        % i % fourCCToString(mapEntry.fourCC) % mapEntry.len % mapEntry.offset % mapEntry.offset;
+
         ChunkInfo info;
         info.id = i;
         info.fourCC = mapEntry.fourCC;
@@ -200,6 +203,17 @@ bool Movie::readKeyTable() {
     auto info = getFirstChunkInfo(FOURCC('K', 'E', 'Y', '*'));
     if (info) {
         keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(info->fourCC, info->id));
+
+        for (size_t i = 0; i < keyTable->entries.size(); i++) {
+            const KeyTableEntry &entry = keyTable->entries[i];
+            uint32_t ownerTag = FOURCC('?', '?', '?', '?');
+            if (chunkInfo.find(entry.castID) != chunkInfo.end()) {
+                ownerTag = chunkInfo[entry.castID].fourCC;
+            }
+            std::cout << boost::format("KEY* entry %d: '%s' @ %d owned by '%s' @ %d\n")
+                % i % fourCCToString(entry.fourCC) % entry.sectionID % fourCCToString(ownerTag) % entry.castID;
+        }
+
         return true;
     }
 
