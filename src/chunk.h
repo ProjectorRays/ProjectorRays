@@ -149,10 +149,10 @@ struct InitialMapChunk : Chunk {
 };
 
 struct KeyTableChunk : Chunk {
-    uint16_t unknown0;
-    uint16_t unknown1;
+    uint16_t entrySize; // Should always be 12 (3 uint32's)
+    uint16_t entrySize2;
     uint32_t entryCount;
-    uint32_t unknown2;
+    uint32_t usedCount;
     std::vector<KeyTableEntry> entries;
 
     KeyTableChunk(Movie *m) : Chunk(m) {}

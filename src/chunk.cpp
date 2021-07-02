@@ -190,12 +190,12 @@ void InitialMapChunk::read(ReadStream &stream) {
 /* KeyTableChunk */
 
 void KeyTableChunk::read(ReadStream &stream) {
-    unknown0 = stream.readUint16();
-    unknown1 = stream.readUint16();
+    entrySize = stream.readUint16();
+    entrySize2 = stream.readUint16();
     entryCount = stream.readUint32();
-    unknown2 = stream.readUint32();
+    usedCount = stream.readUint32();
 
-    entries.resize(entryCount);
+    entries.resize(usedCount);
     for (auto &entry : entries) {
         entry.read(stream);
     }
