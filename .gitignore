@@ -1,9 +1,10 @@
 .DS_STORE
 .vscode
+*.bin
+*.json
 *.lasm
 *.ls
 *.o
-*.bin
 
 /projectorrays
 /projectorrays.exe
