@@ -32,10 +32,9 @@ struct CastMember {
 };
 
 enum ScriptType {
-    kUnknownScript,
-    kScoreScript,
-    kMovieScript,
-    kParentScript
+    kScoreScript = 1,
+    kMovieScript = 3,
+    kParentScript = 7
 };
 
 struct ScriptMember : CastMember {
