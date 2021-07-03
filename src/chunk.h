@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+using ordered_json = nlohmann::ordered_json;
+
 #include "castmember.h"
 #include "subchunk.h"
 #include "util.h"
@@ -24,13 +27,29 @@ struct ScriptChunk;
 struct ScriptContextChunk;
 struct ScriptNamesChunk;
 
+enum ChunkType {
+    kCastChunk,
+    kCastListChunk,
+    kCastMemberChunk,
+    kCastInfoChunk,
+    kConfigChunk,
+    kInitialMapChunk,
+    kKeyTableChunk,
+    kMemoryMapChunk,
+    kScriptChunk,
+    kScriptContextChunk,
+    kScriptNamesChunk
+};
+
 struct Chunk {
     DirectorFile *dir;
+    ChunkType chunkType;
 
-    Chunk(DirectorFile *d) : dir(d) {}
+    Chunk(DirectorFile *d, ChunkType t) : dir(d), chunkType(t) {}
     virtual ~Chunk() = default;
-    virtual void read(ReadStream &stream) {}
+    virtual void read(ReadStream &stream) = 0;
 };
+void to_json(ordered_json &j, const Chunk &c);
 
 struct ListChunk : Chunk {
     uint32_t dataOffset;
@@ -39,7 +58,7 @@ struct ListChunk : Chunk {
     uint32_t finalDataLen;
     uint32_t listOffset;
 
-    ListChunk(DirectorFile *m) : Chunk(m) {}
+    ListChunk(DirectorFile *m, ChunkType t) : Chunk(m, t) {}
     virtual void read(ReadStream &stream);
     void readOffsetTable(ReadStream &stream);
     std::unique_ptr<ReadStream> readBytes(ReadStream &stream, uint16_t index);
@@ -55,11 +74,12 @@ struct CastChunk : Chunk {
     std::map<uint16_t, std::shared_ptr<CastMemberChunk>> members;
     std::shared_ptr<ScriptContextChunk> lctx;
 
-    CastChunk(DirectorFile *m) : Chunk(m) {}
+    CastChunk(DirectorFile *m) : Chunk(m, kCastChunk) {}
     virtual ~CastChunk() = default;
     virtual void read(ReadStream &stream);
     void populate(const std::string &castName, int32_t id, uint16_t minMember);
 };
+void to_json(ordered_json &j, const CastChunk &c);
 
 struct CastListChunk : ListChunk {
     uint16_t unk0;
@@ -68,10 +88,11 @@ struct CastListChunk : ListChunk {
     uint16_t unk1;
     std::vector<CastListEntry> entries;
 
-    CastListChunk(DirectorFile *m) : ListChunk(m) {}
+    CastListChunk(DirectorFile *m) : ListChunk(m, kCastListChunk) {}
     virtual ~CastListChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const CastListChunk &c);
 
 struct CastMemberChunk : Chunk {
     MemberType type;
@@ -83,10 +104,11 @@ struct CastMemberChunk : Chunk {
     uint16_t id;
     ScriptChunk *script;
 
-    CastMemberChunk(DirectorFile *m) : Chunk(m), id(0), script(nullptr) {}
+    CastMemberChunk(DirectorFile *m) : Chunk(m, kCastMemberChunk), id(0), script(nullptr) {}
     virtual ~CastMemberChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const CastMemberChunk &c);
 
 struct CastInfoChunk : ListChunk {
     uint32_t unk1;
@@ -117,10 +139,11 @@ struct CastInfoChunk : ListChunk {
     // cProp20;
     // imageCompression;
 
-    CastInfoChunk(DirectorFile *m) : ListChunk(m) {}
+    CastInfoChunk(DirectorFile *m) : ListChunk(m, kCastInfoChunk) {}
     virtual ~CastInfoChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const CastInfoChunk &c);
 
 struct ConfigChunk : Chunk {
     uint16_t len;
@@ -130,10 +153,11 @@ struct ConfigChunk : Chunk {
     uint16_t maxMember;
     uint16_t directorVersion;
 
-    ConfigChunk(DirectorFile *m) : Chunk(m) {}
+    ConfigChunk(DirectorFile *m) : Chunk(m, kConfigChunk) {}
     virtual ~ConfigChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const ConfigChunk &c);
 
 struct InitialMapChunk : Chunk {
     uint32_t one; // always 1
@@ -143,10 +167,11 @@ struct InitialMapChunk : Chunk {
     uint32_t unused2;
     uint32_t unused3;
 
-    InitialMapChunk(DirectorFile *m) : Chunk(m) {}
+    InitialMapChunk(DirectorFile *m) : Chunk(m, kInitialMapChunk) {}
     virtual ~InitialMapChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const InitialMapChunk &c);
 
 struct KeyTableChunk : Chunk {
     uint16_t entrySize; // Should always be 12 (3 uint32's)
@@ -155,10 +180,11 @@ struct KeyTableChunk : Chunk {
     uint32_t usedCount;
     std::vector<KeyTableEntry> entries;
 
-    KeyTableChunk(DirectorFile *m) : Chunk(m) {}
+    KeyTableChunk(DirectorFile *m) : Chunk(m, kKeyTableChunk) {}
     virtual ~KeyTableChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const KeyTableChunk &c);
 
 struct MemoryMapChunk : Chunk {
     uint16_t headerLength; // should be 24
@@ -170,10 +196,11 @@ struct MemoryMapChunk : Chunk {
     int32_t freeHead;
     std::vector<MemoryMapEntry> mapArray;
 
-    MemoryMapChunk(DirectorFile *m) : Chunk(m) {}
+    MemoryMapChunk(DirectorFile *m) : Chunk(m, kMemoryMapChunk) {}
     virtual ~MemoryMapChunk() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const MemoryMapChunk &c);
 
 struct ScriptChunk : Chunk {
     uint32_t totalLength;
@@ -207,7 +234,7 @@ struct ScriptChunk : Chunk {
 
     CastMemberChunk *member;
 
-    ScriptChunk(DirectorFile *m) : Chunk(m), context(nullptr), member(nullptr) {}
+    ScriptChunk(DirectorFile *m) : Chunk(m, kScriptChunk), context(nullptr), member(nullptr) {}
     virtual ~ScriptChunk() = default;
     virtual void read(ReadStream &stream);
     std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
@@ -218,6 +245,7 @@ struct ScriptChunk : Chunk {
     std::string scriptText();
     std::string bytecodeText();
 };
+void to_json(ordered_json &j, const ScriptChunk &c);
 
 struct ScriptContextChunk : Chunk {
     int32_t unknown0;
@@ -238,11 +266,12 @@ struct ScriptContextChunk : Chunk {
     std::vector<ScriptContextMapEntry> sectionMap;
     std::map<uint32_t, std::shared_ptr<ScriptChunk>> scripts;
 
-    ScriptContextChunk(DirectorFile *m) : Chunk(m) {}
+    ScriptContextChunk(DirectorFile *m) : Chunk(m, kScriptContextChunk) {}
     virtual ~ScriptContextChunk() = default;
     virtual void read(ReadStream &stream);
     std::string getName(int id);
 };
+void to_json(ordered_json &j, const ScriptContextChunk &c);
 
 struct ScriptNamesChunk : Chunk {
     int32_t unknown0;
@@ -253,11 +282,12 @@ struct ScriptNamesChunk : Chunk {
     uint16_t namesCount;
     std::vector<std::string> names;
 
-    ScriptNamesChunk(DirectorFile *m) : Chunk(m) {}
+    ScriptNamesChunk(DirectorFile *m) : Chunk(m, kScriptNamesChunk) {}
     virtual ~ScriptNamesChunk() = default;
     virtual void read(ReadStream &stream);
     std::string getName(int id);
 };
+void to_json(ordered_json &j, const ScriptNamesChunk &c);
 
 }
 

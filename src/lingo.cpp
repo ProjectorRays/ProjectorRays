@@ -350,6 +350,23 @@ std::string Datum::toString(bool dot, bool sum) {
     return "ERROR";
 }
 
+void to_json(ordered_json &j, const Datum &c) {
+    switch (c.type) {
+    case kDatumString:
+        j = c.s;
+        break;
+    case kDatumInt:
+        j = c.i;
+        break;
+    case kDatumFloat:
+        j = c.f;
+        break;
+    default:
+        j = nullptr;
+        break;
+    }
+}
+
 /* AST */
 
 std::string AST::toString(bool dot, bool sum) {

@@ -1,6 +1,9 @@
 #ifndef CASTMEMBER_H
 #define CASTMEMBER_H
 
+#include <nlohmann/json.hpp>
+using ordered_json = nlohmann::ordered_json;
+
 namespace ProjectorRays {
 
 class ReadStream;
@@ -30,6 +33,7 @@ struct CastMember {
     virtual ~CastMember() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const CastMember &c);
 
 enum ScriptType {
     kScoreScript = 1,
@@ -44,6 +48,7 @@ struct ScriptMember : CastMember {
     virtual ~ScriptMember() = default;
     virtual void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const ScriptMember &c);
 
 }
 

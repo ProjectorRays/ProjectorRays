@@ -33,6 +33,25 @@ void Handler::readRecord(ReadStream &stream) {
         stackHeight = stream.readUint32();
 }
 
+void to_json(ordered_json &j, const Handler &c) {
+    j["nameID"] = c.nameID;
+    j["vectorPos"] = c.vectorPos;
+    j["compileLen"] = c.compiledLen;
+    j["compiledOffset"] = c.compiledOffset;
+    j["argumentCount"] = c.argumentCount;
+    j["argumentOffset"] = c.argumentOffset;
+    j["localsCount"] = c.localsCount;
+    j["localsOffset"] = c.localsOffset;
+    j["unknown0Count"] = c.unknown0Count;
+    j["unknown0Offset"] = c.unknown0Offset;
+    j["unknown1"] = c.unknown1;
+    j["unknown2"] = c.unknown2;
+    j["lineCount"] = c.lineCount;
+    j["lineOffset"] = c.lineOffset;
+    if (c.script->dir->capitalX)
+        j["stackHeight"] = c.stackHeight;
+}
+
 void Handler::readData(ReadStream &stream) {
     stream.seek(compiledOffset);
     while (stream.pos() < compiledOffset + compiledLen) {
@@ -212,7 +231,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
                 return std::make_shared<TheExprNode>(propName);
             } else { // last chunk
                 auto string = pop();
-                auto chunkType = static_cast<ChunkType>(propertyID - 0x0b);
+                auto chunkType = static_cast<ChunkExprType>(propertyID - 0x0b);
                 return std::make_shared<LastStringChunkExprNode>(chunkType, std::move(string));
             }
         }
@@ -220,7 +239,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
     case 0x01: // number of chunks
         {
             auto string = pop();
-            return std::make_shared<StringChunkCountExprNode>(static_cast<ChunkType>(propertyID), std::move(string));
+            return std::make_shared<StringChunkCountExprNode>(static_cast<ChunkExprType>(propertyID), std::move(string));
         }
         break;
     case 0x02: // menu property

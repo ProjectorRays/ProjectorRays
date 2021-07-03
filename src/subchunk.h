@@ -6,6 +6,9 @@
 #include <memory>
 #include <string>
 
+#include <nlohmann/json.hpp>
+using ordered_json = nlohmann::ordered_json;
+
 #include "util.h"
 
 namespace ProjectorRays {
@@ -21,6 +24,7 @@ struct CastListEntry {
     uint16_t maxMember;
     int32_t id;
 };
+void to_json(ordered_json &j, const CastListEntry &c);
 
 struct MemoryMapEntry {
     uint32_t fourCC;
@@ -32,6 +36,7 @@ struct MemoryMapEntry {
 
     void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const MemoryMapEntry &c);
 
 struct ScriptContextMapEntry {
     int32_t unknown0;
@@ -41,6 +46,7 @@ struct ScriptContextMapEntry {
 
     void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const ScriptContextMapEntry &c);
 
 enum LiteralType {
     kLiteralString  = 1,
@@ -55,6 +61,7 @@ struct KeyTableEntry {
 
     void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const KeyTableEntry &c);
 
 struct LiteralStore {
     LiteralType type;
@@ -64,6 +71,7 @@ struct LiteralStore {
     void readRecord(ReadStream &stream, int version);
     void readData(ReadStream &stream, uint32_t startOffset);
 };
+void to_json(ordered_json &j, const LiteralStore &c);
 
 struct Rectangle {
     uint16_t top;
@@ -73,6 +81,7 @@ struct Rectangle {
 
     void read(ReadStream &stream);
 };
+void to_json(ordered_json &j, const Rectangle &c);
 
 }
 

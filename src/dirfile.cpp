@@ -1,6 +1,10 @@
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <boost/format.hpp>
+
+#include <nlohmann/json.hpp>
+using ordered_json = nlohmann::ordered_json;
 
 #include "chunk.h"
 #include "lingo.h"
@@ -48,10 +52,12 @@ void DirectorFile::read(ReadStream *s) {
 void DirectorFile::readMemoryMap() {
     // Initial map
     std::shared_ptr<InitialMapChunk> imap = std::static_pointer_cast<InitialMapChunk>(readChunk(FOURCC('i', 'm', 'a', 'p')));
+    deserializedChunks[1] = imap;
 
     // Memory map
     stream->seek(imap->mmapOffset);
     std::shared_ptr<MemoryMapChunk> mmap = std::static_pointer_cast<MemoryMapChunk>(readChunk(FOURCC('m', 'm', 'a', 'p')));
+    deserializedChunks[2] = mmap;
 
     for (uint32_t i = 0; i < mmap->mapArray.size(); i++) {
         auto mapEntry = mmap->mapArray[i];
@@ -314,11 +320,7 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
     }
     std::shared_ptr<Chunk> chunk = makeChunk(fourCC, *chunkData);
 
-    // don't cache the deserialized map chunks
-    // we'll just generate a new one if we need to save
-    if (fourCC != FOURCC('i', 'm', 'a', 'p') && fourCC != FOURCC('m', 'm', 'a', 'p')) {
-        deserializedChunks[id] = chunk;
-    }
+    deserializedChunks[id] = chunk;
 
     return chunk;
 }
@@ -430,7 +432,10 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, ReadStream &stre
         res = std::make_shared<CastListChunk>(this);
         break;
     default:
-        res = std::make_shared<Chunk>(this);
+        throw std::runtime_error(boost::str(
+            boost::format("Could not deserialize '%s' chunk") % fourCCToString(fourCC)
+        ));
+        break;
     }
 
     res->read(stream);
@@ -483,13 +488,20 @@ void DirectorFile::dumpScripts() {
 
 void DirectorFile::dumpChunks() {
     for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
-        if (it->second.offset == 0) // RIFX
+        const auto &info = it->second;
+        if (info.offset == 0) // RIFX
             continue;
 
-        std::string fileName = cleanFileName(fourCCToString(it->second.fourCC) + "-" + std::to_string(it->second.id) + ".bin");
-        std::shared_ptr<ReadStream> chunk = getChunkData(it->second.fourCC, it->second.id);
+        std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
+        std::shared_ptr<ReadStream> chunk = getChunkData(info.fourCC, info.id);
         if (chunk) {
-            writeFile(fileName, chunk->getData(), chunk->len());
+            writeFile(fileName + ".bin", chunk->getData(), chunk->len());
+        }
+        if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
+            ordered_json j = *deserializedChunks[info.id];
+            std::stringstream ss;
+            ss << j.dump(4) << std::endl;
+            writeFile(fileName + ".json", ss.str());
         }
     }
 }

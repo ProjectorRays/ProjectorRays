@@ -1,8 +1,22 @@
+#include <nlohmann/json.hpp>
+using ordered_json = nlohmann::ordered_json;
+
 #include "lingo.h"
 #include "stream.h"
 #include "subchunk.h"
 
 namespace ProjectorRays {
+
+/* CastListEntry */
+
+void to_json(ordered_json &j, const CastListEntry &c) {
+    j["name"] = c.name;
+    j["filePath"] = c.filePath;
+    j["preloadSettings"] = c.preloadSettings;
+    j["minMember"] = c.minMember;
+    j["maxMember"] = c.maxMember;
+    j["id"] = c.id;
+}
 
 /* MemoryMapEntry */
 
@@ -15,6 +29,15 @@ void MemoryMapEntry::read(ReadStream &stream) {
     next = stream.readInt32();
 }
 
+void to_json(ordered_json &j, const MemoryMapEntry &c) {
+    j["fourCC"] = fourCCToString(c.fourCC);
+    j["len"] = c.len;
+    j["offset"] = c.offset;
+    j["flags"] = c.flags;
+    j["unknown0"] = c.unknown0;
+    j["next"] = c.next;
+}
+
 /* ScriptContextMapEntry */
 
 void ScriptContextMapEntry::read(ReadStream &stream) {
@@ -24,12 +47,25 @@ void ScriptContextMapEntry::read(ReadStream &stream) {
     unknown2 = stream.readUint16();
 }
 
+void to_json(ordered_json &j, const ScriptContextMapEntry &c) {
+    j["unknown0"] = c.unknown0;
+    j["sectionID"] = c.sectionID;
+    j["unknown1"] = c.unknown1;
+    j["unknown2"] = c.unknown2;
+}
+
 /* KeyTableEntry */
 
 void KeyTableEntry::read(ReadStream &stream) {
     sectionID = stream.readInt32();
     castID = stream.readInt32();
     fourCC = stream.readUint32();
+}
+
+void to_json(ordered_json &j, const KeyTableEntry &c) {
+    j["sectionID"] = c.sectionID;
+    j["castID"] = c.castID;
+    j["fourCC"] = fourCCToString(c.fourCC);
 }
 
 /* LiteralStore */
@@ -64,6 +100,12 @@ void LiteralStore::readData(ReadStream &stream, uint32_t startOffset) {
     }
 }
 
+void to_json(ordered_json &j, const LiteralStore &c) {
+    j["type"] = c.type;
+    j["offset"] = c.offset;
+    j["value"] = *c.value;
+}
+
 /* Rectangle */
 
 void Rectangle::read(ReadStream &stream) {
@@ -71,6 +113,13 @@ void Rectangle::read(ReadStream &stream) {
     left = stream.readUint16();
     bottom = stream.readUint16();
     right = stream.readUint16();
+}
+
+void to_json(ordered_json &j, const Rectangle &c) {
+    j["top"] = c.top;
+    j["left"] = c.left;
+    j["bottom"] = c.bottom;
+    j["right"] = c.right;
 }
 
 }

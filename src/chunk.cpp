@@ -7,6 +7,46 @@
 
 namespace ProjectorRays {
 
+/* Chunk */
+
+void to_json(ordered_json &j, const Chunk &c) {
+    switch (c.chunkType) {
+    case kCastChunk:
+        to_json(j, static_cast<const CastChunk &>(c));
+        break;
+    case kCastListChunk:
+        to_json(j, static_cast<const CastListChunk &>(c));
+        break;
+    case kCastMemberChunk:
+        to_json(j, static_cast<const CastMemberChunk &>(c));
+        break;
+    case kCastInfoChunk:
+        to_json(j, static_cast<const CastInfoChunk &>(c));
+        break;
+    case kConfigChunk:
+        to_json(j, static_cast<const ConfigChunk &>(c));
+        break;
+    case kInitialMapChunk:
+        to_json(j, static_cast<const InitialMapChunk &>(c));
+        break;
+    case kKeyTableChunk:
+        to_json(j, static_cast<const KeyTableChunk &>(c));
+        break;
+    case kMemoryMapChunk:
+        to_json(j, static_cast<const MemoryMapChunk &>(c));
+        break;
+    case kScriptChunk:
+        to_json(j, static_cast<const ScriptChunk &>(c));
+        break;
+    case kScriptContextChunk:
+        to_json(j, static_cast<const ScriptContextChunk &>(c));
+        break;
+    case kScriptNamesChunk:
+        to_json(j, static_cast<const ScriptNamesChunk &>(c));
+        break;
+    }
+}
+
 /* CastChunk */
 
 void CastChunk::read(ReadStream &stream) {
@@ -15,6 +55,10 @@ void CastChunk::read(ReadStream &stream) {
         auto id = stream.readInt32();
         memberIDs.push_back(id);
     }
+}
+
+void to_json(ordered_json &j, const CastChunk &c) {
+    j["memberIDs"] = c.memberIDs;
 }
 
 void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMember) {
@@ -73,6 +117,15 @@ void CastListChunk::read(ReadStream &stream) {
     }
 }
 
+void to_json(ordered_json &j, const CastListChunk &c) {
+    j["dataOffset"] = c.dataOffset;
+    j["unk0"] = c.unk0;
+    j["castCount"] = c.itemsPerCast;
+    j["itemsPerCast"] = c.itemsPerCast;
+    j["unk1"] = c.unk1;
+    j["entries"] = c.entries;
+}
+
 /* CastMemberChunk */
 
 void CastMemberChunk::read(ReadStream &stream) {
@@ -125,6 +178,14 @@ void CastMemberChunk::read(ReadStream &stream) {
     member->read(*specificStream);
 }
 
+void to_json(ordered_json &j, const CastMemberChunk &c) {
+    j["type"] = c.type;
+    j["infoLen"] = c.infoLen;
+    j["specificDataLen"] = c.specificDataLen;
+    j["info"] = *c.info;
+    j["member"] = *c.member;
+}
+
 /* CastInfoChunk */
 
 void CastInfoChunk::read(ReadStream &stream) {
@@ -160,6 +221,20 @@ void CastInfoChunk::read(ReadStream &stream) {
     // imageCompression = readProperty(stream, 21);
 }
 
+void to_json(ordered_json &j, const CastInfoChunk &c) {
+    j["dataOffset"] = c.dataOffset;
+    j["unk1"] = c.unk1;
+    j["unk2"] = c.unk2;
+    j["flags"] = c.flags;
+    j["scriptId"] = c.scriptId;
+    j["scriptSrcText"] = c.scriptSrcText;
+    j["name"] = c.name;
+    j["comment"] = c.comment;
+    j["fileFormatID"] = c.fileFormatID;
+    j["created"] = c.created;
+    j["modified"] = c.modified;
+}
+
 /* ConfigChunk */
 
 void ConfigChunk::read(ReadStream &stream) {
@@ -176,6 +251,15 @@ void ConfigChunk::read(ReadStream &stream) {
     directorVersion = stream.readUint16();
 }
 
+void to_json(ordered_json &j, const ConfigChunk &c) {
+    j["len"] = c.len;
+    j["fileVersion"] = c.fileVersion;
+    j["movieRect"] = c.movieRect;
+    j["minMember"] = c.minMember;
+    j["maxMember"] = c.maxMember;
+    j["directorVersion"] = c.directorVersion;
+}
+
 /* InitialMapChunk */
 
 void InitialMapChunk::read(ReadStream &stream) {
@@ -185,6 +269,15 @@ void InitialMapChunk::read(ReadStream &stream) {
     unused1 = stream.readUint32();
     unused2 = stream.readUint32();
     unused3 = stream.readUint32();
+}
+
+void to_json(ordered_json &j, const InitialMapChunk &c) {
+    j["one"] = c.one;
+    j["mmapOffset"] = c.mmapOffset;
+    j["version"] = c.version;
+    j["unused1"] = c.unused1;
+    j["unused2"] = c.unused2;
+    j["unused3"] = c.unused3;
 }
 
 /* KeyTableChunk */
@@ -199,6 +292,14 @@ void KeyTableChunk::read(ReadStream &stream) {
     for (auto &entry : entries) {
         entry.read(stream);
     }
+}
+
+void to_json(ordered_json &j, const KeyTableChunk &c) {
+    j["entrySize"] = c.entrySize;
+    j["entrySize2"] = c.entrySize2;
+    j["entryCount"] = c.entryCount;
+    j["usedCount"] = c.usedCount;
+    j["entries"] = c.entries;
 }
 
 /* ListChunk */
@@ -282,6 +383,17 @@ void MemoryMapChunk::read(ReadStream &stream) {
     }
 }
 
+void to_json(ordered_json &j, const MemoryMapChunk &c) {
+    j["headerLength"] = c.headerLength;
+    j["entryLength"] = c.entryLength;
+    j["chunkCountMax"] = c.chunkCountMax;
+    j["chunkCountUsed"] = c.chunkCountUsed;
+    j["junkHead"] = c.junkHead;
+    j["junkHead2"] = c.junkHead2;
+    j["freeHead"] = c.freeHead;
+    j["mapArray"] = c.mapArray;
+}
+
 /* ScriptChunk */
 
 void ScriptChunk::read(ReadStream &stream) {
@@ -338,6 +450,34 @@ std::vector<int16_t> ScriptChunk::readVarnamesTable(ReadStream &stream, uint16_t
         nameIDs[i] = stream.readInt16();
     }
     return nameIDs;
+}
+
+void to_json(ordered_json &j, const ScriptChunk &c) {
+    j["totalLength"] = c.totalLength;
+    j["totalLength2"] = c.totalLength2;
+    j["headerLength"] = c.headerLength;
+    j["scriptNumber"] = c.scriptNumber;
+    j["scriptBehavior"] = c.scriptBehavior;
+    j["handlerVectorsCount"] = c.handlerVectorsCount;
+    j["handlerVectorsOffset"] = c.handlerVectorsOffset;
+    j["handlerVectorsSize"] = c.handlerVectorsSize;
+    j["propertiesCount"] = c.propertiesCount;
+    j["propertiesOffset"] = c.propertiesOffset;
+    j["globalsCount"] = c.globalsCount;
+    j["globalsOffset"] = c.globalsOffset;
+    j["handlersCount"] = c.handlersCount;
+    j["handlersOffset"] = c.handlersOffset;
+    j["literalsCount"] = c.literalsCount;
+    j["literalsOffset"] = c.literalsOffset;
+    j["literalsDataCount"] = c.literalsDataCount;
+    j["literalsDataOffset"] = c.literalsDataOffset;
+    j["propertyNameIDs"] = c.propertyNameIDs;
+    j["globalNameIDs"] = c.globalNameIDs;
+    ordered_json handlers;
+    for (const auto &handler : c.handlers)
+        handlers.push_back(*handler);
+    j["handlers"] = handlers;
+    j["literals"] = c.literals;
 }
 
 std::string ScriptChunk::getName(int id) {
@@ -447,6 +587,23 @@ void ScriptContextChunk::read(ReadStream &stream) {
     }
 }
 
+void to_json(ordered_json &j, const ScriptContextChunk &c) {
+    j["unknown0"] = c.unknown0;
+    j["unknown1"] = c.unknown1;
+    j["entryCount"] = c.entryCount;
+    j["entryCount2"] = c.entryCount2;
+    j["entriesOffset"] = c.entriesOffset;
+    j["unknown2"] = c.unknown2;
+    j["unknown3"] = c.unknown3;
+    j["unknown4"] = c.unknown4;
+    j["unknown5"] = c.unknown5;
+    j["lnamSectionID"] = c.lnamSectionID;
+    j["validCount"] = c.validCount;
+    j["flags"] = c.flags;
+    j["freePointer"] = c.freePointer;
+    j["sectionMap"] = c.sectionMap;
+}
+
 std::string ScriptContextChunk::getName(int id) {
     return lnam->getName(id);
 }
@@ -470,6 +627,16 @@ void ScriptNamesChunk::read(ReadStream &stream) {
         auto length = stream.readUint8();
         name = stream.readString(length);
     }
+}
+
+void to_json(ordered_json &j, const ScriptNamesChunk &c) {
+    j["unknown0"] = c.unknown0;
+    j["unknown1"] = c.unknown1;
+    j["len1"] = c.len1;
+    j["len2"] = c.len2;
+    j["namesOffset"] = c.namesOffset;
+    j["namesCount"] = c.namesCount;
+    j["names"] = c.names;
 }
 
 std::string ScriptNamesChunk::getName(int id) {

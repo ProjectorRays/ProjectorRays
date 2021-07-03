@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+using ordered_json = nlohmann::ordered_json;
+
 namespace ProjectorRays {
 
 struct AST;
@@ -110,7 +113,7 @@ enum DatumType {
     kDatumPropList
 };
 
-enum ChunkType {
+enum ChunkExprType {
     kChunkChar  = 0x01,
     kChunkWord  = 0x02,
     kChunkItem  = 0x03,
@@ -239,6 +242,7 @@ struct Datum {
     int toInt();
     std::string toString(bool dot, bool sum);
 };
+void to_json(ordered_json &j, const Datum &c);
 
 /* Handler */
 
@@ -300,6 +304,7 @@ struct Handler {
     uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
     std::string bytecodeText();
 };
+void to_json(ordered_json &j, const Handler &c);
 
 /* Bytecode */
 
@@ -498,12 +503,12 @@ struct BinaryOpNode : ExprNode {
 /* ChunkExprNode */
 
 struct ChunkExprNode : ExprNode {
-    ChunkType type;
+    ChunkExprType type;
     std::shared_ptr<Node> first;
     std::shared_ptr<Node> last;
     std::shared_ptr<Node> string;
 
-    ChunkExprNode(ChunkType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
+    ChunkExprNode(ChunkExprType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
         : ExprNode(kChunkExprNode), type(t) {
         first = std::move(a);
         first->parent = this;
@@ -829,10 +834,10 @@ struct TheExprNode : ExprNode {
 /* LastStringChunkExprNode */
 
 struct LastStringChunkExprNode : ExprNode {
-    ChunkType type;
+    ChunkExprType type;
     std::shared_ptr<Node> string;
 
-    LastStringChunkExprNode(ChunkType t, std::shared_ptr<Node> s)
+    LastStringChunkExprNode(ChunkExprType t, std::shared_ptr<Node> s)
         : ExprNode(kLastStringChunkExprNode), type(t) {
         string = std::move(s);
         string->parent = this;
@@ -844,10 +849,10 @@ struct LastStringChunkExprNode : ExprNode {
 /* StringChunkCountExprNode */
 
 struct StringChunkCountExprNode : ExprNode {
-    ChunkType type;
+    ChunkExprType type;
     std::shared_ptr<Node> string;
 
-    StringChunkCountExprNode(ChunkType t, std::shared_ptr<Node> s)
+    StringChunkCountExprNode(ChunkExprType t, std::shared_ptr<Node> s)
         : ExprNode(kStringChunkCountExprNode), type(t) {
         string = std::move(s);
         string->parent = this;
