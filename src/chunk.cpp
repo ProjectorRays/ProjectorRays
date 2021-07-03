@@ -473,7 +473,7 @@ void to_json(ordered_json &j, const ScriptChunk &c) {
     j["literalsDataOffset"] = c.literalsDataOffset;
     j["propertyNameIDs"] = c.propertyNameIDs;
     j["globalNameIDs"] = c.globalNameIDs;
-    ordered_json handlers;
+    ordered_json handlers = ordered_json::array();
     for (const auto &handler : c.handlers)
         handlers.push_back(*handler);
     j["handlers"] = handlers;
