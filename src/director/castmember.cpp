@@ -1,8 +1,8 @@
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
-#include "castmember.h"
-#include "stream.h"
+#include "common/stream.h"
+#include "director/castmember.h"
 
 namespace Director {
 

@@ -4,10 +4,11 @@
 #include <sstream>
 #include <boost/format.hpp>
 
-#include "chunk.h"
-#include "lingo.h"
-#include "dirfile.h"
-#include "stream.h"
+#include "common/stream.h"
+#include "director/chunk.h"
+#include "director/lingo.h"
+#include "director/dirfile.h"
+#include "director/util.h"
 
 namespace Director {
 

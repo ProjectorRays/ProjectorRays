@@ -1,9 +1,10 @@
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
-#include "lingo.h"
-#include "stream.h"
-#include "subchunk.h"
+#include "common/stream.h"
+#include "director/lingo.h"
+#include "director/subchunk.h"
+#include "director/util.h"
 
 namespace Director {
 

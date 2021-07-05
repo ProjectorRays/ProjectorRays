@@ -1,5 +1,5 @@
-#include "lingo.h"
-#include "util.h"
+#include "director/lingo.h"
+#include "director/util.h"
 
 namespace Director {
 

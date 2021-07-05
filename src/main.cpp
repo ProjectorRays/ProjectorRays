@@ -1,13 +1,9 @@
 #include <iostream>
 #include <vector>
 
-#include "castmember.h"
-#include "chunk.h"
-#include "fileio.h"
-#include "lingo.h"
-#include "stream.h"
-#include "dirfile.h"
-#include "util.h"
+#include "common/fileio.h"
+#include "common/stream.h"
+#include "director/dirfile.h"
 
 using namespace Director;
 

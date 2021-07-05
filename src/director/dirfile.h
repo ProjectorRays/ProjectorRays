@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+
 namespace Common {
 class ReadStream;
 }
@@ -15,7 +16,9 @@ class ReadStream;
 namespace Director {
 
 struct Chunk;
-// struct Cast;
+struct CastChunk;
+struct ConfigChunk;
+struct KeyTableChunk;
 
 struct ChunkInfo {
     int32_t id;

@@ -9,8 +9,6 @@
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
-#include "util.h"
-
 namespace Common {
 class ReadStream;
 }

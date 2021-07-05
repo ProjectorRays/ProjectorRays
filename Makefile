@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++17 -Wall -Wextra
+CXXFLAGS=-std=c++17 -Wall -Wextra -Isrc
 LDFLAGS=-lz
 LDFLAGS_RELEASE=-s -Os
 
@@ -13,16 +13,16 @@ debug: LDFLAGS_RELEASE=
 debug: projectorrays
 
 OBJS = \
-	src/castmember.o \
-	src/chunk.o \
-	src/dirfile.o \
-	src/fileio.o \
-	src/handler.o \
-	src/lingo.o \
-	src/projectorrays.o \
-	src/stream.o \
-	src/subchunk.o \
-	src/util.o
+	src/main.o \
+	src/common/fileio.o \
+	src/common/stream.o \
+	src/director/castmember.o \
+	src/director/chunk.o \
+	src/director/dirfile.o \
+	src/director/handler.o \
+	src/director/lingo.o \
+	src/director/subchunk.o \
+	src/director/util.o
 
 projectorrays: $(OBJS)
 	$(CXX) -o projectorrays $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LDFLAGS_RELEASE)

@@ -10,9 +10,8 @@
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
-#include "castmember.h"
-#include "subchunk.h"
-#include "util.h"
+#include "director/castmember.h"
+#include "director/subchunk.h"
 
 namespace Director {
 

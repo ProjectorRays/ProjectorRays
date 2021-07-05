@@ -2,8 +2,7 @@
 #include <boost/endian/conversion.hpp>
 #include <zlib.h>
 
-#include "stream.h"
-#include "util.h"
+#include "common/stream.h"
 
 namespace Common {
 
