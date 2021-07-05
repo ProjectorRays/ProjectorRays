@@ -3,7 +3,7 @@
 
 #include "fileio.h"
 
-namespace ProjectorRays {
+namespace Common {
 
 std::shared_ptr<std::vector<uint8_t>> readFile(const std::string &fileName) {
     std::ifstream f;

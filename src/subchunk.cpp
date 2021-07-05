@@ -5,7 +5,7 @@ using ordered_json = nlohmann::ordered_json;
 #include "stream.h"
 #include "subchunk.h"
 
-namespace ProjectorRays {
+namespace Director {
 
 /* CastListEntry */
 
@@ -20,7 +20,7 @@ void to_json(ordered_json &j, const CastListEntry &c) {
 
 /* MemoryMapEntry */
 
-void MemoryMapEntry::read(ReadStream &stream) {
+void MemoryMapEntry::read(Common::ReadStream &stream) {
     fourCC = stream.readUint32();
     len = stream.readUint32();
     offset = stream.readUint32();
@@ -40,7 +40,7 @@ void to_json(ordered_json &j, const MemoryMapEntry &c) {
 
 /* ScriptContextMapEntry */
 
-void ScriptContextMapEntry::read(ReadStream &stream) {
+void ScriptContextMapEntry::read(Common::ReadStream &stream) {
     unknown0 = stream.readInt32();
     sectionID = stream.readInt32();
     unknown1 = stream.readUint16();
@@ -56,7 +56,7 @@ void to_json(ordered_json &j, const ScriptContextMapEntry &c) {
 
 /* KeyTableEntry */
 
-void KeyTableEntry::read(ReadStream &stream) {
+void KeyTableEntry::read(Common::ReadStream &stream) {
     sectionID = stream.readInt32();
     castID = stream.readInt32();
     fourCC = stream.readUint32();
@@ -70,7 +70,7 @@ void to_json(ordered_json &j, const KeyTableEntry &c) {
 
 /* LiteralStore */
 
-void LiteralStore::readRecord(ReadStream &stream, int version) {
+void LiteralStore::readRecord(Common::ReadStream &stream, int version) {
     if (version >= 500)
         type = static_cast<LiteralType>(stream.readUint32());
     else
@@ -78,7 +78,7 @@ void LiteralStore::readRecord(ReadStream &stream, int version) {
     offset = stream.readUint32();
 }
 
-void LiteralStore::readData(ReadStream &stream, uint32_t startOffset) {
+void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
     if (type == kLiteralInt) {
         value = std::make_shared<Datum>((int)offset);
     } else {
@@ -108,7 +108,7 @@ void to_json(ordered_json &j, const LiteralStore &c) {
 
 /* Rectangle */
 
-void Rectangle::read(ReadStream &stream) {
+void Rectangle::read(Common::ReadStream &stream) {
     top = stream.readUint16();
     left = stream.readUint16();
     bottom = stream.readUint16();

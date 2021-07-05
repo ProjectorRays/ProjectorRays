@@ -1,7 +1,7 @@
 #include "lingo.h"
 #include "util.h"
 
-namespace ProjectorRays {
+namespace Director {
 
 /* Lingo */
 

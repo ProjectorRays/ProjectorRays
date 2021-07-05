@@ -4,11 +4,11 @@ using ordered_json = nlohmann::ordered_json;
 #include "castmember.h"
 #include "stream.h"
 
-namespace ProjectorRays {
+namespace Director {
 
 /* CastMember */
 
-void CastMember::read(ReadStream &stream) {}
+void CastMember::read(Common::ReadStream &stream) {}
 
 void to_json(ordered_json &j, const CastMember &c) {
     switch (c.type) {
@@ -22,7 +22,7 @@ void to_json(ordered_json &j, const CastMember &c) {
 
 /* ScriptMember */
 
-void ScriptMember::read(ReadStream &stream) {
+void ScriptMember::read(Common::ReadStream &stream) {
     scriptType = static_cast<ScriptType>(stream.readUint16());
 }
 

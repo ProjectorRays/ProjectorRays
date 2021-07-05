@@ -14,18 +14,18 @@ using ordered_json = nlohmann::ordered_json;
 #include "subchunk.h"
 #include "util.h"
 
-namespace ProjectorRays {
+namespace Director {
 
 /* DirectorFile */
 
-void DirectorFile::read(ReadStream *s) {
+void DirectorFile::read(Common::ReadStream *s) {
     stream = s;
-    stream->endianness = kBigEndian; // we set this properly when we create the RIFX chunk
+    stream->endianness = Common::kBigEndian; // we set this properly when we create the RIFX chunk
 
     // Meta
     auto metaFourCC = stream->readUint32();
     if (metaFourCC == FOURCC('X', 'F', 'I', 'R')) {
-        stream->endianness = kLittleEndian;
+        stream->endianness = Common::kLittleEndian;
     }
     stream->readInt32(); // meta length
     codec = stream->readUint32();
@@ -312,7 +312,7 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
     if (deserializedChunks.find(id) != deserializedChunks.end())
         return deserializedChunks[id];
     
-    std::unique_ptr<ReadStream> chunkData = getChunkData(fourCC, id);
+    std::unique_ptr<Common::ReadStream> chunkData = getChunkData(fourCC, id);
     if (!chunkData) {
         throw std::runtime_error(boost::str(
             boost::format("No data for chunk %d") % id
@@ -325,7 +325,7 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
     return chunk;
 }
 
-std::unique_ptr<ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
+std::unique_ptr<Common::ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
     if (chunkInfo.find(id) == chunkInfo.end())
         throw std::runtime_error("Could not find chunk " + std::to_string(id));
 
@@ -337,10 +337,10 @@ std::unique_ptr<ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t 
         );
     }
 
-    std::unique_ptr<ReadStream> chunk;
+    std::unique_ptr<Common::ReadStream> chunk;
     if (_cachedChunkData.find(id) != _cachedChunkData.end()) {
         auto &data = _cachedChunkData[id];
-        chunk = std::make_unique<ReadStream>(data, stream->endianness, 0, data->size());
+        chunk = std::make_unique<Common::ReadStream>(data, stream->endianness, 0, data->size());
     } else if (afterburned) {
         stream->seek(info.offset + _ilsBodyOffset);
         unsigned long actualUncompLength = info.uncompressedLen;
@@ -365,11 +365,11 @@ std::unique_ptr<ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t 
 }
 
 std::shared_ptr<Chunk> DirectorFile::readChunk(uint32_t fourCC, uint32_t len) {
-    std::unique_ptr<ReadStream> chunkData = readChunkData(fourCC, len);
+    std::unique_ptr<Common::ReadStream> chunkData = readChunkData(fourCC, len);
     return makeChunk(fourCC, *chunkData);
 }
 
-std::unique_ptr<ReadStream> DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
+std::unique_ptr<Common::ReadStream> DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
     auto offset = stream->pos();
 
     auto validFourCC = stream->readUint32();
@@ -394,7 +394,7 @@ std::unique_ptr<ReadStream> DirectorFile::readChunkData(uint32_t fourCC, uint32_
     return stream->readBytes(len);
 }
 
-std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, ReadStream &stream) {
+std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, Common::ReadStream &stream) {
     std::shared_ptr<Chunk> res;
     switch (fourCC) {
     case FOURCC('i', 'm', 'a', 'p'):
@@ -480,8 +480,8 @@ void DirectorFile::dumpScripts() {
                 id = std::to_string(it->first);
             }
             std::string fileName = cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
-            writeFile(fileName + ".ls", it->second->scriptText());
-            writeFile(fileName + ".lasm", it->second->bytecodeText());
+            Common::writeFile(fileName + ".ls", it->second->scriptText());
+            Common::writeFile(fileName + ".lasm", it->second->bytecodeText());
         }
     }
 }
@@ -493,15 +493,15 @@ void DirectorFile::dumpChunks() {
             continue;
 
         std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
-        std::shared_ptr<ReadStream> chunk = getChunkData(info.fourCC, info.id);
+        std::shared_ptr<Common::ReadStream> chunk = getChunkData(info.fourCC, info.id);
         if (chunk) {
-            writeFile(fileName + ".bin", chunk->getData(), chunk->len());
+            Common::writeFile(fileName + ".bin", chunk->getData(), chunk->len());
         }
         if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
             ordered_json j = *deserializedChunks[info.id];
             std::stringstream ss;
             ss << j.dump(4) << std::endl;
-            writeFile(fileName + ".json", ss.str());
+            Common::writeFile(fileName + ".json", ss.str());
         }
     }
 }

@@ -1,5 +1,5 @@
-#ifndef MOVIE_H
-#define MOVIE_H
+#ifndef DIRECTOR_DIRFILE_H
+#define DIRECTOR_DIRFILE_H
 
 #include <cstdint>
 #include <istream>
@@ -8,11 +8,14 @@
 #include <string>
 #include <vector>
 
-namespace ProjectorRays {
+namespace Common {
+class ReadStream;
+}
+
+namespace Director {
 
 struct Chunk;
 // struct Cast;
-class ReadStream;
 
 struct ChunkInfo {
     int32_t id;
@@ -29,7 +32,7 @@ private:
     size_t _ilsBodyOffset;
 
 public:
-    ReadStream *stream;
+    Common::ReadStream *stream;
     std::shared_ptr<KeyTableChunk> keyTable;
     std::shared_ptr<ConfigChunk> config;
 
@@ -47,7 +50,7 @@ public:
 
     DirectorFile() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
 
-    void read(ReadStream *s);
+    void read(Common::ReadStream *s);
     void readMemoryMap();
     bool readAfterburnerMap();
     bool readKeyTable();
@@ -56,10 +59,10 @@ public:
     const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
     bool chunkExists(uint32_t fourCC, int32_t id);
     std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
-    std::unique_ptr<ReadStream> getChunkData(uint32_t fourCC, int32_t id);
+    std::unique_ptr<Common::ReadStream> getChunkData(uint32_t fourCC, int32_t id);
     std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
-    std::unique_ptr<ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
-    std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, ReadStream &stream);
+    std::unique_ptr<Common::ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
+    std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, Common::ReadStream &stream);
 
     void dumpScripts();
     void dumpChunks();

@@ -1,5 +1,5 @@
-#ifndef LINGO_H
-#define LINGO_H
+#ifndef DIRECTOR_LINGO_H
+#define DIRECTOR_LINGO_H
 
 #include <map>
 #include <memory>
@@ -9,14 +9,17 @@
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
-namespace ProjectorRays {
+namespace Common {
+class ReadStream;
+}
+
+namespace Director {
 
 struct AST;
 struct Bytecode;
 struct CaseNode;
 struct LoopNode;
 struct Node;
-class ReadStream;
 struct RepeatWithInStmtNode;
 struct ScriptChunk;
 
@@ -281,9 +284,9 @@ struct Handler {
         script = s;
     }
 
-    void readRecord(ReadStream &stream);
-    void readData(ReadStream &stream);
-    std::vector<int16_t> readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset);
+    void readRecord(Common::ReadStream &stream);
+    void readData(Common::ReadStream &stream);
+    std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
     void readNames();
     std::string getName(int id);
     std::string getArgumentName(int id);

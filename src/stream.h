@@ -1,12 +1,12 @@
-#ifndef STREAM_H
-#define STREAM_H
+#ifndef COMMON_STREAM_H
+#define COMMON_STREAM_H
 
 #include <cstdint>
 #include <istream>
 #include <memory>
 #include <vector>
 
-namespace ProjectorRays {
+namespace Common {
 
 enum Endianness {
     kBigEndian = 0,

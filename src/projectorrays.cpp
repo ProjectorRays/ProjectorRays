@@ -9,7 +9,7 @@
 #include "dirfile.h"
 #include "util.h"
 
-using namespace ProjectorRays;
+using namespace Director;
 
 int main(int argc, char *argv[]) {
     bool dumpChunks = false;
@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    auto buf = readFile(fileName);
-    auto stream = std::make_unique<ReadStream>(buf);
+    auto buf = Common::readFile(fileName);
+    auto stream = std::make_unique<Common::ReadStream>(buf);
     auto dir = std::make_unique<DirectorFile>();
     dir->read(stream.get());
 

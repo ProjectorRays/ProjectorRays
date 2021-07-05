@@ -9,11 +9,11 @@
 #include "dirfile.h"
 #include "stream.h"
 
-namespace ProjectorRays {
+namespace Director {
 
 /* Handler */
 
-void Handler::readRecord(ReadStream &stream) {
+void Handler::readRecord(Common::ReadStream &stream) {
     nameID = stream.readInt16();
     vectorPos = stream.readUint16();
     compiledLen = stream.readUint32();
@@ -52,7 +52,7 @@ void to_json(ordered_json &j, const Handler &c) {
         j["stackHeight"] = c.stackHeight;
 }
 
-void Handler::readData(ReadStream &stream) {
+void Handler::readData(Common::ReadStream &stream) {
     stream.seek(compiledOffset);
     while (stream.pos() < compiledOffset + compiledLen) {
         uint32_t pos = stream.pos() - compiledOffset;
@@ -90,7 +90,7 @@ void Handler::readData(ReadStream &stream) {
     localNameIDs = readVarnamesTable(stream, localsCount, localsOffset);
 }
 
-std::vector<int16_t> Handler::readVarnamesTable(ReadStream &stream, uint16_t count, uint32_t offset) {
+std::vector<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
     stream.seek(offset);
     std::vector<int16_t> nameIDs;
     nameIDs.resize(count);

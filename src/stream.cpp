@@ -5,7 +5,7 @@
 #include "stream.h"
 #include "util.h"
 
-namespace ProjectorRays {
+namespace Common {
 
 size_t ReadStream::pos() {
     return _pos;

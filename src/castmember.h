@@ -1,12 +1,15 @@
-#ifndef CASTMEMBER_H
-#define CASTMEMBER_H
+#ifndef DIRECTOR_CASTMEMBER_H
+#define DIRECTOR_CASTMEMBER_H
 
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
-namespace ProjectorRays {
-
+namespace Common {
 class ReadStream;
+}
+
+namespace Director {
+
 class DirectorFile;
 
 enum MemberType {
@@ -31,7 +34,7 @@ struct CastMember {
 
     CastMember(DirectorFile *d, MemberType t) : dir(d), type(t) {}
     virtual ~CastMember() = default;
-    virtual void read(ReadStream &stream);
+    virtual void read(Common::ReadStream &stream);
 };
 void to_json(ordered_json &j, const CastMember &c);
 
@@ -46,7 +49,7 @@ struct ScriptMember : CastMember {
 
     ScriptMember(DirectorFile *m) : CastMember(m, kScriptMember) {}
     virtual ~ScriptMember() = default;
-    virtual void read(ReadStream &stream);
+    virtual void read(Common::ReadStream &stream);
 };
 void to_json(ordered_json &j, const ScriptMember &c);
 

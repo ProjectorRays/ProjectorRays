@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-namespace ProjectorRays {
+namespace Director {
 
 std::string fourCCToString(uint32_t fourcc) {
     char str[5];
