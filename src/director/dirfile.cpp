@@ -31,7 +31,7 @@ void DirectorFile::read(Common::ReadStream *s) {
     codec = stream->readUint32();
 
     // Codec-dependent map
-    if (codec == FOURCC('M', 'V', '9', '3')) {
+    if (codec == FOURCC('M', 'V', '9', '3') || codec == FOURCC('M', 'C', '9', '5')) {
         readMemoryMap();
     } else if (codec == FOURCC('F', 'G', 'D', 'M') || codec == FOURCC('F', 'G', 'D', 'C')) {
         afterburned = true;
