@@ -22,6 +22,7 @@ jobs:
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-boost
+            mingw-w64-x86_64-nlohmann-json
       - name: Checkout ProjectorRays
         uses: actions/checkout@v2
       - id: sha-short
