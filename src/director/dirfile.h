@@ -53,7 +53,7 @@ public:
 
     DirectorFile() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
 
-    void read(Common::ReadStream *s);
+    void read(Common::ReadStream *s, bool decompile = true);
     void readMemoryMap();
     bool readAfterburnerMap();
     bool readKeyTable();

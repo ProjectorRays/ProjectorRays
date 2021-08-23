@@ -17,7 +17,7 @@ namespace Director {
 
 /* DirectorFile */
 
-void DirectorFile::read(Common::ReadStream *s) {
+void DirectorFile::read(Common::ReadStream *s, bool decompile) {
     stream = s;
     stream->endianness = Common::kBigEndian; // we set this properly when we create the RIFX chunk
 
@@ -44,8 +44,10 @@ void DirectorFile::read(Common::ReadStream *s) {
         return;
     if (!readConfig())
         return;
-    if (!readCasts())
-        return;
+    if (decompile) {
+        if (!readCasts())
+            return;
+    }
 }
 
 void DirectorFile::readMemoryMap() {
