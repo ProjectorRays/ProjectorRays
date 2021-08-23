@@ -1,12 +1,11 @@
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <boost/format.hpp>
 
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
 #include "common/fileio.h"
+#include "common/log.h"
 #include "common/stream.h"
 #include "director/chunk.h"
 #include "director/lingo.h"
@@ -65,8 +64,8 @@ void DirectorFile::readMemoryMap() {
         if (mapEntry.fourCC == FOURCC('f', 'r', 'e', 'e') || mapEntry.fourCC == FOURCC('j', 'u', 'n', 'k'))
             continue;
 
-        std::cout << boost::format("Found RIFX resource index %d: '%s', %d bytes @ pos 0x%08x (%d)\n")
-                        % i % fourCCToString(mapEntry.fourCC) % mapEntry.len % mapEntry.offset % mapEntry.offset;
+        Common::debug(boost::format("Found RIFX resource index %d: '%s', %d bytes @ pos 0x%08x (%d)")
+                        % i % fourCCToString(mapEntry.fourCC) % mapEntry.len % mapEntry.offset % mapEntry.offset);
 
         ChunkInfo info;
         info.id = i;
@@ -86,25 +85,25 @@ bool DirectorFile::readAfterburnerMap() {
 
     // File version
     if (stream->readUint32() != FOURCC('F', 'v', 'e', 'r')) {
-        std::cout << "readAfterburnerMap(): Fver expected but not found\n";
+        Common::log("readAfterburnerMap(): Fver expected but not found");
         return false;
     }
 
     uint32_t fverLength = stream->readVarInt();
     start = stream->pos();
     uint32_t version = stream->readVarInt();
-    std::cout << boost::format("Fver: version: %x\n") % version;
+    Common::debug(boost::format("Fver: version: %x") % version);
     end = stream->pos();
 
     if (end - start != fverLength) {
-        std::cout << boost::format("readAfterburnerMap(): Expected Fver of length %d but read %d bytes\n")
-                        % fverLength % (end - start);
+        Common::log(boost::format("readAfterburnerMap(): Expected Fver of length %d but read %d bytes")
+                        % fverLength % (end - start));
         stream->seek(start + fverLength);
     }
 
     // Compression types
     if (stream->readUint32() != FOURCC('F', 'c', 'd', 'r')) {
-        std::cout << "readAfterburnerMap(): Fcdr expected but not found\n";
+        Common::log("readAfterburnerMap(): Fcdr expected but not found");
         return false;
     }
 
@@ -113,7 +112,7 @@ bool DirectorFile::readAfterburnerMap() {
 
     // Afterburner map
     if (stream->readUint32() != FOURCC('A', 'B', 'M', 'P')) {
-        std::cout << "RIFXArchive::readAfterburnerMap(): ABMP expected but not found\n";
+        Common::log("RIFXArchive::readAfterburnerMap(): ABMP expected but not found");
         return false;
     }
     uint32_t abmpLength = stream->readVarInt();
@@ -121,24 +120,24 @@ bool DirectorFile::readAfterburnerMap() {
     uint32_t abmpCompressionType = stream->readVarInt();
     unsigned long abmpUncompLength = stream->readVarInt();
     unsigned long abmpActualUncompLength = abmpUncompLength;
-    std::cout << boost::format("ABMP: length: %d compressionType: %d uncompressedLength: %lu\n")
-                    % abmpLength % abmpCompressionType % abmpUncompLength;
+    Common::debug(boost::format("ABMP: length: %d compressionType: %d uncompressedLength: %lu")
+                    % abmpLength % abmpCompressionType % abmpUncompLength);
 
     auto abmpStream = stream->readZlibBytes(abmpEnd - stream->pos(), &abmpActualUncompLength);
     if (!abmpStream) {
-        std::cout << "RIFXArchive::readAfterburnerMap(): Could not uncompress ABMP\n";
+        Common::log("RIFXArchive::readAfterburnerMap(): Could not uncompress ABMP");
         return false;
     }
     if (abmpUncompLength != abmpActualUncompLength) {
-        std::cout << boost::format("ABMP: Expected uncompressed length %lu but got length %lu\n")
-                        % abmpUncompLength % abmpActualUncompLength;
+        Common::log(boost::format("ABMP: Expected uncompressed length %lu but got length %lu")
+                        % abmpUncompLength % abmpActualUncompLength);
     }
 
     uint32_t abmpUnk1 = abmpStream->readVarInt();
     uint32_t abmpUnk2 = abmpStream->readVarInt();
     uint32_t resCount = abmpStream->readVarInt();
-    std::cout << boost::format("ABMP: unk1: %d unk2: %d resCount: %d\n")
-                    % abmpUnk1 % abmpUnk2 % resCount;
+    Common::debug(boost::format("ABMP: unk1: %d unk2: %d resCount: %d")
+                    % abmpUnk1 % abmpUnk2 % resCount);
 
     for (uint32_t i = 0; i < resCount; i++) {
         uint32_t resId = abmpStream->readVarInt();
@@ -148,8 +147,8 @@ bool DirectorFile::readAfterburnerMap() {
         uint32_t compressionType = abmpStream->readVarInt();
         uint32_t tag = abmpStream->readUint32();
 
-        std::cout << boost::format("Found RIFX resource index %d: '%s', %d bytes (%d uncompressed) @ pos 0x%08x (%d), compressionType: %d\n")
-                        % resId % fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType;
+        Common::debug(boost::format("Found RIFX resource index %d: '%s', %d bytes (%d uncompressed) @ pos 0x%08x (%d), compressionType: %d")
+                        % resId % fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType);
 
         ChunkInfo info;
         info.id = resId;
@@ -165,41 +164,41 @@ bool DirectorFile::readAfterburnerMap() {
 
     // Initial load segment
     if (chunkInfo.find(2) == chunkInfo.end()) {
-        std::cout << "readAfterburnerMap(): Map has no entry for ILS\n";
+        Common::log("readAfterburnerMap(): Map has no entry for ILS");
         return false;
     }
     if (stream->readUint32() != FOURCC('F', 'G', 'E', 'I')) {
-        std::cout << "readAfterburnerMap(): FGEI expected but not found\n";
+        Common::log("readAfterburnerMap(): FGEI expected but not found");
         return false;
     }
 
     ChunkInfo &ilsInfo = chunkInfo[2];
     uint32_t ilsUnk1 = stream->readVarInt();
-    std::cout << boost::format("ILS: length: %d unk1: %d\n") % ilsInfo.len % ilsUnk1;
+    Common::debug(boost::format("ILS: length: %d unk1: %d") % ilsInfo.len % ilsUnk1);
     _ilsBodyOffset = stream->pos();
     unsigned long ilsActualUncompLength = ilsInfo.uncompressedLen;
     auto ilsStream = stream->readZlibBytes(ilsInfo.len, &ilsActualUncompLength);
     if (!ilsStream) {
-        std::cout << "readAfterburnerMap(): Could not uncompress FGEI\n";
+        Common::log("readAfterburnerMap(): Could not uncompress FGEI");
         return false;
     }
     if (ilsInfo.uncompressedLen != ilsActualUncompLength) {
-        std::cout << boost::format("ILS: Expected uncompressed length %d but got length %lu\n")
-                        % ilsInfo.uncompressedLen % ilsActualUncompLength;
+        Common::log(boost::format("ILS: Expected uncompressed length %d but got length %lu")
+                        % ilsInfo.uncompressedLen % ilsActualUncompLength);
     }
 
     while (!ilsStream->eof()) {
         uint32_t resId = ilsStream->readVarInt();
         ChunkInfo &info = chunkInfo[resId];
 
-        std::cout << boost::format("Loading ILS resource %d: '%s', %d bytes\n")
-                        % resId % fourCCToString(info.fourCC) % info.len;
+        Common::debug(boost::format("Loading ILS resource %d: '%s', %d bytes")
+                        % resId % fourCCToString(info.fourCC) % info.len);
 
         auto data = ilsStream->copyBytes(info.len);
         if (data) {
             _cachedChunkData[resId] = std::move(data);
         } else {
-            std::cout << boost::format("Could not load ILS resource %d\n") % resId;
+            Common::log(boost::format("Could not load ILS resource %d") % resId);
         }
     }
 
@@ -217,14 +216,14 @@ bool DirectorFile::readKeyTable() {
             if (chunkInfo.find(entry.castID) != chunkInfo.end()) {
                 ownerTag = chunkInfo[entry.castID].fourCC;
             }
-            std::cout << boost::format("KEY* entry %d: '%s' @ %d owned by '%s' @ %d\n")
-                % i % fourCCToString(entry.fourCC) % entry.sectionID % fourCCToString(ownerTag) % entry.castID;
+            Common::debug(boost::format("KEY* entry %d: '%s' @ %d owned by '%s' @ %d")
+                % i % fourCCToString(entry.fourCC) % entry.sectionID % fourCCToString(ownerTag) % entry.castID);
         }
 
         return true;
     }
 
-    std::cout << "No key chunk!\n";
+    Common::log("No key chunk!");
     return false;
 }
 
@@ -236,13 +235,13 @@ bool DirectorFile::readConfig() {
     if (info) {
         config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
         version = humanVersion(config->directorVersion);
-        std::cout << "Director version: " + std::to_string(version) + "\n";
+        Common::log("Director version: " + std::to_string(version));
         dotSyntax = (version >= 700); // TODO: Check for verbose/dot syntax opcodes, allow users to toggle this
 
         return true;
     }
 
-    std::cout << "No config chunk!\n";
+    Common::log("No config chunk!");
     return false;
 }
 
@@ -254,7 +253,7 @@ bool DirectorFile::readCasts() {
         if (info) {
             auto castList = std::static_pointer_cast<CastListChunk>(getChunk(info->fourCC, info->id));
             for (const auto &castEntry : castList->entries) {
-                std::cout << "Cast: " + castEntry.name + "\n";
+                Common::debug("Cast: " + castEntry.name);
                 int32_t sectionID = -1;
                 for (const auto &keyEntry : keyTable->entries) {
                     if (keyEntry.castID == castEntry.id && keyEntry.fourCC == FOURCC('C', 'A', 'S', '*')) {
@@ -284,7 +283,7 @@ bool DirectorFile::readCasts() {
         return true;
     }
 
-    std::cout << "No cast!\n";
+    Common::log("No cast!");
     return false;
 
     return false;
@@ -346,7 +345,7 @@ std::unique_ptr<Common::ReadStream> DirectorFile::getChunkData(uint32_t fourCC, 
         unsigned long actualUncompLength = info.uncompressedLen;
         auto chunkStream = stream->readZlibBytes(info.len, &actualUncompLength);
         if (!chunkStream) {
-            std::cout << boost::format("Could not uncompress chunk %d\n") % id;
+            Common::log(boost::format("Could not uncompress chunk %d") % id);
             return nullptr;
         }
         if (info.uncompressedLen != actualUncompLength) {
@@ -388,7 +387,7 @@ std::unique_ptr<Common::ReadStream> DirectorFile::readChunkData(uint32_t fourCC,
             + ", but got '" + fourCCToString(validFourCC) + "' chunk with length " + std::to_string(validLen)
         );
     } else {
-        std::cout << "At offset " + std::to_string(offset) + " reading chunk '" + fourCCToString(fourCC) + "' with length " + std::to_string(len) + "\n";
+        Common::debug("At offset " + std::to_string(offset) + " reading chunk '" + fourCCToString(fourCC) + "' with length " + std::to_string(len));
     }
 
     return stream->readBytes(len);

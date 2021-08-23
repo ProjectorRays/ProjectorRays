@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "common/fileio.h"
+#include "common/log.h"
 #include "common/stream.h"
 #include "director/dirfile.h"
 
@@ -17,6 +18,8 @@ int main(int argc, char *argv[]) {
         std::string arg = argv[argsUsed];
         if (arg == "--dump-chunks") {
             dumpChunks = true;
+        } else if (arg == "-v" || arg == "--verbose") {
+            Common::g_verbose = true;
         } else if (!foundFileName) {
             fileName = arg;
             foundFileName = true;
@@ -26,8 +29,9 @@ int main(int argc, char *argv[]) {
     }
 
     if (argsUsed != argc || !foundFileName) {
-        std::cout << "Usage: " << argv[0] << " [OPTIONS]... FILE\n";
-        std::cout << "  --dump-chunks\t\tDump chunk data\n";
+        Common::log(boost::format("Usage: %s [OPTIONS]... FILE") % argv[0]);
+        Common::log("  --dump-chunks\t\tDump chunk data");
+        Common::log("  -v or --verbose\tVerbose logging");
         return 1;
     }
 

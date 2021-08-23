@@ -2,8 +2,8 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <boost/format.hpp>
 
+#include "common/log.h"
 #include "common/stream.h"
 #include "director/chunk.h"
 #include "director/lingo.h"
@@ -193,7 +193,7 @@ std::shared_ptr<Node> Handler::readVar(int varType) {
 	case 0x6: // field
         return std::make_shared<MemberExprNode>("field", std::move(id), std::move(castID));
 	default:
-		std::cout << boost::format("findVar: unhandled var type %d\n") % varType;
+		Common::log(boost::format("findVar: unhandled var type %d") % varType);
 		break;
 	}
 	return std::make_shared<ErrorNode>();

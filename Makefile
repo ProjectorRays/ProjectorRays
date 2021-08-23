@@ -15,6 +15,7 @@ debug: projectorrays
 OBJS = \
 	src/main.o \
 	src/common/fileio.o \
+	src/common/log.o \
 	src/common/stream.o \
 	src/director/castmember.o \
 	src/director/chunk.o \
