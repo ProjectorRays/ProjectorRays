@@ -33,7 +33,7 @@ To use it, run `./projectorrays FILE`. ProjectorRays will output `.ls` files wit
 
 ## Credits
 
-ProjectorRays is written by [Dylan Servilla](https://github.com/djsrv), based on the [disassembler](https://github.com/Brian151/OpenShockwave/blob/50b3606809b3c8dad13ee41ae20bcbfa70eb3606/tools/lscrtoscript/js/projectorrays.js) by [Anthony Kleine](https://github.com/tomysshadow).
+ProjectorRays is written by [Deborah Servilla](https://github.com/djsrv), based on the [disassembler](https://github.com/Brian151/OpenShockwave/blob/50b3606809b3c8dad13ee41ae20bcbfa70eb3606/tools/lscrtoscript/js/projectorrays.js) by [Anthony Kleine](https://github.com/tomysshadow).
 
 This could not exist without the reverse-engineering work of the [Earthquake Project](https://github.com/Earthquake-Project), the [Just Solve the File Format Problem wiki](http://fileformats.archiveteam.org/wiki/Lingo_bytecode), and the [ScummVM Director engine team](https://www.scummvm.org/credits/#:~:text=Director:).
 
