@@ -27,7 +27,7 @@ To use it, drop a movie or cast file on `projectorrays.exe`. ProjectorRays will 
 
 ### *nix
 
-Install Boost 1.72.0 or later and zlib. Run `make` to build.
+Install Boost 1.72.0 or later, zlib, and nlohmann JSON. Run `make` to build.
 
 To use it, run `./projectorrays FILE`. ProjectorRays will output `.ls` files with decompiled source code in the current working directory.
 
