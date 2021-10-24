@@ -603,7 +603,7 @@ std::string AssignmentStmtNode::toString(bool dot, bool sum) {
 		// we want the variable to always be verbose
 		return "set " + variable->toString(false, sum) + " to " + value->toString(dot, sum);
 	}
-	
+
 	return variable->toString(dot, sum) + " = " + value->toString(dot, sum);
 }
 
@@ -828,7 +828,7 @@ std::string ThePropExprNode::toString(bool dot, bool sum) {
 std::string ObjPropExprNode::toString(bool dot, bool sum) {
 	if (dot)
 		return obj->toString(dot, sum) + "." + prop;
-	
+
 	return "the " + prop + " of " + obj->toString(dot, sum);
 }
 

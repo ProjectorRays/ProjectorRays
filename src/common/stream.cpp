@@ -133,11 +133,11 @@ double ReadStream::readDouble() {
 	_pos += 4;
 	if (pastEOF())
 		return 0;
-	
+
 	uint64_t f64bin = endianness
 		? boost::endian::load_little_u64(reinterpret_cast<unsigned char *>(&_buf->data()[p]))
 		: boost::endian::load_big_u64(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
-	
+
 	return *(double *)(&f64bin);
 }
 

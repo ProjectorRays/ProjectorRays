@@ -322,7 +322,7 @@ const ChunkInfo *DirectorFile::getFirstChunkInfo(uint32_t fourCC) {
 bool DirectorFile::chunkExists(uint32_t fourCC, int32_t id) {
 	if (chunkInfo.find(id) == chunkInfo.end())
 		return false;
-	
+
 	if (fourCC != chunkInfo[id].fourCC)
 		return false;
 
@@ -332,7 +332,7 @@ bool DirectorFile::chunkExists(uint32_t fourCC, int32_t id) {
 std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
 	if (deserializedChunks.find(id) != deserializedChunks.end())
 		return deserializedChunks[id];
-	
+
 	std::unique_ptr<Common::ReadStream> chunkData = getChunkData(fourCC, id);
 	if (!chunkData) {
 		throw std::runtime_error(boost::str(

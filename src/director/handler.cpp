@@ -156,7 +156,7 @@ std::string Handler::getGlobalName(int id) {
 std::shared_ptr<Node> Handler::peek() {
 	if (stack.empty())
 		return std::make_shared<ErrorNode>();
-	
+
 	auto res = stack.back();
 	return res;
 }
@@ -164,7 +164,7 @@ std::shared_ptr<Node> Handler::peek() {
 std::shared_ptr<Node> Handler::pop() {
 	if (stack.empty())
 		return std::make_shared<ErrorNode>();
-	
+
 	auto res = stack.back();
 	stack.pop_back();
 	return res;
@@ -352,7 +352,7 @@ void Handler::tagLoops() {
 		auto &jmpifz = bytecodeArray[startIndex];
 		if (jmpifz.opcode != kOpJmpIfZ)
 			continue;
-		
+
 		// ...and end with endrepeat.
 		uint32_t jmpPos = jmpifz.pos + jmpifz.obj;
 		uint32_t endIndex = bytecodePosMap[jmpPos];
@@ -504,7 +504,7 @@ BytecodeTag Handler::identifyLoop(uint32_t startIndex, uint32_t endIndex) {
 		return kTagRepeatWhile;
 	if (!(bytecodeArray[endIndex - 2].opcode == setOp && bytecodeArray[endIndex - 2].obj == varID))
 		return kTagRepeatWhile;
-	
+
 	return up ? kTagRepeatWithTo : kTagRepeatWithDownTo;
 }
 
