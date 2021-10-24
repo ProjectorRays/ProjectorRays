@@ -21,54 +21,54 @@ struct ConfigChunk;
 struct KeyTableChunk;
 
 struct ChunkInfo {
-    int32_t id;
-    uint32_t fourCC;
-    uint32_t len;
-    uint32_t uncompressedLen;
-    int32_t offset;
-    uint32_t compressionType;
+	int32_t id;
+	uint32_t fourCC;
+	uint32_t len;
+	uint32_t uncompressedLen;
+	int32_t offset;
+	uint32_t compressionType;
 };
 
 class DirectorFile {
 private:
-    std::map<int32_t, std::shared_ptr<std::vector<uint8_t>>> _cachedChunkData;
-    size_t _ilsBodyOffset;
+	std::map<int32_t, std::shared_ptr<std::vector<uint8_t>>> _cachedChunkData;
+	size_t _ilsBodyOffset;
 
 public:
-    Common::ReadStream *stream;
-    std::shared_ptr<KeyTableChunk> keyTable;
-    std::shared_ptr<ConfigChunk> config;
+	Common::ReadStream *stream;
+	std::shared_ptr<KeyTableChunk> keyTable;
+	std::shared_ptr<ConfigChunk> config;
 
-    int version;
-    bool capitalX;
-    bool dotSyntax;
-    uint32_t codec;
-    bool afterburned;
+	int version;
+	bool capitalX;
+	bool dotSyntax;
+	uint32_t codec;
+	bool afterburned;
 
-    std::map<uint32_t, std::vector<int32_t>> chunkIDsByFourCC;
-    std::map<int32_t, ChunkInfo> chunkInfo;
-    std::map<int32_t, std::shared_ptr<Chunk>> deserializedChunks;
+	std::map<uint32_t, std::vector<int32_t>> chunkIDsByFourCC;
+	std::map<int32_t, ChunkInfo> chunkInfo;
+	std::map<int32_t, std::shared_ptr<Chunk>> deserializedChunks;
 
-    std::vector<std::shared_ptr<CastChunk>> casts;
+	std::vector<std::shared_ptr<CastChunk>> casts;
 
-    DirectorFile() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
+	DirectorFile() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
 
-    void read(Common::ReadStream *s, bool decompile = true);
-    void readMemoryMap();
-    bool readAfterburnerMap();
-    bool readKeyTable();
-    bool readConfig();
-    bool readCasts();
-    const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
-    bool chunkExists(uint32_t fourCC, int32_t id);
-    std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
-    std::unique_ptr<Common::ReadStream> getChunkData(uint32_t fourCC, int32_t id);
-    std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
-    std::unique_ptr<Common::ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
-    std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, Common::ReadStream &stream);
+	void read(Common::ReadStream *s, bool decompile = true);
+	void readMemoryMap();
+	bool readAfterburnerMap();
+	bool readKeyTable();
+	bool readConfig();
+	bool readCasts();
+	const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
+	bool chunkExists(uint32_t fourCC, int32_t id);
+	std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
+	std::unique_ptr<Common::ReadStream> getChunkData(uint32_t fourCC, int32_t id);
+	std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
+	std::unique_ptr<Common::ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
+	std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, Common::ReadStream &stream);
 
-    void dumpScripts();
-    void dumpChunks();
+	void dumpScripts();
+	void dumpChunks();
 };
 
 }

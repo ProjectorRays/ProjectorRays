@@ -11,23 +11,23 @@ namespace Director {
 void CastMember::read(Common::ReadStream &stream) {}
 
 void to_json(ordered_json &j, const CastMember &c) {
-    switch (c.type) {
-    case kScriptMember:
-        to_json(j, static_cast<const ScriptMember &>(c));
-        break;
-    default:
-        break;
-    }
+	switch (c.type) {
+	case kScriptMember:
+		to_json(j, static_cast<const ScriptMember &>(c));
+		break;
+	default:
+		break;
+	}
 }
 
 /* ScriptMember */
 
 void ScriptMember::read(Common::ReadStream &stream) {
-    scriptType = static_cast<ScriptType>(stream.readUint16());
+	scriptType = static_cast<ScriptType>(stream.readUint16());
 }
 
 void to_json(ordered_json &j, const ScriptMember &c) {
-    j["scriptType"] = c.scriptType;
+	j["scriptType"] = c.scriptType;
 }
 
 }
