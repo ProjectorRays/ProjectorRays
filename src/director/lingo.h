@@ -458,12 +458,12 @@ struct BlockNode : ExprNode {
 
 /* HandlerNode */
 
-struct HandlerNode : ExprNode {
+struct HandlerNode : Node {
 	Handler *handler;
 	std::shared_ptr<BlockNode> block;
 
 	HandlerNode(Handler *h)
-		: ExprNode(kHandlerNode), handler(h) {
+		: Node(kHandlerNode), handler(h) {
 		block = std::make_shared<BlockNode>();
 		block->parent = this;
 	}
