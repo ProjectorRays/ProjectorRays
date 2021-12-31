@@ -89,6 +89,7 @@ public:
 
 	void dumpScripts();
 	void dumpChunks();
+	void dumpJSON();
 };
 
 }

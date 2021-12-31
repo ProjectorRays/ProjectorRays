@@ -31,6 +31,7 @@ using namespace Director;
 int main(int argc, char *argv[]) {
 	bool decompile = true;
 	bool dumpChunks = false;
+	bool dumpJSON = false;
 	std::string fileName;
 	bool foundFileName = false;
 
@@ -39,6 +40,8 @@ int main(int argc, char *argv[]) {
 		std::string arg = argv[argsUsed];
 		if (arg == "--dump-chunks") {
 			dumpChunks = true;
+		} else if (arg == "--dump-json") {
+			dumpJSON = true;
 		} else if (arg == "--no-decompile") {
 			decompile = false;
 		} else if (arg == "-v" || arg == "--verbose") {
@@ -54,6 +57,7 @@ int main(int argc, char *argv[]) {
 	if (argsUsed != argc || !foundFileName) {
 		Common::log(boost::format("Usage: %s [OPTIONS]... FILE") % argv[0]);
 		Common::log("  --dump-chunks\t\tDump chunk data");
+		Common::log("  --dump-json\t\tDump JSONifed chunk data");
 		Common::log("  --no-decompile\tDon't decompile Lingo");
 		Common::log("  -v or --verbose\tVerbose logging");
 		return 1;
@@ -69,6 +73,9 @@ int main(int argc, char *argv[]) {
 	}
 	if (dumpChunks) {
 		dir->dumpChunks();
+	}
+	if (dumpJSON) {
+		dir->dumpJSON();
 	}
 
 	return 0;

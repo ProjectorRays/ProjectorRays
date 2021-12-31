@@ -518,6 +518,16 @@ void DirectorFile::dumpChunks() {
 		if (chunk) {
 			Common::writeFile(fileName + ".bin", chunk->getData(), chunk->len());
 		}
+	}
+}
+
+void DirectorFile::dumpJSON() {
+	for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
+		const auto &info = it->second;
+		if (info.offset == 0) // RIFX
+			continue;
+
+		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
 			ordered_json j = *deserializedChunks[info.id];
 			std::stringstream ss;
