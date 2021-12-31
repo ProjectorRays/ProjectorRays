@@ -307,8 +307,6 @@ bool DirectorFile::readCasts() {
 
 	Common::log("No cast!");
 	return false;
-
-	return false;
 }
 
 const ChunkInfo *DirectorFile::getFirstChunkInfo(uint32_t fourCC) {
