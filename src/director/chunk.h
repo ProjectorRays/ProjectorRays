@@ -165,16 +165,41 @@ struct CastInfoChunk : ListChunk {
 void to_json(ordered_json &j, const CastInfoChunk &c);
 
 struct ConfigChunk : Chunk {
-	uint16_t len;
-	uint16_t fileVersion;
-	Rectangle movieRect;
-	uint16_t minMember;
-	uint16_t maxMember;
-	uint16_t directorVersion;
-
+	/*  0 */ uint16_t len;
+	/*  2 */ uint16_t fileVersion;
+	/*  4 */ int16_t movieTop;
+	/*  6 */ int16_t movieLeft;
+	/*  8 */ int16_t movieBottom;
+	/* 10 */ int16_t movieRight;
+	/* 12 */ uint16_t minMember;
+	/* 14 */ uint16_t maxMember;
+	/* 16 */ uint8_t field9;
+	/* 17 */ uint8_t field10;
+	/* 18 */ int16_t field11;
+	/* 20 */ int16_t commentFont;
+	/* 22 */ int16_t commentSize;
+	/* 24 */ uint8_t commentStyle;
+	/* 26 */ int16_t stageColor;
+	/* 28 */ int16_t bitDepth;
+	/* 30 */ uint8_t field17;
+	/* 31 */ uint8_t field18;
+	/* 32 */ int32_t field19;
+	/* 36 */ int16_t directorVersion;
+	/* 38 */ int16_t field21;
+	/* 40 */ int32_t field22;
+	/* 44 */ int32_t field23;
+	/* 48 */ int32_t field24;
+	/* 52 */ int8_t field25;
+	/* 53 */ uint8_t field26;
+	/* 54 */ int16_t frameRate;
+	/* 56 */ int16_t platform;
+	/* 58 */ int16_t protection;
+	/* 60 */ int32_t field29;
+	/* 64 */ uint32_t checksum;
 	ConfigChunk(DirectorFile *m) : Chunk(m, kConfigChunk) {}
 	virtual ~ConfigChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	uint32_t computeChecksum();
 };
 void to_json(ordered_json &j, const ConfigChunk &c);
 

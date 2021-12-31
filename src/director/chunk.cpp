@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <boost/format.hpp>
+
+#include "common/log.h"
 #include "common/stream.h"
 #include "director/castmember.h"
 #include "director/chunk.h"
@@ -261,21 +264,170 @@ void to_json(ordered_json &j, const CastInfoChunk &c) {
 void ConfigChunk::read(Common::ReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 
-	len = stream.readUint16();
-	fileVersion = stream.readUint16();
-	movieRect.read(stream);
+	/*  0 */ len = stream.readUint16();
+	/*  2 */ fileVersion = stream.readUint16();
+	/*  4 */ movieTop = stream.readInt16();
+	/*  6 */ movieLeft = stream.readInt16();
+	/*  8 */ movieBottom = stream.readInt16();
+	/* 10 */ movieRight = stream.readInt16();
+	/* 12 */ minMember = stream.readUint16();
+	/* 14 */ maxMember = stream.readUint16();
+	/* 16 */ field9 = stream.readUint8();
+	/* 17 */ field10 = stream.readUint8();
+	/* 18 */ field11 = stream.readInt16();
+	/* 20 */ commentFont = stream.readInt16();
+	/* 22 */ commentSize = stream.readInt16();
+	/* 24 */ commentStyle = stream.readUint16();
+	/* 26 */ stageColor = stream.readInt16();
+	/* 28 */ bitDepth = stream.readInt16();
+	/* 30 */ field17 = stream.readUint8();
+	/* 31 */ field18 = stream.readUint8();
+	/* 32 */ field19 = stream.readInt32();
+	/* 36 */ directorVersion = stream.readInt16();
+	/* 38 */ field21 = stream.readInt16();
+	/* 40 */ field22 = stream.readInt32();
+	/* 44 */ field23 = stream.readInt32();
+	/* 48 */ field24 = stream.readInt32();
+	/* 52 */ field25 = stream.readInt8();
+	/* 53 */ field26 = stream.readUint8();
+	/* 54 */ frameRate = stream.readInt16();
+	/* 56 */ platform = stream.readInt16();
+	/* 58 */ protection = stream.readInt16();
+	/* 60 */ field29 = stream.readInt32();
+	/* 64 */ checksum = stream.readUint32();
 
-	minMember = stream.readUint16();
-	maxMember = stream.readUint16();
+	uint32_t computedChecksum = computeChecksum();
+	Common::log(boost::format("Checksum stored: %u computed: %u") % checksum % computedChecksum);
+}
 
-	stream.seek(36);
-	directorVersion = stream.readUint16();
+uint32_t ConfigChunk::computeChecksum() {
+	int32_t check = len + 1;
+	Common::log("len");
+	Common::log(std::to_string(len));
+	Common::log(std::to_string(check));
+	check *= fileVersion + 2;
+	Common::log("fileVersion");
+	Common::log(std::to_string(fileVersion));
+	Common::log(std::to_string(check));
+	check /= movieTop + 3;
+	Common::log("movieTop");
+	Common::log(std::to_string(movieTop));
+	Common::log(std::to_string(check));
+	check *= movieLeft + 4;
+	Common::log("movieLeft");
+	Common::log(std::to_string(movieLeft));
+	Common::log(std::to_string(check));
+	check /= movieBottom + 5;
+	Common::log("movieBottom");
+	Common::log(std::to_string(movieBottom));
+	Common::log(std::to_string(check));
+	check *= movieRight + 6;
+	Common::log("movieRight");
+	Common::log(std::to_string(movieRight));
+	Common::log(std::to_string(check));
+	check -= minMember + 7;
+	Common::log("minMember");
+	Common::log(std::to_string(minMember));
+	Common::log(std::to_string(check));
+	check *= maxMember + 8;
+	Common::log("maxMember");
+	Common::log(std::to_string(maxMember));
+	Common::log(std::to_string(check));
+	check -= field9 + 9;
+	Common::log("field9");
+	Common::log(std::to_string(field9));
+	Common::log(std::to_string(check));
+	check -= field10 + 10;
+	Common::log("field10");
+	Common::log(std::to_string(field10));
+	Common::log(std::to_string(check));
+	check += field11 + 11;
+	Common::log("field11");
+	Common::log(std::to_string(field11));
+	Common::log(std::to_string(check));
+	check *= commentFont + 12;
+	Common::log("commentFont");
+	Common::log(std::to_string(commentFont));
+	Common::log(std::to_string(check));
+	check += commentSize + 13;
+	Common::log("commentSize");
+	Common::log(std::to_string(commentSize));
+	Common::log(std::to_string(check));
+	if (directorVersion <= 0x4C7) {
+		check *= (commentStyle >> 8) + 14;
+	} else {
+		check *= commentStyle + 14;
+	}
+	Common::log("commentStyle");
+	Common::log(std::to_string(commentStyle));
+	Common::log(std::to_string(check));
+	check += stageColor + 15;
+	Common::log("stageColor");
+	Common::log(std::to_string(stageColor));
+	Common::log(std::to_string(check));
+	check += bitDepth + 16;
+	Common::log("bitDepth");
+	Common::log(std::to_string(bitDepth));
+	Common::log(std::to_string(check));
+	check += field17 + 17;
+	Common::log("field17");
+	Common::log(std::to_string(field17));
+	Common::log(std::to_string(check));
+	check *= field18 + 18;
+	Common::log("field18");
+	Common::log(std::to_string(field18));
+	Common::log(std::to_string(check));
+	check += field19 + 19;
+	Common::log("field19");
+	Common::log(std::to_string(field19));
+	Common::log(std::to_string(check));
+	check *= directorVersion + 20;
+	Common::log("directorVersion");
+	Common::log(std::to_string(directorVersion));
+	Common::log(std::to_string(check));
+	check += field21 + 21;
+	Common::log("field21");
+	Common::log(std::to_string(field21));
+	Common::log(std::to_string(check));
+	check += field22 + 22;
+	Common::log("field22");
+	Common::log(std::to_string(field22));
+	Common::log(std::to_string(check));
+	check += field23 + 23;
+	Common::log("field23");
+	Common::log(std::to_string(field23));
+	Common::log(std::to_string(check));
+	check += field24 + 24;
+	Common::log("field24");
+	Common::log(std::to_string(field24));
+	Common::log(std::to_string(check));
+	check *= field25 + 25;
+	Common::log("field25");
+	Common::log(std::to_string(field25));
+	Common::log(std::to_string(check));
+	check += frameRate + 26;
+	Common::log("frameRate");
+	Common::log(std::to_string(frameRate));
+	Common::log(std::to_string(check));
+	check *= platform + 27;
+	Common::log("platform");
+	Common::log(std::to_string(platform));
+	Common::log(std::to_string(check));
+	check *= (protection * 0xE06) + 0xFF450000;
+	Common::log("protection");
+	Common::log(std::to_string(protection));
+	Common::log(std::to_string(check));
+	check ^= FOURCC('r', 'a', 'l', 'f');
+	// check ^= 0x72616c66;
+	Common::log("ralf");
+	Common::log(std::to_string(check));
+	return (uint32_t)check;
 }
 
 void to_json(ordered_json &j, const ConfigChunk &c) {
 	j["len"] = c.len;
 	j["fileVersion"] = c.fileVersion;
-	j["movieRect"] = c.movieRect;
+	// j["movieRect"] = c.movieRect;
 	j["minMember"] = c.minMember;
 	j["maxMember"] = c.maxMember;
 	j["directorVersion"] = c.directorVersion;
