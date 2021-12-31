@@ -94,16 +94,6 @@ struct LiteralStore {
 };
 void to_json(ordered_json &j, const LiteralStore &c);
 
-struct Rectangle {
-	uint16_t top;
-	uint16_t left;
-	uint16_t bottom;
-	uint16_t right;
-
-	void read(Common::ReadStream &stream);
-};
-void to_json(ordered_json &j, const Rectangle &c);
-
 }
 
 #endif

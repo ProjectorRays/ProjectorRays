@@ -127,20 +127,4 @@ void to_json(ordered_json &j, const LiteralStore &c) {
 	j["value"] = *c.value;
 }
 
-/* Rectangle */
-
-void Rectangle::read(Common::ReadStream &stream) {
-	top = stream.readUint16();
-	left = stream.readUint16();
-	bottom = stream.readUint16();
-	right = stream.readUint16();
-}
-
-void to_json(ordered_json &j, const Rectangle &c) {
-	j["top"] = c.top;
-	j["left"] = c.left;
-	j["bottom"] = c.bottom;
-	j["right"] = c.right;
-}
-
 }
