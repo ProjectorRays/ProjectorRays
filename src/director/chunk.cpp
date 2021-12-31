@@ -288,7 +288,7 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 40 */ field22 = stream.readInt32();
 	/* 44 */ field23 = stream.readInt32();
 	/* 48 */ field24 = stream.readInt32();
-	/* 52 */ field25 = stream.readInt8();
+	/* 52 */ field25 = stream.readUint8();
 	/* 53 */ field26 = stream.readUint8();
 	/* 54 */ frameRate = stream.readInt16();
 	/* 56 */ platform = stream.readInt16();
@@ -297,140 +297,86 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 64 */ checksum = stream.readUint32();
 
 	uint32_t computedChecksum = computeChecksum();
-	Common::log(boost::format("Checksum stored: %u computed: %u") % checksum % computedChecksum);
+	if (checksum != computedChecksum) {
+		Common::log(boost::format("Checksums don't match! Stored: %u Computed: %u") % checksum % computedChecksum);
+	}
 }
 
 uint32_t ConfigChunk::computeChecksum() {
+	int ver = humanVersion(directorVersion);
+
 	int32_t check = len + 1;
-	Common::log("len");
-	Common::log(std::to_string(len));
-	Common::log(std::to_string(check));
 	check *= fileVersion + 2;
-	Common::log("fileVersion");
-	Common::log(std::to_string(fileVersion));
-	Common::log(std::to_string(check));
 	check /= movieTop + 3;
-	Common::log("movieTop");
-	Common::log(std::to_string(movieTop));
-	Common::log(std::to_string(check));
 	check *= movieLeft + 4;
-	Common::log("movieLeft");
-	Common::log(std::to_string(movieLeft));
-	Common::log(std::to_string(check));
 	check /= movieBottom + 5;
-	Common::log("movieBottom");
-	Common::log(std::to_string(movieBottom));
-	Common::log(std::to_string(check));
 	check *= movieRight + 6;
-	Common::log("movieRight");
-	Common::log(std::to_string(movieRight));
-	Common::log(std::to_string(check));
 	check -= minMember + 7;
-	Common::log("minMember");
-	Common::log(std::to_string(minMember));
-	Common::log(std::to_string(check));
 	check *= maxMember + 8;
-	Common::log("maxMember");
-	Common::log(std::to_string(maxMember));
-	Common::log(std::to_string(check));
 	check -= field9 + 9;
-	Common::log("field9");
-	Common::log(std::to_string(field9));
-	Common::log(std::to_string(check));
 	check -= field10 + 10;
-	Common::log("field10");
-	Common::log(std::to_string(field10));
-	Common::log(std::to_string(check));
 	check += field11 + 11;
-	Common::log("field11");
-	Common::log(std::to_string(field11));
-	Common::log(std::to_string(check));
 	check *= commentFont + 12;
-	Common::log("commentFont");
-	Common::log(std::to_string(commentFont));
-	Common::log(std::to_string(check));
 	check += commentSize + 13;
-	Common::log("commentSize");
-	Common::log(std::to_string(commentSize));
-	Common::log(std::to_string(check));
-	if (directorVersion <= 0x4C7) {
-		check *= (commentStyle >> 8) + 14;
+	if (ver < 800) {
+		check *= ((commentStyle >> 8) & 0xFF) + 14;
 	} else {
 		check *= commentStyle + 14;
 	}
-	Common::log("commentStyle");
-	Common::log(std::to_string(commentStyle));
-	Common::log(std::to_string(check));
-	check += stageColor + 15;
-	Common::log("stageColor");
-	Common::log(std::to_string(stageColor));
-	Common::log(std::to_string(check));
+	if (ver < 700) {
+		check += stageColor + 15;
+	} else {
+		check += (stageColor & 0xFF) + 15;
+	}
 	check += bitDepth + 16;
-	Common::log("bitDepth");
-	Common::log(std::to_string(bitDepth));
-	Common::log(std::to_string(check));
 	check += field17 + 17;
-	Common::log("field17");
-	Common::log(std::to_string(field17));
-	Common::log(std::to_string(check));
 	check *= field18 + 18;
-	Common::log("field18");
-	Common::log(std::to_string(field18));
-	Common::log(std::to_string(check));
 	check += field19 + 19;
-	Common::log("field19");
-	Common::log(std::to_string(field19));
-	Common::log(std::to_string(check));
 	check *= directorVersion + 20;
-	Common::log("directorVersion");
-	Common::log(std::to_string(directorVersion));
-	Common::log(std::to_string(check));
 	check += field21 + 21;
-	Common::log("field21");
-	Common::log(std::to_string(field21));
-	Common::log(std::to_string(check));
 	check += field22 + 22;
-	Common::log("field22");
-	Common::log(std::to_string(field22));
-	Common::log(std::to_string(check));
 	check += field23 + 23;
-	Common::log("field23");
-	Common::log(std::to_string(field23));
-	Common::log(std::to_string(check));
 	check += field24 + 24;
-	Common::log("field24");
-	Common::log(std::to_string(field24));
-	Common::log(std::to_string(check));
 	check *= field25 + 25;
-	Common::log("field25");
-	Common::log(std::to_string(field25));
-	Common::log(std::to_string(check));
 	check += frameRate + 26;
-	Common::log("frameRate");
-	Common::log(std::to_string(frameRate));
-	Common::log(std::to_string(check));
 	check *= platform + 27;
-	Common::log("platform");
-	Common::log(std::to_string(platform));
-	Common::log(std::to_string(check));
 	check *= (protection * 0xE06) + 0xFF450000;
-	Common::log("protection");
-	Common::log(std::to_string(protection));
-	Common::log(std::to_string(check));
 	check ^= FOURCC('r', 'a', 'l', 'f');
-	// check ^= 0x72616c66;
-	Common::log("ralf");
-	Common::log(std::to_string(check));
 	return (uint32_t)check;
 }
 
 void to_json(ordered_json &j, const ConfigChunk &c) {
 	j["len"] = c.len;
 	j["fileVersion"] = c.fileVersion;
-	// j["movieRect"] = c.movieRect;
+	j["movieTop"] = c.movieTop;
+	j["movieLeft"] = c.movieLeft;
+	j["movieBottom"] = c.movieBottom;
+	j["movieRight"] = c.movieRight;
 	j["minMember"] = c.minMember;
 	j["maxMember"] = c.maxMember;
+	j["field9"] = c.field9;
+	j["field10"] = c.field10;
+	j["field11"] = c.field11;
+	j["commentFont"] = c.commentFont;
+	j["commentSize"] = c.commentSize;
+	j["commentStyle"] = c.commentStyle;
+	j["stageColor"] = c.stageColor;
+	j["bitDepth"] = c.bitDepth;
+	j["field17"] = c.field17;
+	j["field18"] = c.field18;
+	j["field19"] = c.field19;
 	j["directorVersion"] = c.directorVersion;
+	j["field21"] = c.field21;
+	j["field22"] = c.field22;
+	j["field23"] = c.field23;
+	j["field24"] = c.field24;
+	j["field25"] = c.field25;
+	j["field26"] = c.field26;
+	j["frameRate"] = c.frameRate;
+	j["platform"] = c.platform;
+	j["protection"] = c.protection;
+	j["field29"] = c.field29;
+	j["checksum"] = c.checksum;
 }
 
 /* InitialMapChunk */

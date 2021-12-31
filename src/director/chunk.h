@@ -178,7 +178,7 @@ struct ConfigChunk : Chunk {
 	/* 18 */ int16_t field11;
 	/* 20 */ int16_t commentFont;
 	/* 22 */ int16_t commentSize;
-	/* 24 */ uint8_t commentStyle;
+	/* 24 */ uint16_t commentStyle;
 	/* 26 */ int16_t stageColor;
 	/* 28 */ int16_t bitDepth;
 	/* 30 */ uint8_t field17;
@@ -189,7 +189,7 @@ struct ConfigChunk : Chunk {
 	/* 40 */ int32_t field22;
 	/* 44 */ int32_t field23;
 	/* 48 */ int32_t field24;
-	/* 52 */ int8_t field25;
+	/* 52 */ uint8_t field25;
 	/* 53 */ uint8_t field26;
 	/* 54 */ int16_t frameRate;
 	/* 56 */ int16_t platform;
