@@ -26,33 +26,37 @@
 
 namespace Common {
 
-size_t ReadStream::pos() {
+/* Stream */
+
+size_t Stream::pos() {
 	return _pos;
 }
 
-size_t ReadStream::len() {
+size_t Stream::len() {
 	return _len;
 }
 
-void ReadStream::seek(size_t pos) {
+void Stream::seek(size_t pos) {
 	_pos = pos;
 }
 
-void ReadStream::skip(size_t len) {
+void Stream::skip(size_t len) {
 	_pos += len;
 }
 
-bool ReadStream::eof() {
+bool Stream::eof() {
 	return  _pos >= _len || _offset + _pos >= _buf->size();
 }
 
-bool ReadStream::pastEOF() {
+bool Stream::pastEOF() {
 	return  _pos > _len || _offset + _pos > _buf->size();
 }
 
-uint8_t *ReadStream::getData() {
+uint8_t *Stream::getData() {
 	return &_buf->data()[_offset];
 }
+
+/* ReadStream */
 
 std::shared_ptr<std::vector<uint8_t>> ReadStream::copyBytes(size_t len) {
 	size_t p =  _offset + _pos;
@@ -204,6 +208,69 @@ std::string ReadStream::readString(size_t len) {
 std::string ReadStream::readPascalString() {
 	uint8_t len = readUint8();
 	return readString(len);
+}
+
+/* WriteStream */
+
+size_t WriteStream::writeBytes(const void *dataPtr, size_t dataSize) {
+	size_t p = _offset + _pos;
+	_pos += dataSize;
+
+	size_t writeSize = std::min(dataSize, _len - p);
+	memcpy(&_buf->data()[p], dataPtr, writeSize);
+	return writeSize;
+}
+
+void WriteStream::writeUint8(uint8_t value) {
+	writeBytes(&value, 1);
+}
+
+void WriteStream::writeInt8(int8_t value) {
+	writeUint8(value);
+}
+
+void WriteStream::writeUint16(uint16_t value) {
+	if (endianness)
+		boost::endian::native_to_little_inplace(value);
+	else
+		boost::endian::native_to_big_inplace(value);
+	
+	writeBytes(&value, 2);
+}
+
+void WriteStream::writeInt16(int16_t value) {
+	writeUint16(value);
+}
+
+void WriteStream::writeUint32(uint32_t value) {
+	if (endianness)
+		boost::endian::native_to_little_inplace(value);
+	else
+		boost::endian::native_to_big_inplace(value);
+	
+	writeBytes(&value, 4);
+}
+
+void WriteStream::writeInt32(int32_t value) {
+	writeUint32(value);
+}
+
+void WriteStream::writeDouble(double value) {
+	if (endianness)
+		boost::endian::native_to_little_inplace(value);
+	else
+		boost::endian::native_to_big_inplace(value);
+	
+	writeBytes(&value, 8);
+}
+
+void WriteStream::writeString(const std::string &value) {
+	writeBytes(value.c_str(), value.size());
+}
+
+void WriteStream::writePascalString(const std::string &value) {
+	writeUint8(value.size());
+	writeString(value);
 }
 
 }

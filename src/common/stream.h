@@ -33,10 +33,10 @@ enum Endianness {
 	kLittleEndian = 1
 };
 
-/* ReadStream */
+/* Stream */
 
-class ReadStream {
-private:
+class Stream {
+protected:
 	std::shared_ptr<std::vector<uint8_t>> _buf;
 	size_t _offset;
 	size_t _len;
@@ -45,7 +45,7 @@ private:
 public:
 	Endianness endianness;
 
-	ReadStream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
+	Stream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
 		: _buf(b), _offset(o), _len(l), _pos(0), endianness(e) {}
 
 	size_t pos();
@@ -56,6 +56,15 @@ public:
 	bool pastEOF();
 
 	std::uint8_t *getData();
+};
+
+/* ReadStream */
+
+class ReadStream : public Stream {
+public:
+	ReadStream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
+		: Stream(b, e, o, l) {}
+
 	std::shared_ptr<std::vector<uint8_t>> copyBytes(size_t len);
 
 	std::unique_ptr<ReadStream> readBytes(size_t len);
@@ -71,6 +80,25 @@ public:
 	uint32_t readVarInt();
 	std::string readString(size_t len);
 	std::string readPascalString();
+};
+
+/* WriteStream */
+
+class WriteStream : public Stream {
+public:
+	WriteStream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
+		: Stream(b, e, o, l) {}
+
+	size_t writeBytes(const void *dataPtr, size_t dataSize);
+	void writeUint8(uint8_t value);
+	void writeInt8(int8_t value);
+	void writeUint16(uint16_t value);
+	void writeInt16(int16_t value);
+	void writeUint32(uint32_t value);
+	void writeInt32(int32_t value);
+	void writeDouble(double value);
+	void writeString(const std::string &value);
+	void writePascalString(const std::string &value);
 };
 
 }
