@@ -35,7 +35,21 @@ using ordered_json = nlohmann::ordered_json;
 
 namespace Director {
 
+static const size_t kRIFXHeaderSize = 12;
+
 /* DirectorFile */
+
+DirectorFile::DirectorFile() :
+	_ilsBodyOffset(0),
+	stream(nullptr),
+	version(0),
+	capitalX(false),
+	codec(0),
+	afterburned(false) {}
+
+DirectorFile::~DirectorFile() = default;
+
+// read stuff
 
 void DirectorFile::read(Common::ReadStream *s, bool decompile) {
 	stream = s;
@@ -46,7 +60,8 @@ void DirectorFile::read(Common::ReadStream *s, bool decompile) {
 	if (metaFourCC == FOURCC('X', 'F', 'I', 'R')) {
 		stream->endianness = Common::kLittleEndian;
 	}
-	stream->readInt32(); // meta length
+	endianness = stream->endianness;
+	stream->readUint32(); // meta length
 	codec = stream->readUint32();
 
 	// Codec-dependent map
@@ -362,19 +377,25 @@ std::unique_ptr<Common::ReadStream> DirectorFile::getChunkData(uint32_t fourCC, 
 		chunk = std::make_unique<Common::ReadStream>(data, stream->endianness, 0, data->size());
 	} else if (afterburned) {
 		stream->seek(info.offset + _ilsBodyOffset);
-		unsigned long actualUncompLength = info.uncompressedLen;
-		auto chunkStream = stream->readZlibBytes(info.len, &actualUncompLength);
-		if (!chunkStream) {
-			Common::log(boost::format("Could not uncompress chunk %d") % id);
-			return nullptr;
+		if (info.compressionType == 0) {
+			// Chunk is zlib compressed
+			unsigned long actualUncompLength = info.uncompressedLen;
+			auto chunkStream = stream->readZlibBytes(info.len, &actualUncompLength);
+			if (!chunkStream) {
+				Common::log(boost::format("Could not uncompress '%s' %d") % fourCCToString(fourCC) % id);
+				return nullptr;
+			}
+			if (info.uncompressedLen != actualUncompLength) {
+				throw std::runtime_error(boost::str(
+					boost::format("Chunk %d: Expected uncompressed length %d but got length %lu")
+						% id % info.uncompressedLen % actualUncompLength
+				));
+			}
+			return chunkStream;
+		} else {
+			// Stuff like 'snd '
+			return stream->readBytes(info.len);
 		}
-		if (info.uncompressedLen != actualUncompLength) {
-			throw std::runtime_error(boost::str(
-				boost::format("Chunk %d: Expected uncompressed length %d but got length %lu")
-					% id % info.uncompressedLen % actualUncompLength
-			));
-		}
-		return chunkStream;
 	} else {
 		stream->seek(info.offset);
 		chunk = readChunkData(fourCC, info.len);
@@ -461,6 +482,215 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, Common::ReadStre
 
 	return res;
 }
+
+// write stuff
+
+void DirectorFile::writeToFile(std::string fileName) {
+	generateInitialMap();
+	generateMemoryMap();
+	auto data = std::make_shared<std::vector<uint8_t>>(size());
+	auto stream = std::make_unique<Common::WriteStream>(data);
+	write(*stream);
+	Common::writeFile(fileName, data->data(), data->size());
+}
+
+void DirectorFile::generateInitialMap() {
+	initialMap = std::make_unique<InitialMapChunk>(this);
+	initialMap->one = 1;
+	initialMap->mmapOffset = kRIFXHeaderSize + initialMap->size();
+	initialMap->version = (version < 500) ? 0 : config->directorVersion;
+	initialMap->unused1 = 0;
+	initialMap->unused2 = 0;
+	initialMap->unused3 = 0;
+}
+
+void DirectorFile::generateMemoryMap() {
+	// Figure out how many slots we'll need
+	int32_t maxID = 2; // the mmap's ID
+	for (auto [id, info] : chunkInfo) {
+		if (id > maxID) {
+			maxID = id;
+		}
+	}
+
+	memoryMap = std::make_unique<MemoryMapChunk>(this);
+	memoryMap->headerLength = 24;
+	memoryMap->entryLength = 20;
+	memoryMap->chunkCountMax = maxID + 1;
+	memoryMap->chunkCountUsed = maxID + 1;
+	memoryMap->freeHead = -1;
+	memoryMap->junkHead = -1;
+	memoryMap->junkHead = -1;
+
+	// Fill the map with free entries
+	memoryMap->mapArray.resize(maxID + 1);
+	for (auto &entry : memoryMap->mapArray) {
+		entry.fourCC = FOURCC('f', 'r', 'e', 'e');
+		entry.len = 0;
+		entry.offset = 0;
+		entry.flags = 12;
+		entry.unknown0 = 0;
+		entry.next = 0;
+	}
+
+	// Fill in the actual entries
+	int32_t nextOffset = 0;
+
+	auto &rifxEntry = memoryMap->mapArray[0];
+	rifxEntry.fourCC = FOURCC('R', 'I', 'F', 'X');
+	// length to be calculated...
+	rifxEntry.offset = nextOffset;
+	rifxEntry.flags = 1;
+	rifxEntry.unknown0 = 0;
+	rifxEntry.next = 0;
+	nextOffset += kRIFXHeaderSize;
+
+	auto &imapEntry = memoryMap->mapArray[1];
+	imapEntry.fourCC = FOURCC('i', 'm', 'a', 'p');
+	imapEntry.len = initialMap->size();
+	imapEntry.offset = nextOffset;
+	imapEntry.flags = 0;
+	imapEntry.unknown0 = 0;
+	imapEntry.next = 0;
+	nextOffset += imapEntry.len;
+
+	auto &mmapEntry = memoryMap->mapArray[2];
+	mmapEntry.fourCC = FOURCC('m', 'm', 'a', 'p');
+	mmapEntry.len = memoryMap->size();
+	mmapEntry.offset = nextOffset;
+	mmapEntry.flags = 0;
+	mmapEntry.unknown0 = 0;
+	mmapEntry.next = 0;
+	nextOffset += mmapEntry.len;
+
+	for (auto [id, info] : chunkInfo) {
+		if (id <= 2) // Ignore RIFX, imap, mmap
+			continue;
+
+		auto &entry = memoryMap->mapArray[id];
+		entry.fourCC = info.fourCC;
+		entry.len = chunkSize(id);
+		entry.offset = nextOffset;
+		entry.flags = 0;
+		entry.unknown0 = 0;
+		entry.next = 0;
+		nextOffset += 8 + entry.len;
+	}
+
+	rifxEntry.len = nextOffset;
+
+	// Now link the free entries
+	for (int32_t id = maxID; id >= 0; id--) {
+		auto &entry = memoryMap->mapArray[id];
+		if (entry.fourCC == FOURCC('f', 'r', 'e', 'e')) {
+			entry.next = memoryMap->freeHead;
+			memoryMap->freeHead = id;
+		}
+	}
+}
+
+size_t DirectorFile::size() {
+	return memoryMap->mapArray[0].len;
+}
+
+size_t DirectorFile::chunkSize(int32_t id) {
+	// If we've implemented writing for this chunk, recalculate its size.
+	if (deserializedChunks.find(id) != deserializedChunks.end()) {
+		Chunk &chunk = *deserializedChunks[id];
+		if (chunk.writable) {
+			return chunk.size();
+		}
+	}
+
+	// Otherwise, return the original size.
+	return (chunkInfo[id].compressionType == 0)
+				? chunkInfo[id].uncompressedLen
+				: chunkInfo[id].len;
+}
+
+void DirectorFile::write(Common::WriteStream &stream) {
+	stream.endianness = endianness;
+
+	writeChunk(stream, 0); // Write RIFX
+	writeChunk(stream, 1); // Write imap
+	writeChunk(stream, 2); // Write mmap
+
+	for (auto [id, info] : chunkInfo) {
+		if (id <= 2) // Ignore RIFX, imap, mmap
+			continue;
+
+		writeChunk(stream, id);
+	}
+}
+
+void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
+	auto &mapEntry = memoryMap->mapArray[id];
+	Chunk *chunk = nullptr;
+	switch (id) {
+	case 0: // RIFX
+		{
+			stream.writeUint32(FOURCC('R', 'I', 'F', 'X'));
+			stream.writeUint32(size());
+			uint32_t newCodec;
+			switch (codec) {
+			case FOURCC('M', 'C', '9', '5'):
+			case FOURCC('F', 'G', 'D', 'C'):
+				newCodec = FOURCC('M', 'C', '9', '5');
+				break;
+			default:
+				newCodec = FOURCC('M', 'V', '9', '3');
+			}
+			stream.writeUint32(newCodec);
+		}
+		return;
+	case 1: // imap
+		chunk = initialMap.get();
+		break;
+	case 2: // mmap
+		chunk = memoryMap.get();
+		break;
+	default:
+		if (deserializedChunks.find(id) != deserializedChunks.end()) {
+			chunk = deserializedChunks[id].get();
+		}
+		break;
+	}
+	stream.seek(mapEntry.offset);
+	stream.writeUint32(mapEntry.fourCC);
+	stream.writeUint32(mapEntry.len);
+	if (chunk && chunk->writable) {
+		chunk->write(stream);
+		stream.endianness = endianness; // reset endianness
+	} else {
+		auto chunkData = getChunkData(mapEntry.fourCC, id);
+		stream.writeBytes(chunkData->getData(), chunkData->len());
+	}
+	size_t len = stream.pos() - mapEntry.offset - 8;
+	if ((unsigned)mapEntry.len != len) {
+		Common::log(
+			boost::format("Size estimate for '%s' was incorrect! (Expected %d bytes, wrote %d)")
+				% fourCCToString(mapEntry.fourCC) % mapEntry.len % len
+		);
+	}
+}
+
+// restoration
+
+void DirectorFile::restoreScriptText() {
+	for (const auto &cast : casts) {
+		if (!cast->lctx)
+			continue;
+
+		for (auto [scriptId, script] : cast->lctx->scripts) {
+			CastMemberChunk *member = script->member;
+			if (member) {
+				member->info->scriptSrcText = script->scriptText();
+			}
+		}
+	}
+}
+
+// dumping
 
 void DirectorFile::dumpScripts() {
 	for (const auto &cast : casts) {

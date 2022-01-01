@@ -31,6 +31,7 @@ using ordered_json = nlohmann::ordered_json;
 
 namespace Common {
 class ReadStream;
+class WriteStream;
 }
 
 namespace Director {
@@ -56,6 +57,7 @@ struct MemoryMapEntry {
 	int32_t next;
 
 	void read(Common::ReadStream &stream);
+	void write(Common::WriteStream &stream);
 };
 void to_json(ordered_json &j, const MemoryMapEntry &c);
 

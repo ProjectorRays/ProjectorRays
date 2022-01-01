@@ -78,5 +78,8 @@ int main(int argc, char *argv[]) {
 		dir->dumpJSON();
 	}
 
+	dir->restoreScriptText();
+	dir->writeToFile("test.dir");
+
 	return 0;
 }

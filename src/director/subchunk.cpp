@@ -50,6 +50,15 @@ void MemoryMapEntry::read(Common::ReadStream &stream) {
 	next = stream.readInt32();
 }
 
+void MemoryMapEntry::write(Common::WriteStream &stream) {
+	stream.writeUint32(fourCC);
+	stream.writeUint32(len);
+	stream.writeUint32(offset);
+	stream.writeInt16(flags);
+	stream.writeInt16(unknown0);
+	stream.writeInt32(next);
+}
+
 void to_json(ordered_json &j, const MemoryMapEntry &c) {
 	j["fourCC"] = fourCCToString(c.fourCC);
 	j["len"] = c.len;

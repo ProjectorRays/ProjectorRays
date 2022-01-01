@@ -63,10 +63,13 @@ enum ChunkType {
 struct Chunk {
 	DirectorFile *dir;
 	ChunkType chunkType;
+	bool writable;
 
-	Chunk(DirectorFile *d, ChunkType t) : dir(d), chunkType(t) {}
+	Chunk(DirectorFile *d, ChunkType t) : dir(d), chunkType(t), writable(false) {}
 	virtual ~Chunk() = default;
 	virtual void read(Common::ReadStream &stream) = 0;
+	virtual size_t size() { return 0; }
+	virtual void write(Common::WriteStream &stream) {}
 };
 void to_json(ordered_json &j, const Chunk &c);
 
@@ -74,17 +77,35 @@ struct ListChunk : Chunk {
 	uint32_t dataOffset;
 	uint16_t offsetTableLen;
 	std::vector<uint32_t> offsetTable;
-	uint32_t finalDataLen;
-	uint32_t listOffset;
+	uint32_t itemsLen;
+	Common::Endianness itemEndianness;
+	std::vector<std::shared_ptr<std::vector<uint8_t>>> items;
 
 	ListChunk(DirectorFile *m, ChunkType t) : Chunk(m, t) {}
 	virtual void read(Common::ReadStream &stream);
+	virtual void readHeader(Common::ReadStream &stream);
 	void readOffsetTable(Common::ReadStream &stream);
-	std::unique_ptr<Common::ReadStream> readBytes(Common::ReadStream &stream, uint16_t index);
-	std::string readCString(Common::ReadStream &stream, uint16_t index);
-	std::string readPascalString(Common::ReadStream &stream, uint16_t index);
-	uint16_t readUint16(Common::ReadStream &stream, uint16_t index);
-	uint32_t readUint32(Common::ReadStream &stream, uint16_t index);
+	void readItems(Common::ReadStream &stream);
+
+	std::unique_ptr<Common::ReadStream> readBytes(uint16_t index);
+	std::string readString(uint16_t index);
+	std::string readPascalString(uint16_t index);
+	uint16_t readUint16(uint16_t index);
+	uint32_t readUint32(uint16_t index);
+
+	void updateOffsets();
+
+	virtual size_t size();
+	virtual size_t headerSize();
+	size_t offsetTableSize();
+	size_t itemsSize();
+	virtual size_t itemSize(uint16_t index);
+
+	virtual void write(Common::WriteStream &stream);
+	virtual void writeHeader(Common::WriteStream &stream);
+	void writeOffsetTable(Common::WriteStream &stream);
+	void writeItems(Common::WriteStream &stream);
+	virtual void writeItem(Common::WriteStream &stream, uint16_t index);
 };
 
 struct CastChunk : Chunk {
@@ -110,6 +131,7 @@ struct CastListChunk : ListChunk {
 	CastListChunk(DirectorFile *m) : ListChunk(m, kCastListChunk) {}
 	virtual ~CastListChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual void readHeader(Common::ReadStream &stream);
 };
 void to_json(ordered_json &j, const CastListChunk &c);
 
@@ -118,14 +140,21 @@ struct CastMemberChunk : Chunk {
 	uint32_t infoLen;
 	uint32_t specificDataLen;
 	std::shared_ptr<CastInfoChunk> info;
+	std::shared_ptr<std::vector<uint8_t>> specificData;
 	std::unique_ptr<CastMember> member;
+	bool hasFlags1;
+	uint8_t flags1;
 
 	uint16_t id;
 	ScriptChunk *script;
 
-	CastMemberChunk(DirectorFile *m) : Chunk(m, kCastMemberChunk), id(0), script(nullptr) {}
+	CastMemberChunk(DirectorFile *m) : Chunk(m, kCastMemberChunk), id(0), script(nullptr) {
+		writable = true;
+	}
 	virtual ~CastMemberChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual size_t size();
+	virtual void write(Common::WriteStream &stream);
 };
 void to_json(ordered_json &j, const CastMemberChunk &c);
 
@@ -139,7 +168,7 @@ struct CastInfoChunk : ListChunk {
 	std::string name;
 	// cProp02;
 	// cProp03;
-	std::string comment;
+	// std::string comment;
 	// cProp05;
 	// cProp06;
 	// cProp07;
@@ -151,16 +180,23 @@ struct CastInfoChunk : ListChunk {
 	// cProp13;
 	// cProp14;
 	// cProp15;
-	std::string fileFormatID;
-	uint32_t created;
-	uint32_t modified;
+	// std::string fileFormatID;
+	// uint32_t created;
+	// uint32_t modified;
 	// cProp19;
 	// cProp20;
 	// imageCompression;
 
-	CastInfoChunk(DirectorFile *m) : ListChunk(m, kCastInfoChunk) {}
+	CastInfoChunk(DirectorFile *m) : ListChunk(m, kCastInfoChunk) {
+		writable = true;
+	}
 	virtual ~CastInfoChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual void readHeader(Common::ReadStream &stream);
+	virtual size_t headerSize();
+	virtual void writeHeader(Common::WriteStream &stream);
+	virtual size_t itemSize(uint16_t index);
+	virtual void writeItem(Common::WriteStream &stream, uint16_t index);
 };
 void to_json(ordered_json &j, const CastInfoChunk &c);
 
@@ -196,9 +232,14 @@ struct ConfigChunk : Chunk {
 	/* 58 */ int16_t protection;
 	/* 60 */ int32_t field29;
 	/* 64 */ uint32_t checksum;
-	ConfigChunk(DirectorFile *m) : Chunk(m, kConfigChunk) {}
+	/* 68 */ std::shared_ptr<std::vector<uint8_t>> remnants;
+	ConfigChunk(DirectorFile *m) : Chunk(m, kConfigChunk) {
+		writable = true;
+	}
 	virtual ~ConfigChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual size_t size();
+	virtual void write(Common::WriteStream &stream);
 	uint32_t computeChecksum();
 };
 void to_json(ordered_json &j, const ConfigChunk &c);
@@ -211,9 +252,13 @@ struct InitialMapChunk : Chunk {
 	uint32_t unused2;
 	uint32_t unused3;
 
-	InitialMapChunk(DirectorFile *m) : Chunk(m, kInitialMapChunk) {}
+	InitialMapChunk(DirectorFile *m) : Chunk(m, kInitialMapChunk) {
+		writable = true;
+	}
 	virtual ~InitialMapChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual size_t size();
+	virtual void write(Common::WriteStream &stream);
 };
 void to_json(ordered_json &j, const InitialMapChunk &c);
 
@@ -240,9 +285,13 @@ struct MemoryMapChunk : Chunk {
 	int32_t freeHead;
 	std::vector<MemoryMapEntry> mapArray;
 
-	MemoryMapChunk(DirectorFile *m) : Chunk(m, kMemoryMapChunk) {}
+	MemoryMapChunk(DirectorFile *m) : Chunk(m, kMemoryMapChunk) {
+		writable = true;
+	}
 	virtual ~MemoryMapChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual size_t size();
+	virtual void write(Common::WriteStream &stream);
 };
 void to_json(ordered_json &j, const MemoryMapChunk &c);
 

@@ -31,6 +31,7 @@
 
 namespace Common {
 class ReadStream;
+class WriteStream;
 }
 
 namespace Director {
@@ -39,6 +40,8 @@ struct Chunk;
 struct CastChunk;
 struct ConfigChunk;
 struct KeyTableChunk;
+struct InitialMapChunk;
+struct MemoryMapChunk;
 
 struct ChunkInfo {
 	int32_t id;
@@ -59,6 +62,7 @@ public:
 	std::shared_ptr<KeyTableChunk> keyTable;
 	std::shared_ptr<ConfigChunk> config;
 
+	Common::Endianness endianness;
 	int version;
 	bool capitalX;
 	bool dotSyntax;
@@ -71,7 +75,11 @@ public:
 
 	std::vector<std::shared_ptr<CastChunk>> casts;
 
-	DirectorFile() : _ilsBodyOffset(0), stream(nullptr), version(0), capitalX(false), codec(0), afterburned(false) {}
+	std::unique_ptr<InitialMapChunk> initialMap;
+	std::unique_ptr<MemoryMapChunk> memoryMap;
+
+	DirectorFile();
+	~DirectorFile();
 
 	void read(Common::ReadStream *s, bool decompile = true);
 	void readMemoryMap();
@@ -86,6 +94,17 @@ public:
 	std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
 	std::unique_ptr<Common::ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
 	std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, Common::ReadStream &stream);
+
+	size_t size();
+	size_t chunkSize(int32_t id);
+
+	void writeToFile(std::string fileName);
+	void generateInitialMap();
+	void generateMemoryMap();
+	void write(Common::WriteStream &stream);
+	void writeChunk(Common::WriteStream &stream, int32_t id);
+
+	void restoreScriptText();
 
 	void dumpScripts();
 	void dumpChunks();
