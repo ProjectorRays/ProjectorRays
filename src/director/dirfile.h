@@ -46,7 +46,7 @@ struct ChunkInfo {
 	uint32_t len;
 	uint32_t uncompressedLen;
 	int32_t offset;
-	uint32_t compressionType;
+	int32_t compressionType;
 };
 
 class DirectorFile {

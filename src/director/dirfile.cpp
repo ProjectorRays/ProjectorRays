@@ -95,7 +95,7 @@ void DirectorFile::readMemoryMap() {
 		info.len = mapEntry.len;
 		info.uncompressedLen = mapEntry.len;
 		info.offset = mapEntry.offset;
-		info.compressionType = 0;
+		info.compressionType = -1;
 		chunkInfo[i] = info;
 
 		chunkIDsByFourCC[mapEntry.fourCC].push_back(i);
@@ -139,7 +139,7 @@ bool DirectorFile::readAfterburnerMap() {
 	}
 	uint32_t abmpLength = stream->readVarInt();
 	uint32_t abmpEnd = stream->pos() + abmpLength;
-	uint32_t abmpCompressionType = stream->readVarInt();
+	int32_t abmpCompressionType = stream->readVarInt();
 	unsigned long abmpUncompLength = stream->readVarInt();
 	unsigned long abmpActualUncompLength = abmpUncompLength;
 	Common::debug(boost::format("ABMP: length: %d compressionType: %d uncompressedLength: %lu")
@@ -166,7 +166,7 @@ bool DirectorFile::readAfterburnerMap() {
 		int32_t offset = abmpStream->readVarInt();
 		uint32_t compSize = abmpStream->readVarInt();
 		uint32_t uncompSize = abmpStream->readVarInt();
-		uint32_t compressionType = abmpStream->readVarInt();
+		int32_t compressionType = abmpStream->readVarInt();
 		uint32_t tag = abmpStream->readUint32();
 
 		Common::debug(boost::format("Found RIFX resource index %d: '%s', %d bytes (%d uncompressed) @ pos 0x%08x (%d), compressionType: %d")
