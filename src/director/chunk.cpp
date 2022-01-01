@@ -631,7 +631,7 @@ std::string ScriptChunk::varDeclarations() {
 				res += ", ";
 			res += propertyNames[i];
 		}
-		res += "\n";
+		res += kLingoLineEnding;
 	}
 	if (globalNames.size() > 0) {
 		res += "global ";
@@ -640,7 +640,7 @@ std::string ScriptChunk::varDeclarations() {
 				res += ", ";
 			res += globalNames[i];
 		}
-		res += "\n";
+		res += kLingoLineEnding;
 	}
 	return res;
 }
@@ -649,7 +649,7 @@ std::string ScriptChunk::scriptText() {
 	std::string res = varDeclarations();
 	for (size_t i = 0; i < handlers.size(); i++) {
 		if (res.size() > 0)
-			res += "\n";
+			res += kLingoLineEnding;
 		res += handlers[i]->ast->toString(dir->dotSyntax, false);
 	}
 	return res;
@@ -659,7 +659,7 @@ std::string ScriptChunk::bytecodeText() {
 	std::string res = varDeclarations();
 	for (size_t i = 0; i < handlers.size(); i++) {
 		if (res.size() > 0)
-			res += "\n";
+			res += kLingoLineEnding;
 		res += handlers[i]->bytecodeText();
 	}
 	return res;

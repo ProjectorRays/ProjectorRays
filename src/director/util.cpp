@@ -22,6 +22,7 @@
 #include <limits>
 #include <sstream>
 
+#include "director/lingo.h"
 #include "director/util.h"
 
 namespace Director {
@@ -38,11 +39,11 @@ std::string fourCCToString(uint32_t fourcc) {
 
 std::string indent(std::string str) {
 	std::string res;
-	size_t pos = str.find("\n");
+	size_t pos = str.find(kLingoLineEnding);
 	while (pos != std::string::npos) {
 		res += "  " + str.substr(0, pos + 1);
 		str = str.substr(pos + 1);
-		pos = str.find("\n");
+		pos = str.find(kLingoLineEnding);
 	}
 	return res;
 }

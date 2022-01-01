@@ -1162,7 +1162,7 @@ std::string Handler::bytecodeText() {
 			res += argumentNames[i];
 		}
 	}
-	res += "\n";
+	res += kLingoLineEnding;
 	for (auto &bytecode : bytecodeArray) {
 		auto line = "  " + posToString(bytecode.pos) + " " + Lingo::getOpcodeName(bytecode.opID);
 		switch (bytecode.opcode) {
@@ -1192,10 +1192,11 @@ std::string Handler::bytecodeText() {
 			else
 				line += bytecode.translation->toString(dotSyntax, true);
 		}
-		line += "\n";
+		line += kLingoLineEnding;
 		res += line;
 	}
-	res += "end\n";
+	res += "end";
+	res += kLingoLineEnding;
 	return res;
 }
 

@@ -476,7 +476,7 @@ std::shared_ptr<Datum> LiteralNode::getValue() {
 std::string BlockNode::toString(bool dot, bool sum) {
 	std::string res = "";
 	for (const auto &child : children) {
-		res += indent(child->toString(dot, sum) + "\n");
+		res += indent(child->toString(dot, sum) + kLingoLineEnding);
 	}
 	return res;
 }
@@ -498,7 +498,7 @@ std::string HandlerNode::toString(bool dot, bool sum) {
 			res += handler->argumentNames[i];
 		}
 	}
-	res += "\n";
+	res += kLingoLineEnding;
 	if (handler->globalNames.size() > 0) {
 		res += "  global ";
 		for (size_t i = 0; i < handler->globalNames.size(); i++) {
@@ -506,10 +506,11 @@ std::string HandlerNode::toString(bool dot, bool sum) {
 				res += ", ";
 			res += handler->globalNames[i];
 		}
-		res += "\n";
+		res += kLingoLineEnding;
 	}
 	res += block->toString(dot, sum);
-	res += "end\n";
+	res += "end";
+	res += kLingoLineEnding;
 	return res;
 }
 
@@ -616,10 +617,12 @@ std::string IfStmtNode::toString(bool dot, bool sum) {
 			res += " / else";
 		}
 	} else {
-		res += "\n";
+		res += kLingoLineEnding;
 		res += block1->toString(dot, sum);
 		if (hasElse) {
-			res += "else\n" + block2->toString(dot, sum);
+			res += "else";
+			res += kLingoLineEnding;
+			res += block2->toString(dot, sum);
 		}
 		res += "end if";
 	}
@@ -631,7 +634,9 @@ std::string IfStmtNode::toString(bool dot, bool sum) {
 std::string RepeatWhileStmtNode::toString(bool dot, bool sum) {
 	std::string res = "repeat while " + condition->toString(dot, sum);
 	if (!sum) {
-		res += "\n" + block->toString(dot, sum) + "end repeat";
+		res += kLingoLineEnding;
+		res += block->toString(dot, sum);
+		res += "end repeat";
 	}
 	return res;
 }
@@ -641,7 +646,9 @@ std::string RepeatWhileStmtNode::toString(bool dot, bool sum) {
 std::string RepeatWithInStmtNode::toString(bool dot, bool sum) {
 	std::string res = "repeat with " + varName + " in " + list->toString(dot, sum);
 	if (!sum) {
-		res += "\n" + block->toString(dot, sum) + "end repeat";
+		res += kLingoLineEnding;
+		res += block->toString(dot, sum);
+		res += "end repeat";
 	}
 	return res;
 }
@@ -657,7 +664,9 @@ std::string RepeatWithToStmtNode::toString(bool dot, bool sum) {
 	}
 	res += end->toString(dot, sum);
 	if (!sum) {
-		res += "\n" + block->toString(dot, sum) + "end repeat";
+		res += kLingoLineEnding;
+		res += block->toString(dot, sum);
+		res += "end repeat";
 	}
 	return res;
 }
@@ -685,12 +694,16 @@ std::string CaseNode::toString(bool dot, bool sum) {
 		if (nextOr) {
 			res += ", " + nextOr->toString(dot, sum);
 		} else {
-			res += ":\n" + block->toString(dot, sum);
+			res += ":";
+			res += kLingoLineEnding;
+			res += block->toString(dot, sum);
 		}
 		if (nextCase) {
 			res += nextCase->toString(dot, sum);
 		} else if (otherwise) {
-			res += "otherwise:\n" + otherwise->toString(dot, sum);
+			res += "otherwise:";
+			res += kLingoLineEnding;
+			res += otherwise->toString(dot, sum);
 		}
 	}
 	return res;
@@ -701,7 +714,9 @@ std::string CaseNode::toString(bool dot, bool sum) {
 std::string CasesStmtNode::toString(bool dot, bool sum) {
 	std::string res = "case " + value->toString(dot, sum) + " of";
 	if (!sum) {
-		res += "\n" + indent(firstCase->toString(dot, sum)) + "end case";
+		res += kLingoLineEnding;
+		res += indent(firstCase->toString(dot, sum));
+		res += "end case";
 	}
 	return res;
 }
@@ -711,7 +726,9 @@ std::string CasesStmtNode::toString(bool dot, bool sum) {
 std::string TellStmtNode::toString(bool dot, bool sum) {
 	std::string res = "tell " + window->toString(dot, sum);
 	if (!sum) {
-		res += "\n" + block->toString(dot, sum) + "end tell";
+		res += kLingoLineEnding;
+		res += block->toString(dot, sum);
+		res += "end tell";
 	}
 	return res;
 }

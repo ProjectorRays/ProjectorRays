@@ -45,6 +45,8 @@ struct ScriptChunk;
 
 typedef unsigned int uint;
 
+const char kLingoLineEnding = '\r';
+
 enum OpCode {
 	// single-byte
 	kOpRet				= 0x01,
