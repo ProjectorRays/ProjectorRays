@@ -205,6 +205,16 @@ std::string ReadStream::readString(size_t len) {
 	return res;
 }
 
+std::string ReadStream::readCString() {
+	std::string res;
+	char ch = readInt8();
+	while (ch) {
+		res += ch;
+		ch = readInt8();
+	}
+	return res;
+}
+
 std::string ReadStream::readPascalString() {
 	uint8_t len = readUint8();
 	return readString(len);

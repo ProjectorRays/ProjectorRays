@@ -96,6 +96,16 @@ struct LiteralStore {
 };
 void to_json(ordered_json &j, const LiteralStore &c);
 
+struct MoaID {
+	uint32_t data1;
+	uint16_t data2;
+	uint16_t data3;
+	uint8_t data4[8];
+
+	void read(Common::ReadStream &stream);
+	std::string toString();
+};
+
 }
 
 #endif

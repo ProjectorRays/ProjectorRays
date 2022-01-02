@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <boost/format.hpp>
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
@@ -134,6 +135,26 @@ void to_json(ordered_json &j, const LiteralStore &c) {
 	j["type"] = c.type;
 	j["offset"] = c.offset;
 	j["value"] = *c.value;
+}
+
+/* MoaID */
+
+void MoaID::read(Common::ReadStream &stream) {
+	data1 = stream.readUint32();
+	data2 = stream.readUint16();
+	data3 = stream.readUint16();
+	for (size_t i = 0; i < 8; i++) {
+		data4[i] = stream.readUint8();
+	}
+}
+
+std::string MoaID::toString() {
+	return boost::str(
+		boost::format("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X")
+			% data1 % data2 % data3
+			% (uint)data4[0] % (uint)data4[1] % (uint)data4[2] % (uint)data4[3]
+			% (uint)data4[4] % (uint)data4[5] % (uint)data4[6] % (uint)data4[7]
+	);
 }
 
 }

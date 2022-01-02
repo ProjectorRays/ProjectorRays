@@ -79,6 +79,7 @@ public:
 	double readAppleFloat80();
 	uint32_t readVarInt();
 	std::string readString(size_t len);
+	std::string readCString();
 	std::string readPascalString();
 };
 

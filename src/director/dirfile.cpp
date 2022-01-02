@@ -145,7 +145,28 @@ bool DirectorFile::readAfterburnerMap() {
 	}
 
 	uint32_t fcdrLength = stream->readVarInt();
-	stream->skip(fcdrLength);
+	unsigned long fcdrUncompLength = 10 * fcdrLength; // Should be big enough...
+	auto fcdrStream = stream->readZlibBytes(fcdrLength, &fcdrUncompLength);
+
+	uint16_t compressionTypeCount = fcdrStream->readUint16();
+	std::vector<MoaID> compressionIDs(compressionTypeCount);
+	for (auto &compressionID : compressionIDs) {
+		compressionID.read(*fcdrStream);
+	}
+	std::vector<std::string> compressionDescs(compressionTypeCount);
+	for (auto &compressionDesc : compressionDescs) {
+		compressionDesc = fcdrStream->readCString();
+	}
+	if (fcdrStream->pos() != fcdrUncompLength) {
+		Common::log(boost::format("readAfterburnerMap(): Fcdr has uncompressed length %lu but read %zu bytes")
+						% fcdrUncompLength % fcdrStream->pos());
+	}
+
+	Common::debug(boost::format("Fcdr: %d compression types") % compressionTypeCount);
+	for (size_t i = 0; i < compressionTypeCount; i++) {
+		Common::debug(boost::format("Fcdr: type %zu: %s \"%s\"")
+						% i % compressionIDs[i].toString() % compressionDescs[i]);
+	}
 
 	// Afterburner map
 	if (stream->readUint32() != FOURCC('A', 'B', 'M', 'P')) {
