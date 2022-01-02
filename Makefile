@@ -6,11 +6,11 @@ ifeq ($(OS),Windows_NT)
 	LDFLAGS+=-static -static-libgcc
 endif
 
-all: projectorrays
+FONTMAPS = $(wildcard fontmaps/*.txt)
+FONTMAP_HEADERS = $(patsubst %.txt,%.h,$(FONTMAPS))
 
-debug: CXXFLAGS+=-g -fsanitize=address
-debug: LDFLAGS_RELEASE=
-debug: projectorrays
+fontmaps/%.h: $(patsubst %.h,%.txt,$@)
+	xxd -i $(patsubst %.h,%.txt,$@) > $@
 
 OBJS = \
 	src/main.o \
@@ -20,14 +20,23 @@ OBJS = \
 	src/director/castmember.o \
 	src/director/chunk.o \
 	src/director/dirfile.o \
+	src/director/fontmap.o \
 	src/director/handler.o \
 	src/director/lingo.o \
 	src/director/subchunk.o \
 	src/director/util.o
 
+src/director/fontmap.o: $(FONTMAP_HEADERS)
+
 projectorrays: $(OBJS)
 	$(CXX) -o projectorrays $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LDFLAGS_RELEASE)
 
+all: projectorrays
+
+debug: CXXFLAGS+=-g -fsanitize=address
+debug: LDFLAGS_RELEASE=
+debug: projectorrays
+
 .PHONY: clean
 clean:
-	-rm projectorrays $(OBJS)
+	-rm projectorrays $(FONTMAP_HEADERS) $(OBJS)

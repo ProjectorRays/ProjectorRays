@@ -1,0 +1,100 @@
+﻿; Copyright 1994-2004, Macromedia, Inc.  All Rights Reserved.
+;
+;=================================================================
+;
+; Default Font Mapping Table for Director MX 2004 Macintosh and Windows.
+;
+; This file provides a font mapping table for Director MX 2004 for Windows 
+; and Macintosh.
+;
+; If a copy of this file is in the same folder or directory as the 
+; Director application, Director will automatically include this font 
+; mapping table in every new movie you create.
+; 
+; To add this font mapping table to an existing movie, choose 
+; Movie:Properties... from the Modify menu.  Then click Load from File.  
+; Use the dialog box that appears to locate this file.
+; 
+; Note: In this file, a semicolon at the beginning of a line indicates
+; a comment.
+;
+; Special Note for Mac OSX users: This file is saved using the 'Classic' line
+; ending character (CR).  If you need to alter and save this file, make sure to 
+; preserve this - the UNIX line ending character (LF) will not work properly.
+;
+;=================================================================
+;
+; FONT MAPPINGS 
+;
+; Font mappings specify which font and size substitutions to make when
+; moving a movie from one platform to another.
+;
+; The format for font mapping definitions is:
+;
+; Platform:FontName => Platform:FontName [MAP NONE] [oldSize => newSize]
+;
+;    Specifying MAP NONE turns off character mapping for this font.
+;    If you specify size mappings, they apply for THAT FONT ONLY.
+;
+; Here are some typical mappings for the standard Macintosh fonts:
+;
+
+Mac:Chicago       => Win:System
+Mac:Courier       => Win:"Courier New"
+Mac:Geneva        => Win:"MS Sans Serif"
+Mac:Helvetica     => Win:Arial
+Mac:Monaco        => Win:Terminal
+Mac:"New York"    => Win:"MS Serif"
+Mac:Symbol        => Win:Symbol  Map None
+Mac:Times         => Win:"Times New Roman" 14=>12 18=>14 24=>18 30=>24
+Mac:Palatino      => Win:"Times New Roman"
+
+;
+; Here are some typical mappings for the standard Windows fonts:
+;
+
+Win:Arial             => Mac:Helvetica
+Win:"Courier"         => Mac:Courier
+Win:"Courier New"     => Mac:Courier
+Win:"MS Serif"        => Mac:"New York"
+Win:"MS Sans Serif"   => Mac:Geneva
+Win:Symbol            => Mac:Symbol  Map None
+Win:System            => Mac:Chicago
+Win:Terminal          => Mac:Monaco
+Win:"Times New Roman" => Mac:"Times" 12=>14 14=>18 18=>24 24=>30
+
+; Note: When mapping from Windows to Macintosh, Courier and Courier New 
+; map onto Courier.  When coming back to Windows only Courier New
+; will be used.
+
+; Japanese Font Mappings
+; 
+; The Macintosh Japanese Osaka font is mapped to a Windows font, and 
+; all Windows fonts are mapped to Macintosh's Osaka.  Map None is used
+; because only Roman fonts need upper-ASCII characters mapped.  To prevent 
+; mapping of any additional Japanese fonts, add them to this list.
+;
+; Note: If you do not have a Japanese system, the font names below 
+; will appear to be unreadable.
+Mac:Osaka           => Win:"ＭＳ ゴシック" Map None
+
+Win:"ＭＳ ゴシック" => Mac:Osaka Map None
+Win:"ＭＳ 明朝"     => Mac:Osaka Map None
+Win:"標準ゴシック"  => Mac:Osaka Map None
+Win:"標準明朝"      => Mac:Osaka Map None
+Win:"明朝"          => Mac:Osaka Map None
+
+; Korean Font Mappings
+Mac:AppleGothic     => Win:"굴림" Map None
+Mac:Seoul           => Win:"궁서" Map None
+Mac:AppleMyungio    => Win:"돋움" Map None
+Mac:"한강체"        => Win:"바탕" Map None
+
+Win:"굴림"          => Mac:AppleGothic Map None
+Win:"굴림체"        => Mac:AppleGothic Map None
+Win:"궁서"          => Mac:Seoul Map None
+Win:"궁서체"        => Mac:Seoul Map None
+Win:"돋움"          => Mac:AppleMyungio Map None
+Win:"돋움체"        => Mac:AppleMyungio Map None
+Win:"바탕"          => Mac:"한강체" Map None
+Win:"바탕체"        => Mac:"한강체" Map None
