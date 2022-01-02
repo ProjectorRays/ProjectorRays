@@ -133,7 +133,7 @@ bool DirectorFile::readAfterburnerMap() {
 	end = stream->pos();
 
 	if (end - start != fverLength) {
-		Common::log(boost::format("readAfterburnerMap(): Expected Fver of length %d but read %d bytes")
+		Common::log(boost::format("readAfterburnerMap(): Expected Fver of length %u but read %u bytes")
 						% fverLength % (end - start));
 		stream->seek(start + fverLength);
 	}
@@ -157,7 +157,7 @@ bool DirectorFile::readAfterburnerMap() {
 	int32_t abmpCompressionType = stream->readVarInt();
 	unsigned long abmpUncompLength = stream->readVarInt();
 	unsigned long abmpActualUncompLength = abmpUncompLength;
-	Common::debug(boost::format("ABMP: length: %d compressionType: %d uncompressedLength: %lu")
+	Common::debug(boost::format("ABMP: length: %u compressionType: %u uncompressedLength: %lu")
 					% abmpLength % abmpCompressionType % abmpUncompLength);
 
 	auto abmpStream = stream->readZlibBytes(abmpEnd - stream->pos(), &abmpActualUncompLength);
@@ -173,18 +173,18 @@ bool DirectorFile::readAfterburnerMap() {
 	uint32_t abmpUnk1 = abmpStream->readVarInt();
 	uint32_t abmpUnk2 = abmpStream->readVarInt();
 	uint32_t resCount = abmpStream->readVarInt();
-	Common::debug(boost::format("ABMP: unk1: %d unk2: %d resCount: %d")
+	Common::debug(boost::format("ABMP: unk1: %u unk2: %u resCount: %u")
 					% abmpUnk1 % abmpUnk2 % resCount);
 
 	for (uint32_t i = 0; i < resCount; i++) {
-		uint32_t resId = abmpStream->readVarInt();
+		int32_t resId = abmpStream->readVarInt();
 		int32_t offset = abmpStream->readVarInt();
 		uint32_t compSize = abmpStream->readVarInt();
 		uint32_t uncompSize = abmpStream->readVarInt();
 		int32_t compressionType = abmpStream->readVarInt();
 		uint32_t tag = abmpStream->readUint32();
 
-		Common::debug(boost::format("Found RIFX resource index %d: '%s', %d bytes (%d uncompressed) @ pos 0x%08x (%d), compressionType: %d")
+		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes (%u uncompressed) @ pos 0x%08x (%d), compressionType: %d")
 						% resId % fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType);
 
 		ChunkInfo info;
@@ -220,15 +220,15 @@ bool DirectorFile::readAfterburnerMap() {
 		return false;
 	}
 	if (ilsInfo.uncompressedLen != ilsActualUncompLength) {
-		Common::log(boost::format("ILS: Expected uncompressed length %d but got length %lu")
+		Common::log(boost::format("ILS: Expected uncompressed length %u but got length %lu")
 						% ilsInfo.uncompressedLen % ilsActualUncompLength);
 	}
 
 	while (!ilsStream->eof()) {
-		uint32_t resId = ilsStream->readVarInt();
+		int32_t resId = ilsStream->readVarInt();
 		ChunkInfo &info = chunkInfo[resId];
 
-		Common::debug(boost::format("Loading ILS resource %d: '%s', %d bytes")
+		Common::debug(boost::format("Loading ILS resource %d: '%s', %u bytes")
 						% resId % fourCCToString(info.fourCC) % info.len);
 
 		auto data = ilsStream->copyBytes(info.len);
@@ -253,7 +253,7 @@ bool DirectorFile::readKeyTable() {
 			if (chunkInfo.find(entry.castID) != chunkInfo.end()) {
 				ownerTag = chunkInfo[entry.castID].fourCC;
 			}
-			Common::debug(boost::format("KEY* entry %d: '%s' @ %d owned by '%s' @ %d")
+			Common::debug(boost::format("KEY* entry %u: '%s' @ %d owned by '%s' @ %d")
 				% i % fourCCToString(entry.fourCC) % entry.sectionID % fourCCToString(ownerTag) % entry.castID);
 		}
 
