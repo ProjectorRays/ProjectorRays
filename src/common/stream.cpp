@@ -17,10 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
+#include <boost/format.hpp>
 #include <boost/endian/conversion.hpp>
 #include <zlib.h>
 
+#include "common/log.h"
 #include "common/stream.h"
 
 namespace Common {
@@ -73,8 +74,10 @@ size_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 
 	unsigned long outLen = destLen;
 	int ret = uncompress(dest, &outLen, &_data[p], len);
-	if (ret != Z_OK)
+	if (ret != Z_OK) {
+		Common::log(boost::format("zlib decompression error %d!") % ret);
 		return 0;
+	}
 
 	return outLen;
 }
