@@ -21,17 +21,18 @@
 #include <fstream>
 
 #include "common/fileio.h"
+#include "common/stream.h"
 
 namespace Common {
 
-std::shared_ptr<std::vector<uint8_t>> readFile(const std::string &fileName) {
+std::vector<uint8_t> readFile(const std::string &fileName) {
 	std::ifstream f;
 	f.open(fileName, std::ios::in | std::ios::binary);
 	f.seekg(0, std::ios::end);
 	auto fileSize = f.tellg();
 	f.seekg(0, std::ios::beg);
-	auto buf = std::make_shared<std::vector<uint8_t>>(fileSize, 0);
-	f.read((char *)buf->data(), fileSize);
+	std::vector<uint8_t> buf(fileSize, 0);
+	f.read((char *)buf.data(), fileSize);
 	f.close();
 	return buf;
 }
@@ -48,6 +49,10 @@ void writeFile(const std::string &fileName, const uint8_t *contents, size_t size
 	f.open(fileName, std::ios::out);
 	f.write((char *)contents, size);
 	f.close();
+}
+
+void writeFile(const std::string &fileName, const BufferView &view) {
+	writeFile(fileName, view.data(), view.len());
 }
 
 }

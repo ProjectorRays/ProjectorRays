@@ -27,11 +27,7 @@
 #include <string>
 #include <vector>
 
-
-namespace Common {
-class ReadStream;
-class WriteStream;
-}
+#include "common/stream.h"
 
 namespace Director {
 
@@ -53,8 +49,11 @@ struct ChunkInfo {
 
 class DirectorFile {
 private:
-	std::map<int32_t, std::shared_ptr<std::vector<uint8_t>>> _cachedChunkData;
 	size_t _ilsBodyOffset;
+	std::vector<uint8_t> _ilsBuf;
+
+	std::map<int32_t, std::vector<uint8_t>> _cachedChunkBufs;
+	std::map<int32_t, Common::BufferView> _cachedChunkViews;
 
 public:
 	Common::ReadStream *stream;
@@ -89,10 +88,10 @@ public:
 	const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
 	bool chunkExists(uint32_t fourCC, int32_t id);
 	std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
-	std::unique_ptr<Common::ReadStream> getChunkData(uint32_t fourCC, int32_t id);
+	Common::BufferView getChunkData(uint32_t fourCC, int32_t id);
 	std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
-	std::unique_ptr<Common::ReadStream> readChunkData(uint32_t fourCC, uint32_t len);
-	std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, Common::ReadStream &stream);
+	Common::BufferView readChunkData(uint32_t fourCC, uint32_t len);
+	std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, const Common::BufferView &view);
 
 	size_t size();
 	size_t chunkSize(int32_t id);

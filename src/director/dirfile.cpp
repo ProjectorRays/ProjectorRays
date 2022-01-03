@@ -144,21 +144,22 @@ bool DirectorFile::readAfterburnerMap() {
 	}
 
 	uint32_t fcdrLength = stream->readVarInt();
-	unsigned long fcdrUncompLength = 10 * fcdrLength; // Should be big enough...
-	auto fcdrStream = stream->readZlibBytes(fcdrLength, &fcdrUncompLength);
+	std::vector<uint8_t> fcdrBuf(10 * fcdrLength); // Should be big enough...
+	size_t fcdrUncompLength = stream->readZlibBytes(fcdrLength, fcdrBuf.data(), fcdrBuf.size());
+	Common::ReadStream fcdrStream(fcdrBuf.data(), fcdrUncompLength, endianness);
 
-	uint16_t compressionTypeCount = fcdrStream->readUint16();
+	uint16_t compressionTypeCount = fcdrStream.readUint16();
 	std::vector<MoaID> compressionIDs(compressionTypeCount);
 	for (auto &compressionID : compressionIDs) {
-		compressionID.read(*fcdrStream);
+		compressionID.read(fcdrStream);
 	}
 	std::vector<std::string> compressionDescs(compressionTypeCount);
 	for (auto &compressionDesc : compressionDescs) {
-		compressionDesc = fcdrStream->readCString();
+		compressionDesc = fcdrStream.readCString();
 	}
-	if (fcdrStream->pos() != fcdrUncompLength) {
-		Common::log(boost::format("readAfterburnerMap(): Fcdr has uncompressed length %lu but read %zu bytes")
-						% fcdrUncompLength % fcdrStream->pos());
+	if (fcdrStream.pos() != fcdrUncompLength) {
+		Common::log(boost::format("readAfterburnerMap(): Fcdr has uncompressed length %zu but read %zu bytes")
+						% fcdrUncompLength % fcdrStream.pos());
 	}
 
 	Common::debug(boost::format("Fcdr: %d compression types") % compressionTypeCount);
@@ -175,34 +176,31 @@ bool DirectorFile::readAfterburnerMap() {
 	uint32_t abmpLength = stream->readVarInt();
 	uint32_t abmpEnd = stream->pos() + abmpLength;
 	int32_t abmpCompressionType = stream->readVarInt();
-	unsigned long abmpUncompLength = stream->readVarInt();
-	unsigned long abmpActualUncompLength = abmpUncompLength;
-	Common::debug(boost::format("ABMP: length: %u compressionType: %u uncompressedLength: %lu")
+	uint32_t abmpUncompLength = stream->readVarInt();
+	Common::debug(boost::format("ABMP: length: %u compressionType: %u uncompressedLength: %u")
 					% abmpLength % abmpCompressionType % abmpUncompLength);
 
-	auto abmpStream = stream->readZlibBytes(abmpEnd - stream->pos(), &abmpActualUncompLength);
-	if (!abmpStream) {
-		Common::log("RIFXArchive::readAfterburnerMap(): Could not uncompress ABMP");
-		return false;
-	}
+	std::vector<uint8_t> abmpBuf(abmpUncompLength);
+	size_t abmpActualUncompLength = stream->readZlibBytes(abmpEnd - stream->pos(), abmpBuf.data(), abmpBuf.size());
 	if (abmpUncompLength != abmpActualUncompLength) {
-		Common::log(boost::format("ABMP: Expected uncompressed length %lu but got length %lu")
+		Common::log(boost::format("ABMP: Expected uncompressed length %u but got length %zu")
 						% abmpUncompLength % abmpActualUncompLength);
 	}
+	Common::ReadStream abmpStream(abmpBuf.data(), abmpBuf.size(), endianness);
 
-	uint32_t abmpUnk1 = abmpStream->readVarInt();
-	uint32_t abmpUnk2 = abmpStream->readVarInt();
-	uint32_t resCount = abmpStream->readVarInt();
+	uint32_t abmpUnk1 = abmpStream.readVarInt();
+	uint32_t abmpUnk2 = abmpStream.readVarInt();
+	uint32_t resCount = abmpStream.readVarInt();
 	Common::debug(boost::format("ABMP: unk1: %u unk2: %u resCount: %u")
 					% abmpUnk1 % abmpUnk2 % resCount);
 
 	for (uint32_t i = 0; i < resCount; i++) {
-		int32_t resId = abmpStream->readVarInt();
-		int32_t offset = abmpStream->readVarInt();
-		uint32_t compSize = abmpStream->readVarInt();
-		uint32_t uncompSize = abmpStream->readVarInt();
-		int32_t compressionType = abmpStream->readVarInt();
-		uint32_t tag = abmpStream->readUint32();
+		int32_t resId = abmpStream.readVarInt();
+		int32_t offset = abmpStream.readVarInt();
+		uint32_t compSize = abmpStream.readVarInt();
+		uint32_t uncompSize = abmpStream.readVarInt();
+		int32_t compressionType = abmpStream.readVarInt();
+		uint32_t tag = abmpStream.readUint32();
 
 		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes (%u uncompressed) @ pos 0x%08x (%d), compressionType: %d")
 						% resId % fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType);
@@ -233,30 +231,22 @@ bool DirectorFile::readAfterburnerMap() {
 	uint32_t ilsUnk1 = stream->readVarInt();
 	Common::debug(boost::format("ILS: length: %d unk1: %d") % ilsInfo.len % ilsUnk1);
 	_ilsBodyOffset = stream->pos();
-	unsigned long ilsActualUncompLength = ilsInfo.uncompressedLen;
-	auto ilsStream = stream->readZlibBytes(ilsInfo.len, &ilsActualUncompLength);
-	if (!ilsStream) {
-		Common::log("readAfterburnerMap(): Could not uncompress FGEI");
-		return false;
-	}
+	_ilsBuf.resize(ilsInfo.uncompressedLen);
+	size_t ilsActualUncompLength = stream->readZlibBytes(ilsInfo.len, _ilsBuf.data(), _ilsBuf.size());
 	if (ilsInfo.uncompressedLen != ilsActualUncompLength) {
-		Common::log(boost::format("ILS: Expected uncompressed length %u but got length %lu")
+		Common::log(boost::format("ILS: Expected uncompressed length %u but got length %zu")
 						% ilsInfo.uncompressedLen % ilsActualUncompLength);
 	}
+	Common::ReadStream ilsStream(_ilsBuf.data(), ilsInfo.uncompressedLen, endianness);
 
-	while (!ilsStream->eof()) {
-		int32_t resId = ilsStream->readVarInt();
+	while (!ilsStream.eof()) {
+		int32_t resId = ilsStream.readVarInt();
 		ChunkInfo &info = chunkInfo[resId];
 
 		Common::debug(boost::format("Loading ILS resource %d: '%s', %u bytes")
 						% resId % fourCCToString(info.fourCC) % info.len);
 
-		auto data = ilsStream->copyBytes(info.len);
-		if (data) {
-			_cachedChunkData[resId] = std::move(data);
-		} else {
-			Common::log(boost::format("Could not load ILS resource %d") % resId);
-		}
+		_cachedChunkViews[resId] = ilsStream.readBytes(info.len);
 	}
 
 	return true;
@@ -366,20 +356,15 @@ std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
 	if (deserializedChunks.find(id) != deserializedChunks.end())
 		return deserializedChunks[id];
 
-	std::unique_ptr<Common::ReadStream> chunkData = getChunkData(fourCC, id);
-	if (!chunkData) {
-		throw std::runtime_error(boost::str(
-			boost::format("No data for chunk %d") % id
-		));
-	}
-	std::shared_ptr<Chunk> chunk = makeChunk(fourCC, *chunkData);
+	Common::BufferView chunkView = getChunkData(fourCC, id);
+	std::shared_ptr<Chunk> chunk = makeChunk(fourCC, chunkView);
 
 	deserializedChunks[id] = chunk;
 
 	return chunk;
 }
 
-std::unique_ptr<Common::ReadStream> DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
+Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 	if (chunkInfo.find(id) == chunkInfo.end())
 		throw std::runtime_error("Could not find chunk " + std::to_string(id));
 
@@ -391,45 +376,42 @@ std::unique_ptr<Common::ReadStream> DirectorFile::getChunkData(uint32_t fourCC, 
 		);
 	}
 
-	std::unique_ptr<Common::ReadStream> chunk;
-	if (_cachedChunkData.find(id) != _cachedChunkData.end()) {
-		auto &data = _cachedChunkData[id];
-		chunk = std::make_unique<Common::ReadStream>(data, stream->endianness, 0, data->size());
-	} else if (afterburned) {
+	if (_cachedChunkViews.find(id) != _cachedChunkViews.end()) {
+		return _cachedChunkViews[id];
+	}
+
+	if (afterburned) {
 		stream->seek(info.offset + _ilsBodyOffset);
 		if (info.compressionType == 0) {
 			// Chunk is zlib compressed
-			unsigned long actualUncompLength = info.uncompressedLen;
-			auto chunkStream = stream->readZlibBytes(info.len, &actualUncompLength);
-			if (!chunkStream) {
-				Common::log(boost::format("Could not uncompress '%s' %d") % fourCCToString(fourCC) % id);
-				return nullptr;
-			}
+			_cachedChunkBufs[id] = std::vector<uint8_t>(info.uncompressedLen);
+			size_t actualUncompLength = stream->readZlibBytes(info.len, _cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
 			if (info.uncompressedLen != actualUncompLength) {
 				throw std::runtime_error(boost::str(
-					boost::format("Chunk %d: Expected uncompressed length %d but got length %lu")
+					boost::format("Chunk %d: Expected uncompressed length %d but got length %zu")
 						% id % info.uncompressedLen % actualUncompLength
 				));
 			}
-			return chunkStream;
+			_cachedChunkViews[id] = Common::BufferView(_cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
 		} else {
 			// Stuff like 'snd '
-			return stream->readBytes(info.len);
+			_cachedChunkViews[id] = stream->readBytes(info.len);
 		}
 	} else {
 		stream->seek(info.offset);
-		chunk = readChunkData(fourCC, info.len);
+		_cachedChunkViews[id] = readChunkData(fourCC, info.len);
 	}
 
-	return chunk;
+	return _cachedChunkViews[id];
 }
 
 std::shared_ptr<Chunk> DirectorFile::readChunk(uint32_t fourCC, uint32_t len) {
-	std::unique_ptr<Common::ReadStream> chunkData = readChunkData(fourCC, len);
-	return makeChunk(fourCC, *chunkData);
+	Common::BufferView chunkView = readChunkData(fourCC, len);
+	Common::ReadStream chunkStream(chunkView, endianness);
+	return makeChunk(fourCC, chunkStream);
 }
 
-std::unique_ptr<Common::ReadStream> DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
+Common::BufferView DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
 	auto offset = stream->pos();
 
 	auto validFourCC = stream->readUint32();
@@ -454,7 +436,7 @@ std::unique_ptr<Common::ReadStream> DirectorFile::readChunkData(uint32_t fourCC,
 	return stream->readBytes(len);
 }
 
-std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, Common::ReadStream &stream) {
+std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::BufferView &view) {
 	std::shared_ptr<Chunk> res;
 	switch (fourCC) {
 	case FOURCC('i', 'm', 'a', 'p'):
@@ -498,7 +480,8 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, Common::ReadStre
 		break;
 	}
 
-	res->read(stream);
+	Common::ReadStream chunkStream(view, endianness);
+	res->read(chunkStream);
 
 	return res;
 }
@@ -508,10 +491,10 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, Common::ReadStre
 void DirectorFile::writeToFile(std::string fileName) {
 	generateInitialMap();
 	generateMemoryMap();
-	auto data = std::make_shared<std::vector<uint8_t>>(size());
-	auto stream = std::make_unique<Common::WriteStream>(data);
-	write(*stream);
-	Common::writeFile(fileName, data->data(), data->size());
+	std::vector<uint8_t> buf(size());
+	Common::WriteStream stream(buf.data(), buf.size(), endianness);
+	write(stream);
+	Common::writeFile(fileName, stream);
 }
 
 void DirectorFile::generateInitialMap() {
@@ -682,8 +665,7 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 		chunk->write(stream);
 		stream.endianness = endianness; // reset endianness
 	} else {
-		auto chunkData = getChunkData(mapEntry.fourCC, id);
-		stream.writeBytes(chunkData->getData(), chunkData->len());
+		stream.writeBytes(getChunkData(mapEntry.fourCC, id));
 	}
 	size_t len = stream.pos() - mapEntry.offset - 8;
 	if ((unsigned)mapEntry.len != len) {
@@ -762,10 +744,7 @@ void DirectorFile::dumpChunks() {
 			continue;
 
 		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
-		std::shared_ptr<Common::ReadStream> chunk = getChunkData(info.fourCC, info.id);
-		if (chunk) {
-			Common::writeFile(fileName + ".bin", chunk->getData(), chunk->len());
-		}
+		Common::writeFile(fileName + ".bin", getChunkData(info.fourCC, info.id));
 	}
 }
 

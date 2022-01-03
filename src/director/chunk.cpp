@@ -124,10 +124,10 @@ void CastListChunk::read(Common::ReadStream &stream) {
 		if (itemsPerCast >= 3)
 			entries[i].preloadSettings = readUint16(i * itemsPerCast + 3);
 		if (itemsPerCast >= 4) {
-			auto item = readBytes(i * itemsPerCast + 4);
-			entries[i].minMember = item->readUint16();
-			entries[i].maxMember = item->readUint16();
-			entries[i].id = item->readInt32();
+			Common::ReadStream item(items[i * itemsPerCast + 4], itemEndianness);
+			entries[i].minMember = item.readUint16();
+			entries[i].maxMember = item.readUint16();
+			entries[i].id = item.readInt32();
 		}
 	}
 }
@@ -160,13 +160,13 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		specificDataLen = stream.readUint32();
 
 		// info
-		std::unique_ptr<Common::ReadStream> infoStream = stream.readBytes(infoLen);
+		Common::ReadStream infoStream(stream.readBytes(infoLen), stream.endianness);
 		info = std::make_shared<CastInfoChunk>(dir);
-		info->read(*infoStream);
+		info->read(infoStream);
 
 		// specific data
 		hasFlags1 = false;
-		specificData = stream.copyBytes(specificDataLen);
+		specificData = stream.readBytes(specificDataLen);
 	} else {
 		specificDataLen = stream.readUint16();
 		infoLen = stream.readUint32();
@@ -184,12 +184,12 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		}
 
 		// specific data
-		specificData = stream.copyBytes(specificDataLeft);
+		specificData = stream.readBytes(specificDataLeft);
 
 		// info
-		std::unique_ptr<Common::ReadStream> infoStream = stream.readBytes(infoLen);
+		Common::ReadStream infoStream (stream.readBytes(infoLen), stream.endianness);
 		info = std::make_shared<CastInfoChunk>(dir);
-		info->read(*infoStream);
+		info->read(infoStream);
 	}
 
 	switch (type) {
@@ -200,13 +200,13 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		member = std::make_unique<CastMember>(dir, type);
 		break;
 	}
-	std::unique_ptr<Common::ReadStream> specificStream = std::make_unique<Common::ReadStream>(specificData, stream.endianness, 0, specificData->size());
-	member->read(*specificStream);
+	Common::ReadStream specificStream(specificData, stream.endianness);
+	member->read(specificStream);
 }
 
 size_t CastMemberChunk::size() {
 	infoLen = info->size();
-	specificDataLen = specificData->size();
+	specificDataLen = specificData.len();
 
 	size_t len = 0;
 	if (dir->version >= 500) {
@@ -237,7 +237,7 @@ void CastMemberChunk::write(Common::WriteStream &stream) {
 		stream.writeUint32(infoLen);
 		stream.writeUint32(specificDataLen);
 		info->write(stream);
-		stream.writeBytes(specificData->data(), specificData->size());
+		stream.writeBytes(specificData);
 	} else {
 		stream.writeUint16(specificDataLen);
 		stream.writeUint32(infoLen);
@@ -246,7 +246,7 @@ void CastMemberChunk::write(Common::WriteStream &stream) {
 		if (hasFlags1) {
 			stream.writeUint8(flags1);
 		}
-		stream.writeBytes(specificData->data(), specificData->size());
+		stream.writeBytes(specificData);
 	}
 }
 
@@ -392,7 +392,7 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 58 */ protection = stream.readInt16();
 	/* 60 */ field29 = stream.readInt32();
 	/* 64 */ checksum = stream.readUint32();
-	/* 68 */ remnants = stream.copyBytes(len - stream.pos());
+	/* 68 */ remnants = stream.readBytes(len - stream.pos());
 
 	uint32_t computedChecksum = computeChecksum();
 	if (checksum != computedChecksum) {
@@ -440,7 +440,7 @@ void ConfigChunk::write(Common::WriteStream &stream) {
 	/* 58 */ stream.writeInt16(protection);
 	/* 60 */ stream.writeInt32(field29);
 	/* 64 */ stream.writeUint32(checksum);
-	/* 68 */ stream.writeBytes(remnants->data(), remnants->size());
+	/* 68 */ stream.writeBytes(remnants);
 }
 
 uint32_t ConfigChunk::computeChecksum() {
@@ -609,50 +609,43 @@ void ListChunk::readItems(Common::ReadStream &stream) {
 		size_t offset = offsetTable[i];
 		size_t nextOffset = (i == offsetTableLen - 1) ? itemsLen : offsetTable[i + 1];
 		stream.seek(listOffset + offset);
-		items[i] = stream.copyBytes(nextOffset - offset);
+		items[i] = stream.readBytes(nextOffset - offset);
 	}
-}
-
-std::unique_ptr<Common::ReadStream> ListChunk::readBytes(uint16_t index) {
-	if (index >= offsetTableLen)
-		return nullptr;
-
-	return std::make_unique<Common::ReadStream>(items[index], itemEndianness, 0, items[index]->size());
 }
 
 std::string ListChunk::readString(uint16_t index) {
 	if (index >= offsetTableLen)
 		return "";
 
-	auto stream = readBytes(index);
-	return stream->readString(stream->len());
+	Common::ReadStream stream(items[index], itemEndianness);
+	return stream.readString(stream.len());
 }
 
 std::string ListChunk::readPascalString(uint16_t index) {
 	if (index >= offsetTableLen)
 		return "";
 
-	auto stream = readBytes(index);
-	if (stream->len() == 0)
+	Common::ReadStream stream(items[index], itemEndianness);
+	if (stream.len() == 0)
 		return "";
 
-	return stream->readPascalString();
+	return stream.readPascalString();
 }
 
 uint16_t ListChunk::readUint16(uint16_t index) {
 	if (index >= offsetTableLen)
 		return 0;
 
-	auto stream = readBytes(index);
-	return stream->readUint16();
+	Common::ReadStream stream(items[index], itemEndianness);
+	return stream.readUint16();
 }
 
 uint32_t ListChunk::readUint32(uint16_t index) {
 	if (index >= offsetTableLen)
 		return 0;
 
-	auto stream = readBytes(index);
-	return stream->readUint32();
+	Common::ReadStream stream(items[index], itemEndianness);
+	return stream.readUint32();
 }
 
 // offset updating
@@ -696,7 +689,7 @@ size_t ListChunk::itemsSize() {
 }
 
 size_t ListChunk::itemSize(uint16_t index) {
-	return items[index]->size();
+	return items[index].len();
 }
 
 // write stuff
@@ -727,7 +720,7 @@ void ListChunk::writeItems(Common::WriteStream &stream) {
 }
 
 void ListChunk::writeItem(Common::WriteStream &stream, uint16_t index) {
-	stream.writeBytes(items[index]->data(), items[index]->size());
+	stream.writeBytes(items[index]);
 }
 
 /* MemoryMapChunk */

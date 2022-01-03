@@ -25,14 +25,20 @@
 
 namespace Common {
 
-/* Stream */
+/* BufferView */
 
-size_t Stream::pos() {
-	return _pos;
+size_t BufferView::len() const {
+	return _len;
 }
 
-size_t Stream::len() {
-	return _len;
+uint8_t *BufferView::data() const {
+	return _data;
+}
+
+/* Stream */
+
+size_t Stream::pos() const {
+	return _pos;
 }
 
 void Stream::seek(size_t pos) {
@@ -43,58 +49,43 @@ void Stream::skip(size_t len) {
 	_pos += len;
 }
 
-bool Stream::eof() {
-	return  _pos >= _len || _offset + _pos >= _buf->size();
+bool Stream::eof() const {
+	return  _pos >= _len;
 }
 
-bool Stream::pastEOF() {
-	return  _pos > _len || _offset + _pos > _buf->size();
-}
-
-uint8_t *Stream::getData() {
-	return &_buf->data()[_offset];
+bool Stream::pastEOF() const {
+	return  _pos > _len;
 }
 
 /* ReadStream */
 
-std::shared_ptr<std::vector<uint8_t>> ReadStream::copyBytes(size_t len) {
-	size_t p =  _offset + _pos;
-	_pos += len;
-	if (pastEOF())
-		return nullptr;
-
-	auto res = std::make_shared<std::vector<uint8_t>>(len, 0);
-	res->assign(_buf->begin() + p, _buf->begin() + p + len);
-	return res;
-}
-
-std::unique_ptr<ReadStream> ReadStream::readBytes(size_t len) {
-	auto res = std::make_unique<ReadStream>(_buf, endianness, _offset + _pos, len);
+BufferView ReadStream::readBytes(size_t len) {
+	BufferView res(_data + _pos, len);
 	_pos += len;
 	return res;
 }
 
-std::unique_ptr<ReadStream> ReadStream::readZlibBytes(unsigned long len, unsigned long *outLen) {
-	size_t p = _offset + _pos;
+size_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
+	size_t p = _pos;
 	_pos += len;
 	if (pastEOF())
-		return nullptr;
+		return 0;
 
-	auto out = std::make_shared<std::vector<uint8_t>>(*outLen, 0);
-	int ret = uncompress(out->data(), outLen, _buf->data() + p, len);
+	unsigned long outLen = destLen;
+	int ret = uncompress(dest, &outLen, &_data[p], len);
 	if (ret != Z_OK)
-		return nullptr;
+		return 0;
 
-	return std::make_unique<ReadStream>(out, endianness, 0, *outLen);
+	return outLen;
 }
 
 uint8_t ReadStream::readUint8() {
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += 1;
 	if (pastEOF())
 		return 0;
 
-	return _buf->data()[p];
+	return _data[p];
 }
 
 int8_t ReadStream::readInt8() {
@@ -102,14 +93,14 @@ int8_t ReadStream::readInt8() {
 }
 
 uint16_t ReadStream::readUint16() {
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += 2;
 	if (pastEOF())
 		return 0;
 
 	return endianness
-		? boost::endian::load_little_u16(reinterpret_cast<unsigned char *>(&_buf->data()[p]))
-		: boost::endian::load_big_u16(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
+		? boost::endian::load_little_u16(&_data[p])
+		: boost::endian::load_big_u16(&_data[p]);
 }
 
 int16_t ReadStream::readInt16() {
@@ -117,14 +108,14 @@ int16_t ReadStream::readInt16() {
 }
 
 uint32_t ReadStream::readUint32() {
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += 4;
 	if (pastEOF())
 		return 0;
 
 	return endianness
-		? boost::endian::load_little_u32(reinterpret_cast<unsigned char *>(&_buf->data()[p]))
-		: boost::endian::load_big_u32(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
+		? boost::endian::load_little_u32(&_data[p])
+		: boost::endian::load_big_u32(&_data[p]);
 }
 
 int32_t ReadStream::readInt32() {
@@ -132,14 +123,14 @@ int32_t ReadStream::readInt32() {
 }
 
 double ReadStream::readDouble() {
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += 4;
 	if (pastEOF())
 		return 0;
 
 	uint64_t f64bin = endianness
-		? boost::endian::load_little_u64(reinterpret_cast<unsigned char *>(&_buf->data()[p]))
-		: boost::endian::load_big_u64(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
+		? boost::endian::load_little_u64(&_data[p])
+		: boost::endian::load_big_u64(&_data[p]);
 
 	return *(double *)(&f64bin);
 }
@@ -152,15 +143,15 @@ double ReadStream::readAppleFloat80() {
 	// point number (Standard Apple Numeric Environment [SANE] data type
 	// Extended).
 
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += 10;
 	if (pastEOF())
 		return 0.0;
 
-	uint16_t exponent = boost::endian::load_big_u16(reinterpret_cast<unsigned char *>(&_buf->data()[p]));
+	uint16_t exponent = boost::endian::load_big_u16(&_data[p]);
 	uint64_t f64sign = (uint64_t)(exponent & 0x8000) << 48;
 	exponent &= 0x7fff;
-	uint64_t fraction = boost::endian::load_big_u64(reinterpret_cast<unsigned char *>(&_buf->data()[p + 2]));
+	uint64_t fraction = boost::endian::load_big_u64(&_data[p + 2]);
 	fraction &= 0x7fffffffffffffffULL;
 	uint64_t f64exp = 0;
 	if (exponent == 0) {
@@ -191,13 +182,13 @@ uint32_t ReadStream::readVarInt() {
 }
 
 std::string ReadStream::readString(size_t len) {
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += len;
 	if (pastEOF())
 		return "";
 
 	char *str = new char[len + 1];
-	memcpy(str, &_buf->data()[p], len);
+	memcpy(str, &_data[p], len);
 	str[len] = '\0';
 	std::string res(str);
 	delete[] str;
@@ -222,12 +213,16 @@ std::string ReadStream::readPascalString() {
 /* WriteStream */
 
 size_t WriteStream::writeBytes(const void *dataPtr, size_t dataSize) {
-	size_t p = _offset + _pos;
+	size_t p = _pos;
 	_pos += dataSize;
 
 	size_t writeSize = std::min(dataSize, _len - p);
-	memcpy(&_buf->data()[p], dataPtr, writeSize);
+	memcpy(&_data[p], dataPtr, writeSize);
 	return writeSize;
+}
+
+size_t WriteStream::writeBytes(const Common::BufferView &view) {
+	return writeBytes(view.data(), view.len());
 }
 
 void WriteStream::writeUint8(uint8_t value) {

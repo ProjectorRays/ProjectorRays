@@ -32,42 +32,58 @@ enum Endianness {
 	kLittleEndian = 1
 };
 
+/* BufferView */
+
+class BufferView {
+protected:
+	uint8_t *_data;
+	size_t _len;
+
+public:
+	BufferView()
+		: _data(nullptr), _len(0) {}
+
+	BufferView(uint8_t *d, size_t l)
+		: _data(d), _len(l) {}
+
+	size_t len() const;
+	uint8_t *data() const;
+};
+
 /* Stream */
 
-class Stream {
+class Stream : public BufferView {
 protected:
-	std::shared_ptr<std::vector<uint8_t>> _buf;
-	size_t _offset;
-	size_t _len;
 	size_t _pos;
 
 public:
 	Endianness endianness;
 
-	Stream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
-		: _buf(b), _offset(o), _len(l), _pos(0), endianness(e) {}
+	Stream(uint8_t *d, size_t l, Endianness e = kBigEndian, size_t p = 0)
+		: BufferView(d, l), _pos(p), endianness(e) {}
 
-	size_t pos();
-	size_t len();
+	Stream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
+		: BufferView(view.data(), view.len()), _pos(p), endianness(e) {}
+
+	size_t pos() const;
 	void seek(size_t p);
 	void skip(size_t p);
-	bool eof();
-	bool pastEOF();
-
-	std::uint8_t *getData();
+	bool eof() const;
+	bool pastEOF() const;
 };
 
 /* ReadStream */
 
 class ReadStream : public Stream {
 public:
-	ReadStream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
-		: Stream(b, e, o, l) {}
+	ReadStream(uint8_t *d, size_t l, Endianness e = kBigEndian, size_t p = 0)
+		: Stream(d, l, e, p) {}
 
-	std::shared_ptr<std::vector<uint8_t>> copyBytes(size_t len);
+	ReadStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
+		: Stream(view, e, p) {}
 
-	std::unique_ptr<ReadStream> readBytes(size_t len);
-	std::unique_ptr<ReadStream> readZlibBytes(unsigned long len, unsigned long *outLen);
+	BufferView readBytes(size_t len);
+	size_t readZlibBytes(size_t len, uint8_t *dest, size_t destLen);
 	uint8_t readUint8();
 	int8_t readInt8();
 	uint16_t readUint16();
@@ -86,10 +102,14 @@ public:
 
 class WriteStream : public Stream {
 public:
-	WriteStream(std::shared_ptr<std::vector<uint8_t>> b, Endianness e = kBigEndian, size_t o = 0, size_t l = SIZE_MAX)
-		: Stream(b, e, o, l) {}
+	WriteStream(uint8_t *d, size_t l, Endianness e = kBigEndian, size_t p = 0)
+		: Stream(d, l, e, p) {}
+
+	WriteStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
+		: Stream(view, e, p) {}
 
 	size_t writeBytes(const void *dataPtr, size_t dataSize);
+	size_t writeBytes(const Common::BufferView &view);
 	void writeUint8(uint8_t value);
 	void writeInt8(int8_t value);
 	void writeUint16(uint16_t value);

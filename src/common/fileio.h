@@ -27,9 +27,12 @@
 
 namespace Common {
 
-std::shared_ptr<std::vector<uint8_t>> readFile(const std::string &fileName);
+class BufferView;
+
+std::vector<uint8_t> readFile(const std::string &fileName);
 void writeFile(const std::string &fileName, const std::string &contents);
 void writeFile(const std::string &fileName, const uint8_t *contents, size_t size);
+void writeFile(const std::string &fileName, const BufferView &view);
 
 }
 

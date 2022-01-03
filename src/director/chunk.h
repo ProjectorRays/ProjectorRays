@@ -29,6 +29,7 @@
 #include <nlohmann/json.hpp>
 using ordered_json = nlohmann::ordered_json;
 
+#include "common/stream.h"
 #include "director/castmember.h"
 #include "director/subchunk.h"
 
@@ -78,7 +79,7 @@ struct ListChunk : Chunk {
 	std::vector<uint32_t> offsetTable;
 	uint32_t itemsLen;
 	Common::Endianness itemEndianness;
-	std::vector<std::shared_ptr<std::vector<uint8_t>>> items;
+	std::vector<Common::BufferView> items;
 
 	ListChunk(DirectorFile *m, ChunkType t) : Chunk(m, t) {}
 	virtual void read(Common::ReadStream &stream);
@@ -86,7 +87,6 @@ struct ListChunk : Chunk {
 	void readOffsetTable(Common::ReadStream &stream);
 	void readItems(Common::ReadStream &stream);
 
-	std::unique_ptr<Common::ReadStream> readBytes(uint16_t index);
 	std::string readString(uint16_t index);
 	std::string readPascalString(uint16_t index);
 	uint16_t readUint16(uint16_t index);
@@ -139,7 +139,7 @@ struct CastMemberChunk : Chunk {
 	uint32_t infoLen;
 	uint32_t specificDataLen;
 	std::shared_ptr<CastInfoChunk> info;
-	std::shared_ptr<std::vector<uint8_t>> specificData;
+	Common::BufferView specificData;
 	std::unique_ptr<CastMember> member;
 	bool hasFlags1;
 	uint8_t flags1;
@@ -231,7 +231,7 @@ struct ConfigChunk : Chunk {
 	/* 58 */ int16_t protection;
 	/* 60 */ int32_t field29;
 	/* 64 */ uint32_t checksum;
-	/* 68 */ std::shared_ptr<std::vector<uint8_t>> remnants;
+	/* 68 */ Common::BufferView remnants;
 	ConfigChunk(DirectorFile *m) : Chunk(m, kConfigChunk) {
 		writable = true;
 	}
