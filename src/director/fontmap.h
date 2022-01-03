@@ -20,13 +20,11 @@
 #ifndef DIRECTOR_FONTMAP_H
 #define DIRECTOR_FONTMAP_H
 
-namespace Common {
-class WriteStream;
-}
+#include "common/stream.h"
 
 namespace Director {
 
-void writeFontMap(Common::WriteStream &stream);
+Common::BufferView getFontMap(int version);
 
 }
 

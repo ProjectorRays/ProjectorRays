@@ -21,6 +21,7 @@ OBJS = \
 	src/director/chunk.o \
 	src/director/dirfile.o \
 	src/director/fontmap.o \
+	src/director/guid.o \
 	src/director/handler.o \
 	src/director/lingo.o \
 	src/director/subchunk.o \

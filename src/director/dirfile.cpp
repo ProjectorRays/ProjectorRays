@@ -29,6 +29,8 @@ using ordered_json = nlohmann::ordered_json;
 #include "director/chunk.h"
 #include "director/lingo.h"
 #include "director/dirfile.h"
+#include "director/fontmap.h"
+#include "director/guid.h"
 #include "director/subchunk.h"
 #include "director/util.h"
 
@@ -109,7 +111,7 @@ void DirectorFile::readMemoryMap() {
 		info.len = mapEntry.len;
 		info.uncompressedLen = mapEntry.len;
 		info.offset = mapEntry.offset;
-		info.compressionType = -1;
+		info.compressionID = NULL_COMPRESSION_GUID;
 		chunkInfo[i] = info;
 
 		chunkIDsByFourCC[mapEntry.fourCC].push_back(i);
@@ -211,7 +213,7 @@ bool DirectorFile::readAfterburnerMap() {
 		info.len = compSize;
 		info.uncompressedLen = uncompSize;
 		info.offset = offset;
-		info.compressionType = compressionType;
+		info.compressionID = compressionIDs[compressionType];
 		chunkInfo[resId] = info;
 
 		chunkIDsByFourCC[tag].push_back(resId);
@@ -382,8 +384,7 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 
 	if (afterburned) {
 		stream->seek(info.offset + _ilsBodyOffset);
-		if (info.compressionType == 0) {
-			// Chunk is zlib compressed
+		if (info.compressionID == ZLIB_COMPRESSION_GUID) {
 			_cachedChunkBufs[id] = std::vector<uint8_t>(info.uncompressedLen);
 			size_t actualUncompLength = stream->readZlibBytes(info.len, _cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
 			if (info.uncompressedLen != actualUncompLength) {
@@ -393,8 +394,12 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 				));
 			}
 			_cachedChunkViews[id] = Common::BufferView(_cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
+		} else if (info.compressionID == FONTMAP_COMPRESSION_GUID) {
+			_cachedChunkViews[id] = getFontMap(version);
 		} else {
-			// Stuff like 'snd '
+			if (info.compressionID != NULL_COMPRESSION_GUID) {
+				Common::log(boost::format("Unhandled compression type %s!") % info.compressionID.toString());
+			}
 			_cachedChunkViews[id] = stream->readBytes(info.len);
 		}
 	} else {
@@ -605,10 +610,21 @@ size_t DirectorFile::chunkSize(int32_t id) {
 		}
 	}
 
+	auto &info = chunkInfo[id];
+
+	// If this is a compressed fontmap, return the default fontmap size.
+	if (info.compressionID == FONTMAP_COMPRESSION_GUID) {
+		return getFontMap(version).len();
+	}
+
+	// If we've implemented this compression algorithm,
+	// return the uncompressed size.
+	if (info.compressionID == ZLIB_COMPRESSION_GUID) {
+		return info.uncompressedLen;
+	}
+
 	// Otherwise, return the original size.
-	return (chunkInfo[id].compressionType == 0)
-				? chunkInfo[id].uncompressedLen
-				: chunkInfo[id].len;
+	return info.len;
 }
 
 void DirectorFile::write(Common::WriteStream &stream) {

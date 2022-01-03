@@ -31,27 +31,25 @@
 
 namespace Director {
 
-void writeFontMap(Common::WriteStream &stream, int version) {
+Common::BufferView getFontMap(int version) {
 	// Writes the default font map for the given Director version.
 	// D12 is the same as D11.5 and D6.5 is the same as D6.
 	// Font map compression was added in D6, so we don't need any earlier versions.
-	if (version >= 1150) {
-		stream.writeBytes(fontmaps_fontmap_D11_5_txt, fontmaps_fontmap_D11_5_txt_len);
-	} else if (version >= 1100) {
-		stream.writeBytes(fontmaps_fontmap_D11_txt, fontmaps_fontmap_D11_txt_len);
-	} else if (version >= 1000) {
-		stream.writeBytes(fontmaps_fontmap_D10_txt, fontmaps_fontmap_D10_txt_len);
-	} else if (version >= 900) {
-		stream.writeBytes(fontmaps_fontmap_D9_txt, fontmaps_fontmap_D9_txt_len);
-	} else if (version >= 850) {
-		stream.writeBytes(fontmaps_fontmap_D8_5_txt, fontmaps_fontmap_D8_5_txt_len);
-	} else if (version >= 800) {
-		stream.writeBytes(fontmaps_fontmap_D8_txt, fontmaps_fontmap_D8_txt_len);
-	} else if (version >= 700) {
-		stream.writeBytes(fontmaps_fontmap_D7_txt, fontmaps_fontmap_D7_txt_len);
-	} else {
-		stream.writeBytes(fontmaps_fontmap_D6_txt, fontmaps_fontmap_D6_txt_len);
-	}
+	if (version >= 1150)
+		return Common::BufferView(fontmaps_fontmap_D11_5_txt, fontmaps_fontmap_D11_5_txt_len);
+	if (version >= 1100)
+		return Common::BufferView(fontmaps_fontmap_D11_txt, fontmaps_fontmap_D11_txt_len);
+	if (version >= 1000)
+		return Common::BufferView(fontmaps_fontmap_D10_txt, fontmaps_fontmap_D10_txt_len);
+	if (version >= 900)
+		return Common::BufferView(fontmaps_fontmap_D9_txt, fontmaps_fontmap_D9_txt_len);
+	if (version >= 850)
+		return Common::BufferView(fontmaps_fontmap_D8_5_txt, fontmaps_fontmap_D8_5_txt_len);
+	if (version >= 800)
+		return Common::BufferView(fontmaps_fontmap_D8_txt, fontmaps_fontmap_D8_txt_len);
+	if (version >= 700)
+		return Common::BufferView(fontmaps_fontmap_D7_txt, fontmaps_fontmap_D7_txt_len);
+	return Common::BufferView(fontmaps_fontmap_D6_txt, fontmaps_fontmap_D6_txt_len);
 }
 
 }

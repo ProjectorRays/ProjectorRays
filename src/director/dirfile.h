@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "common/stream.h"
+#include "director/guid.h"
 
 namespace Director {
 
@@ -44,7 +45,7 @@ struct ChunkInfo {
 	uint32_t len;
 	uint32_t uncompressedLen;
 	int32_t offset;
-	int32_t compressionType;
+	MoaID compressionID;
 };
 
 class DirectorFile {
