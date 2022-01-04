@@ -60,7 +60,7 @@ bool Stream::pastEOF() const {
 
 /* ReadStream */
 
-BufferView ReadStream::readBytes(size_t len) {
+BufferView ReadStream::readByteView(size_t len) {
 	BufferView res(_data + _pos, len);
 	_pos += len;
 	return res;

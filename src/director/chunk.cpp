@@ -160,13 +160,13 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		specificDataLen = stream.readUint32();
 
 		// info
-		Common::ReadStream infoStream(stream.readBytes(infoLen), stream.endianness);
+		Common::ReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
 		info = std::make_shared<CastInfoChunk>(dir);
 		info->read(infoStream);
 
 		// specific data
 		hasFlags1 = false;
-		specificData = stream.readBytes(specificDataLen);
+		specificData = stream.readByteView(specificDataLen);
 	} else {
 		specificDataLen = stream.readUint16();
 		infoLen = stream.readUint32();
@@ -184,10 +184,10 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		}
 
 		// specific data
-		specificData = stream.readBytes(specificDataLeft);
+		specificData = stream.readByteView(specificDataLeft);
 
 		// info
-		Common::ReadStream infoStream (stream.readBytes(infoLen), stream.endianness);
+		Common::ReadStream infoStream (stream.readByteView(infoLen), stream.endianness);
 		info = std::make_shared<CastInfoChunk>(dir);
 		info->read(infoStream);
 	}
@@ -392,7 +392,7 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 58 */ protection = stream.readInt16();
 	/* 60 */ field29 = stream.readInt32();
 	/* 64 */ checksum = stream.readUint32();
-	/* 68 */ remnants = stream.readBytes(len - stream.pos());
+	/* 68 */ remnants = stream.readByteView(len - stream.pos());
 
 	uint32_t computedChecksum = computeChecksum();
 	if (checksum != computedChecksum) {
@@ -609,7 +609,7 @@ void ListChunk::readItems(Common::ReadStream &stream) {
 		size_t offset = offsetTable[i];
 		size_t nextOffset = (i == offsetTableLen - 1) ? itemsLen : offsetTable[i + 1];
 		stream.seek(listOffset + offset);
-		items[i] = stream.readBytes(nextOffset - offset);
+		items[i] = stream.readByteView(nextOffset - offset);
 	}
 }
 

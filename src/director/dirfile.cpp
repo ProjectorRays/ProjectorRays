@@ -248,7 +248,7 @@ bool DirectorFile::readAfterburnerMap() {
 		Common::debug(boost::format("Loading ILS resource %d: '%s', %u bytes")
 						% resId % fourCCToString(info.fourCC) % info.len);
 
-		_cachedChunkViews[resId] = ilsStream.readBytes(info.len);
+		_cachedChunkViews[resId] = ilsStream.readByteView(info.len);
 	}
 
 	return true;
@@ -400,7 +400,7 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 			if (info.compressionID != NULL_COMPRESSION_GUID) {
 				Common::log(boost::format("Unhandled compression type %s!") % info.compressionID.toString());
 			}
-			_cachedChunkViews[id] = stream->readBytes(info.len);
+			_cachedChunkViews[id] = stream->readByteView(info.len);
 		}
 	} else {
 		stream->seek(info.offset);
@@ -438,7 +438,7 @@ Common::BufferView DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
 		Common::debug("At offset " + std::to_string(offset) + " reading chunk '" + fourCCToString(fourCC) + "' with length " + std::to_string(len));
 	}
 
-	return stream->readBytes(len);
+	return stream->readByteView(len);
 }
 
 std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::BufferView &view) {

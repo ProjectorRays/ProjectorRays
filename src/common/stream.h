@@ -82,7 +82,7 @@ public:
 	ReadStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
 		: Stream(view, e, p) {}
 
-	BufferView readBytes(size_t len);
+	BufferView readByteView(size_t len);
 	size_t readZlibBytes(size_t len, uint8_t *dest, size_t destLen);
 	uint8_t readUint8();
 	int8_t readInt8();
