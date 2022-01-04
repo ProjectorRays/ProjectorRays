@@ -52,7 +52,7 @@ void writeFile(const std::string &fileName, const uint8_t *contents, size_t size
 }
 
 void writeFile(const std::string &fileName, const BufferView &view) {
-	writeFile(fileName, view.data(), view.len());
+	writeFile(fileName, view.data(), view.size());
 }
 
 }

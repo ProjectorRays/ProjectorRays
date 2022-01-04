@@ -28,8 +28,8 @@ namespace Common {
 
 /* BufferView */
 
-size_t BufferView::len() const {
-	return _len;
+size_t BufferView::size() const {
+	return _size;
 }
 
 uint8_t *BufferView::data() const {
@@ -51,11 +51,11 @@ void Stream::skip(size_t len) {
 }
 
 bool Stream::eof() const {
-	return  _pos >= _len;
+	return  _pos >= _size;
 }
 
 bool Stream::pastEOF() const {
-	return  _pos > _len;
+	return  _pos > _size;
 }
 
 /* ReadStream */
@@ -219,13 +219,13 @@ size_t WriteStream::writeBytes(const void *dataPtr, size_t dataSize) {
 	size_t p = _pos;
 	_pos += dataSize;
 
-	size_t writeSize = std::min(dataSize, _len - p);
+	size_t writeSize = std::min(dataSize, _size - p);
 	memcpy(&_data[p], dataPtr, writeSize);
 	return writeSize;
 }
 
 size_t WriteStream::writeBytes(const Common::BufferView &view) {
-	return writeBytes(view.data(), view.len());
+	return writeBytes(view.data(), view.size());
 }
 
 void WriteStream::writeUint8(uint8_t value) {

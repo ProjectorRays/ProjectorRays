@@ -614,7 +614,7 @@ size_t DirectorFile::chunkSize(int32_t id) {
 
 	// If this is a compressed fontmap, return the default fontmap size.
 	if (info.compressionID == FONTMAP_COMPRESSION_GUID) {
-		return getFontMap(version).len();
+		return getFontMap(version).size();
 	}
 
 	// If we've implemented this compression algorithm,

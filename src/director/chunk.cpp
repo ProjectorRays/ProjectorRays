@@ -206,7 +206,7 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 
 size_t CastMemberChunk::size() {
 	infoLen = info->size();
-	specificDataLen = specificData.len();
+	specificDataLen = specificData.size();
 
 	size_t len = 0;
 	if (dir->version >= 500) {
@@ -618,7 +618,7 @@ std::string ListChunk::readString(uint16_t index) {
 		return "";
 
 	Common::ReadStream stream(items[index], itemEndianness);
-	return stream.readString(stream.len());
+	return stream.readString(stream.size());
 }
 
 std::string ListChunk::readPascalString(uint16_t index) {
@@ -626,7 +626,7 @@ std::string ListChunk::readPascalString(uint16_t index) {
 		return "";
 
 	Common::ReadStream stream(items[index], itemEndianness);
-	if (stream.len() == 0)
+	if (stream.size() == 0)
 		return "";
 
 	return stream.readPascalString();
@@ -689,7 +689,7 @@ size_t ListChunk::itemsSize() {
 }
 
 size_t ListChunk::itemSize(uint16_t index) {
-	return items[index].len();
+	return items[index].size();
 }
 
 // write stuff

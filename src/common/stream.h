@@ -37,16 +37,16 @@ enum Endianness {
 class BufferView {
 protected:
 	uint8_t *_data;
-	size_t _len;
+	size_t _size;
 
 public:
 	BufferView()
-		: _data(nullptr), _len(0) {}
+		: _data(nullptr), _size(0) {}
 
-	BufferView(uint8_t *d, size_t l)
-		: _data(d), _len(l) {}
+	BufferView(uint8_t *d, size_t s)
+		: _data(d), _size(s) {}
 
-	size_t len() const;
+	size_t size() const;
 	uint8_t *data() const;
 };
 
@@ -59,11 +59,11 @@ protected:
 public:
 	Endianness endianness;
 
-	Stream(uint8_t *d, size_t l, Endianness e = kBigEndian, size_t p = 0)
-		: BufferView(d, l), _pos(p), endianness(e) {}
+	Stream(uint8_t *d, size_t s, Endianness e = kBigEndian, size_t p = 0)
+		: BufferView(d, s), _pos(p), endianness(e) {}
 
 	Stream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
-		: BufferView(view.data(), view.len()), _pos(p), endianness(e) {}
+		: BufferView(view.data(), view.size()), _pos(p), endianness(e) {}
 
 	size_t pos() const;
 	void seek(size_t p);
@@ -76,8 +76,8 @@ public:
 
 class ReadStream : public Stream {
 public:
-	ReadStream(uint8_t *d, size_t l, Endianness e = kBigEndian, size_t p = 0)
-		: Stream(d, l, e, p) {}
+	ReadStream(uint8_t *d, size_t s, Endianness e = kBigEndian, size_t p = 0)
+		: Stream(d, s, e, p) {}
 
 	ReadStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
 		: Stream(view, e, p) {}
@@ -102,8 +102,8 @@ public:
 
 class WriteStream : public Stream {
 public:
-	WriteStream(uint8_t *d, size_t l, Endianness e = kBigEndian, size_t p = 0)
-		: Stream(d, l, e, p) {}
+	WriteStream(uint8_t *d, size_t s, Endianness e = kBigEndian, size_t p = 0)
+		: Stream(d, s, e, p) {}
 
 	WriteStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
 		: Stream(view, e, p) {}
