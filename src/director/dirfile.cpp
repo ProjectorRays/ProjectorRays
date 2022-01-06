@@ -588,7 +588,7 @@ void DirectorFile::generateMemoryMap() {
 		nextOffset += 8 + entry.len;
 	}
 
-	rifxEntry.len = nextOffset;
+	rifxEntry.len = nextOffset - 8; // minus fourCC and len
 
 	// Now link the free entries
 	for (int32_t id = maxID; id >= 0; id--) {
@@ -601,7 +601,7 @@ void DirectorFile::generateMemoryMap() {
 }
 
 size_t DirectorFile::size() {
-	return memoryMap->mapArray[0].len;
+	return memoryMap->mapArray[0].len + 8; // plus fourCC and len
 }
 
 size_t DirectorFile::chunkSize(int32_t id) {
@@ -647,12 +647,15 @@ void DirectorFile::write(Common::WriteStream &stream) {
 
 void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	auto &mapEntry = memoryMap->mapArray[id];
+
+	stream.seek(mapEntry.offset);
+	stream.writeUint32(mapEntry.fourCC);
+	stream.writeUint32(mapEntry.len);
+
 	Chunk *chunk = nullptr;
 	switch (id) {
 	case 0: // RIFX
 		{
-			stream.writeUint32(FOURCC('R', 'I', 'F', 'X'));
-			stream.writeUint32(size());
 			uint32_t newCodec;
 			switch (codec) {
 			case FOURCC('M', 'C', '9', '5'):
@@ -677,9 +680,6 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 		}
 		break;
 	}
-	stream.seek(mapEntry.offset);
-	stream.writeUint32(mapEntry.fourCC);
-	stream.writeUint32(mapEntry.len);
 	if (chunk && chunk->writable) {
 		chunk->write(stream);
 		stream.endianness = endianness; // reset endianness
