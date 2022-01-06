@@ -667,8 +667,6 @@ size_t DirectorFile::chunkSize(int32_t id) {
 }
 
 void DirectorFile::write(Common::WriteStream &stream) {
-	stream.endianness = endianness;
-
 	writeChunk(stream, 0); // Write RIFX
 	writeChunk(stream, 1); // Write imap
 	writeChunk(stream, 2); // Write mmap
@@ -683,6 +681,8 @@ void DirectorFile::write(Common::WriteStream &stream) {
 
 void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	auto &mapEntry = memoryMap->mapArray[id];
+
+	stream.endianness = endianness;
 
 	stream.seek(mapEntry.offset);
 	stream.writeUint32(mapEntry.fourCC);
@@ -718,7 +718,6 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	}
 	if (chunk && chunk->writable) {
 		chunk->write(stream);
-		stream.endianness = endianness; // reset endianness
 	} else {
 		stream.writeBytes(getChunkData(mapEntry.fourCC, id));
 	}
