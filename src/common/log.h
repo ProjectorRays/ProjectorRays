@@ -31,6 +31,8 @@ void log(const std::string &msg);
 void log(const boost::format &msg);
 void debug(const std::string &msg);
 void debug(const boost::format &msg);
+void warning(const std::string &msg);
+void warning(const boost::format &msg);
 
 }
 

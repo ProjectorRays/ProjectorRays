@@ -39,7 +39,7 @@ mpg123_ssize_t ReadStream_lseek(void *stream, off_t offset, int whence) {
 
 #define CHECK_ERR(name) \
 	if (err != MPG123_OK && err != MPG123_DONE) { \
-		Common::log(boost::format(name": %s") % mpg123_plain_strerror(err)); \
+		Common::warning(boost::format(name": %s") % mpg123_plain_strerror(err)); \
 		mpg123_close(mh); \
 		mpg123_delete(mh); \
 		return false; \
@@ -73,7 +73,7 @@ bool decodeMP3(
 
 	// initialize an mpg123 handle
 	if ((mh = mpg123_new(NULL, &err)) == NULL) {
-		Common::log(boost::format("mpg123_new: %s") % mpg123_plain_strerror(err));
+		Common::warning(boost::format("mpg123_new: %s") % mpg123_plain_strerror(err));
 		return false;
 	}
 
@@ -110,17 +110,17 @@ bool decodeMP3(
 	CHECK_ERR("mpg123_getformat");
 
 	if (outputSampleRate != hdrSampleRate) {
-		Common::log(boost::format("Output sample rate (%ld) doesn't match header sample rate (%d)!")
+		Common::warning(boost::format("Output sample rate (%ld) doesn't match header sample rate (%d)!")
 						% outputSampleRate % hdrSampleRate);
 		return false;
 	}
 	if (outputChannels != hdrChannels) {
-		Common::log(boost::format("Output channels (%d) doesn't match header channels (%d)!")
+		Common::warning(boost::format("Output channels (%d) doesn't match header channels (%d)!")
 						% outputChannels % hdrChannels);
 		return false;
 	}
 	if (outputEncoding != expectedEncoding) {
-		Common::log(boost::format("Output encoding (%d) doesn't match header sample size (%d)!")
+		Common::warning(boost::format("Output encoding (%d) doesn't match header sample size (%d)!")
 						% outputEncoding % hdrSampleSize);
 		return false;
 	}
@@ -205,7 +205,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out) {
 		/* uint32_t futureUse3 = */ in.readUint32();
 		/* uint32_t futureUse4 = */ in.readUint32();
 	} else {
-		Common::log(boost::format("Unhandled sound encode option 0x%02X!") % (uint)encode);
+		Common::warning(boost::format("Unhandled sound encode option 0x%02X!") % (uint)encode);
 		return -1;
 	}
 

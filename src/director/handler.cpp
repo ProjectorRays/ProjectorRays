@@ -212,7 +212,7 @@ std::shared_ptr<Node> Handler::readVar(int varType) {
 	case 0x6: // field
 		return std::make_shared<MemberExprNode>("field", std::move(id), std::move(castID));
 	default:
-		Common::log(boost::format("findVar: unhandled var type %d") % varType);
+		Common::warning(boost::format("findVar: unhandled var type %d") % varType);
 		break;
 	}
 	return std::make_shared<ErrorNode>();

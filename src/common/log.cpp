@@ -43,4 +43,12 @@ void debug(const boost::format &msg) {
 		log(msg);
 }
 
+void warning(const std::string &msg) {
+	std::cerr << msg << "\n";
+}
+
+void warning(const boost::format &msg) {
+	std::cerr << msg << "\n";
+}
+
 }

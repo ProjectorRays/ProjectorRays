@@ -75,7 +75,7 @@ bool DirectorFile::read(Common::ReadStream *s, bool decompile) {
 		if (!readAfterburnerMap())
 			return false;
 	} else {
-		Common::log("Codec unsupported: " + fourCCToString(codec));
+		Common::warning("Codec unsupported: " + fourCCToString(codec));
 		return false;
 	}
 
@@ -128,7 +128,7 @@ bool DirectorFile::readAfterburnerMap() {
 
 	// File version
 	if (stream->readUint32() != FOURCC('F', 'v', 'e', 'r')) {
-		Common::log("readAfterburnerMap(): Fver expected but not found");
+		Common::warning("readAfterburnerMap(): Fver expected but not found");
 		return false;
 	}
 
@@ -139,14 +139,14 @@ bool DirectorFile::readAfterburnerMap() {
 	end = stream->pos();
 
 	if (end - start != fverLength) {
-		Common::log(boost::format("readAfterburnerMap(): Expected Fver of length %u but read %u bytes")
+		Common::warning(boost::format("readAfterburnerMap(): Expected Fver of length %u but read %u bytes")
 						% fverLength % (end - start));
 		stream->seek(start + fverLength);
 	}
 
 	// Compression types
 	if (stream->readUint32() != FOURCC('F', 'c', 'd', 'r')) {
-		Common::log("readAfterburnerMap(): Fcdr expected but not found");
+		Common::warning("readAfterburnerMap(): Fcdr expected but not found");
 		return false;
 	}
 
@@ -154,7 +154,7 @@ bool DirectorFile::readAfterburnerMap() {
 	std::vector<uint8_t> fcdrBuf(10 * fcdrLength); // Should be big enough...
 	ssize_t fcdrUncompLength = stream->readZlibBytes(fcdrLength, fcdrBuf.data(), fcdrBuf.size());
 	if (fcdrUncompLength == -1) {
-		Common::log("Fcdr: Could not decompress");
+		Common::warning("Fcdr: Could not decompress");
 		return false;
 	}
 
@@ -170,7 +170,7 @@ bool DirectorFile::readAfterburnerMap() {
 		compressionDesc = fcdrStream.readCString();
 	}
 	if (fcdrStream.pos() != (unsigned)fcdrUncompLength) {
-		Common::log(boost::format("readAfterburnerMap(): Fcdr has uncompressed length %zu but read %zu bytes")
+		Common::warning(boost::format("readAfterburnerMap(): Fcdr has uncompressed length %zu but read %zu bytes")
 						% (unsigned)fcdrUncompLength % fcdrStream.pos());
 	}
 
@@ -182,7 +182,7 @@ bool DirectorFile::readAfterburnerMap() {
 
 	// Afterburner map
 	if (stream->readUint32() != FOURCC('A', 'B', 'M', 'P')) {
-		Common::log("RIFXArchive::readAfterburnerMap(): ABMP expected but not found");
+		Common::warning("RIFXArchive::readAfterburnerMap(): ABMP expected but not found");
 		return false;
 	}
 	uint32_t abmpLength = stream->readVarInt();
@@ -195,11 +195,11 @@ bool DirectorFile::readAfterburnerMap() {
 	std::vector<uint8_t> abmpBuf(abmpUncompLength);
 	ssize_t abmpActualUncompLength = stream->readZlibBytes(abmpEnd - stream->pos(), abmpBuf.data(), abmpBuf.size());
 	if (abmpActualUncompLength == -1) {
-		Common::log("ABMP: Could not decompress");
+		Common::warning("ABMP: Could not decompress");
 		return false;
 	}
 	if ((unsigned)abmpActualUncompLength != abmpUncompLength) {
-		Common::log(boost::format("ABMP: Expected uncompressed length %u but got length %zu")
+		Common::warning(boost::format("ABMP: Expected uncompressed length %u but got length %zu")
 						% abmpUncompLength % (unsigned)abmpActualUncompLength);
 	}
 	Common::ReadStream abmpStream(abmpBuf.data(), abmpBuf.size(), endianness);
@@ -235,11 +235,11 @@ bool DirectorFile::readAfterburnerMap() {
 
 	// Initial load segment
 	if (chunkInfo.find(2) == chunkInfo.end()) {
-		Common::log("readAfterburnerMap(): Map has no entry for ILS");
+		Common::warning("readAfterburnerMap(): Map has no entry for ILS");
 		return false;
 	}
 	if (stream->readUint32() != FOURCC('F', 'G', 'E', 'I')) {
-		Common::log("readAfterburnerMap(): FGEI expected but not found");
+		Common::warning("readAfterburnerMap(): FGEI expected but not found");
 		return false;
 	}
 
@@ -250,11 +250,11 @@ bool DirectorFile::readAfterburnerMap() {
 	_ilsBuf.resize(ilsInfo.uncompressedLen);
 	ssize_t ilsActualUncompLength = stream->readZlibBytes(ilsInfo.len, _ilsBuf.data(), _ilsBuf.size());
 	if (ilsActualUncompLength == -1) {
-		Common::log("ILS: Could not decompress");
+		Common::warning("ILS: Could not decompress");
 		return false;
 	}
 	if ((unsigned)ilsActualUncompLength != ilsInfo.uncompressedLen) {
-		Common::log(boost::format("ILS: Expected uncompressed length %u but got length %zu")
+		Common::warning(boost::format("ILS: Expected uncompressed length %u but got length %zu")
 						% ilsInfo.uncompressedLen % (unsigned)ilsActualUncompLength);
 	}
 	Common::ReadStream ilsStream(_ilsBuf.data(), ilsInfo.uncompressedLen, endianness);
@@ -290,7 +290,7 @@ bool DirectorFile::readKeyTable() {
 		return true;
 	}
 
-	Common::log("No key chunk!");
+	Common::warning("No key chunk!");
 	return false;
 }
 
@@ -308,7 +308,7 @@ bool DirectorFile::readConfig() {
 		return true;
 	}
 
-	Common::log("No config chunk!");
+	Common::warning("No config chunk!");
 	return false;
 }
 
@@ -350,7 +350,7 @@ bool DirectorFile::readCasts() {
 		return true;
 	}
 
-	Common::log("No cast!");
+	Common::warning("No cast!");
 	return false;
 }
 
@@ -431,7 +431,7 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 			_cachedChunkViews[id] = getFontMap(version);
 		} else {
 			if (info.compressionID != NULL_COMPRESSION_GUID) {
-				Common::log(boost::format("Unhandled compression type %s!") % info.compressionID.toString());
+				Common::warning(boost::format("Unhandled compression type %s!") % info.compressionID.toString());
 			}
 			_cachedChunkViews[id] = stream->readByteView(info.len);
 		}
@@ -724,7 +724,7 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	}
 	size_t len = stream.pos() - mapEntry.offset - 8;
 	if ((unsigned)mapEntry.len != len) {
-		Common::log(
+		Common::warning(
 			boost::format("Size estimate for '%s' was incorrect! (Expected %u bytes, wrote %zu)")
 				% fourCCToString(mapEntry.fourCC) % mapEntry.len % len
 		);
