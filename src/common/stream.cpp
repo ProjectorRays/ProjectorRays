@@ -42,6 +42,23 @@ size_t Stream::pos() const {
 	return _pos;
 }
 
+off_t Stream::lseek(off_t offset, int whence) {
+	switch (whence) {
+	case SEEK_SET:
+		_pos = offset;
+		break;
+	case SEEK_CUR:
+		_pos += offset;
+		break;
+	case SEEK_END:
+		_pos = _size + offset;
+		break;
+	default:
+		return -1;
+	}
+	return _pos;
+}
+
 void Stream::seek(size_t pos) {
 	_pos = pos;
 }
@@ -64,6 +81,19 @@ BufferView ReadStream::readByteView(size_t len) {
 	BufferView res(_data + _pos, len);
 	_pos += len;
 	return res;
+}
+
+ssize_t ReadStream::readUpToBytes(size_t len, uint8_t *dest) {
+	if (eof())
+		return 0;
+
+	if (_pos + len > _size)
+		len = _size - _pos;
+
+	memcpy(dest, &_data[_pos], len);
+
+	_pos += len;
+	return len;
 }
 
 ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {

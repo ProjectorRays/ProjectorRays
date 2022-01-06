@@ -66,6 +66,7 @@ public:
 		: BufferView(view.data(), view.size()), _pos(p), endianness(e) {}
 
 	size_t pos() const;
+	off_t lseek(off_t offset, int whence);
 	void seek(size_t p);
 	void skip(size_t p);
 	bool eof() const;
@@ -83,6 +84,7 @@ public:
 		: Stream(view, e, p) {}
 
 	BufferView readByteView(size_t len);
+	ssize_t readUpToBytes(size_t len, uint8_t *dest);
 	ssize_t readZlibBytes(size_t len, uint8_t *dest, size_t destLen);
 	uint8_t readUint8();
 	int8_t readInt8();
