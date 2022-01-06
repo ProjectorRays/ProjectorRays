@@ -63,8 +63,8 @@ void Stream::seek(size_t pos) {
 	_pos = pos;
 }
 
-void Stream::skip(size_t len) {
-	_pos += len;
+void Stream::skip(off_t offset) {
+	_pos += offset;
 }
 
 bool Stream::eof() const {

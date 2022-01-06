@@ -67,8 +67,8 @@ public:
 
 	size_t pos() const;
 	off_t lseek(off_t offset, int whence);
-	void seek(size_t p);
-	void skip(size_t p);
+	void seek(size_t pos);
+	void skip(off_t offset);
 	bool eof() const;
 	bool pastEOF() const;
 };
