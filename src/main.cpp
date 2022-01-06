@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <filesystem>
 #include <iostream>
 #include <vector>
 
@@ -28,11 +29,13 @@
 using namespace Director;
 
 int main(int argc, char *argv[]) {
-	bool decompile = true;
 	bool dumpChunks = false;
 	bool dumpJSON = false;
-	std::string fileName;
-	bool foundFileName = false;
+	bool dumpScripts = false;
+	std::string input;
+	bool foundInput = false;
+	std::string output;
+	bool foundOutput = false;
 
 	int argsUsed;
 	for (argsUsed = 1; argsUsed < argc; argsUsed++) {
@@ -41,45 +44,53 @@ int main(int argc, char *argv[]) {
 			dumpChunks = true;
 		} else if (arg == "--dump-json") {
 			dumpJSON = true;
-		} else if (arg == "--no-decompile") {
-			decompile = false;
+		} else if (arg == "--dump-scripts") {
+			dumpScripts = true;
 		} else if (arg == "-v" || arg == "--verbose") {
 			Common::g_verbose = true;
-		} else if (!foundFileName) {
-			fileName = arg;
-			foundFileName = true;
+		} else if (!foundInput) {
+			input = arg;
+			foundInput = true;
+		} else if (!foundOutput) {
+			output = arg;
+			foundOutput = true;
 		} else {
 			break;
 		}
 	}
 
-	if (argsUsed != argc || !foundFileName) {
-		Common::log(boost::format("Usage: %s [OPTIONS]... FILE") % argv[0]);
+	if (argsUsed != argc || !foundInput || !foundOutput) {
+		Common::log(boost::format("Usage: %s [OPTIONS]... INPUT_FILE OUTPUT_FILE") % argv[0]);
 		Common::log("  --dump-chunks\t\tDump chunk data");
 		Common::log("  --dump-json\t\tDump JSONifed chunk data");
-		Common::log("  --no-decompile\tDon't decompile Lingo");
+		Common::log("  --dump-scripts\tDump scripts");
 		Common::log("  -v or --verbose\tVerbose logging");
 		return 1;
 	}
 
-	auto buf = Common::readFile(fileName);
+	std::vector<uint8_t> buf;
+	if (!Common::readFile(input, buf)) {
+		Common::warning(boost::format("Could not read %s!") % input);
+		return -1;
+	}
+
 	Common::ReadStream stream(buf.data(), buf.size());
 	auto dir = std::make_unique<DirectorFile>();
-	if (!dir->read(&stream, decompile))
+	if (!dir->read(&stream))
 		return -1;
 
-	if (decompile) {
-		dir->dumpScripts();
-	}
 	if (dumpChunks) {
 		dir->dumpChunks();
 	}
 	if (dumpJSON) {
 		dir->dumpJSON();
 	}
+	if (dumpScripts) {
+		dir->dumpScripts();
+	}
 
 	dir->restoreScriptText();
-	dir->writeToFile("test.dir");
+	dir->writeToFile(output);
 
 	return 0;
 }

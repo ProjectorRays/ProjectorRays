@@ -29,7 +29,7 @@ namespace Common {
 
 class BufferView;
 
-std::vector<uint8_t> readFile(const std::string &fileName);
+bool readFile(const std::string &fileName, std::vector<uint8_t> &buf);
 void writeFile(const std::string &fileName, const std::string &contents);
 void writeFile(const std::string &fileName, const uint8_t *contents, size_t size);
 void writeFile(const std::string &fileName, const BufferView &view);

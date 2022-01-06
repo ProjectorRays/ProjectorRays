@@ -25,16 +25,21 @@
 
 namespace Common {
 
-std::vector<uint8_t> readFile(const std::string &fileName) {
+bool readFile(const std::string &fileName, std::vector<uint8_t> &buf) {
 	std::ifstream f;
 	f.open(fileName, std::ios::in | std::ios::binary);
+
+	if (f.fail())
+		return false;
+
 	f.seekg(0, std::ios::end);
 	auto fileSize = f.tellg();
 	f.seekg(0, std::ios::beg);
-	std::vector<uint8_t> buf(fileSize, 0);
+	buf.resize(fileSize);
 	f.read((char *)buf.data(), fileSize);
 	f.close();
-	return buf;
+
+	return true;
 }
 
 void writeFile(const std::string &fileName, const std::string &contents) {

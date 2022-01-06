@@ -54,7 +54,7 @@ DirectorFile::~DirectorFile() = default;
 
 // read stuff
 
-bool DirectorFile::read(Common::ReadStream *s, bool decompile) {
+bool DirectorFile::read(Common::ReadStream *s) {
 	stream = s;
 	stream->endianness = Common::kBigEndian; // we set this properly when we create the RIFX chunk
 
@@ -83,10 +83,8 @@ bool DirectorFile::read(Common::ReadStream *s, bool decompile) {
 		return false;
 	if (!readConfig())
 		return false;
-	if (decompile) {
-		if (!readCasts())
-			return false;
-	}
+	if (!readCasts())
+		return false;
 
 	return true;
 }

@@ -80,7 +80,7 @@ public:
 	DirectorFile();
 	~DirectorFile();
 
-	bool read(Common::ReadStream *s, bool decompile = true);
+	bool read(Common::ReadStream *s);
 	void readMemoryMap();
 	bool readAfterburnerMap();
 	bool readKeyTable();
