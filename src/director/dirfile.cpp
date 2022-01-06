@@ -105,7 +105,7 @@ void DirectorFile::readMemoryMap() {
 		if (mapEntry.fourCC == FOURCC('f', 'r', 'e', 'e') || mapEntry.fourCC == FOURCC('j', 'u', 'n', 'k'))
 			continue;
 
-		Common::debug(boost::format("Found RIFX resource index %d: '%s', %d bytes @ pos 0x%08x (%d)")
+		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes @ pos 0x%08x (%d)")
 						% i % fourCCToString(mapEntry.fourCC) % mapEntry.len % mapEntry.offset % mapEntry.offset);
 
 		ChunkInfo info;
@@ -172,7 +172,7 @@ bool DirectorFile::readAfterburnerMap() {
 						% (unsigned)fcdrUncompLength % fcdrStream.pos());
 	}
 
-	Common::debug(boost::format("Fcdr: %d compression types") % compressionTypeCount);
+	Common::debug(boost::format("Fcdr: %u compression types") % compressionTypeCount);
 	for (size_t i = 0; i < compressionTypeCount; i++) {
 		Common::debug(boost::format("Fcdr: type %zu: %s \"%s\"")
 						% i % compressionIDs[i].toString() % compressionDescs[i]);
@@ -185,7 +185,7 @@ bool DirectorFile::readAfterburnerMap() {
 	}
 	uint32_t abmpLength = stream->readVarInt();
 	uint32_t abmpEnd = stream->pos() + abmpLength;
-	int32_t abmpCompressionType = stream->readVarInt();
+	uint32_t abmpCompressionType = stream->readVarInt();
 	uint32_t abmpUncompLength = stream->readVarInt();
 	Common::debug(boost::format("ABMP: length: %u compressionType: %u uncompressedLength: %u")
 					% abmpLength % abmpCompressionType % abmpUncompLength);
@@ -213,10 +213,10 @@ bool DirectorFile::readAfterburnerMap() {
 		int32_t offset = abmpStream.readVarInt();
 		uint32_t compSize = abmpStream.readVarInt();
 		uint32_t uncompSize = abmpStream.readVarInt();
-		int32_t compressionType = abmpStream.readVarInt();
+		uint32_t compressionType = abmpStream.readVarInt();
 		uint32_t tag = abmpStream.readUint32();
 
-		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes (%u uncompressed) @ pos 0x%08x (%d), compressionType: %d")
+		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes (%u uncompressed) @ pos 0x%08x (%d), compressionType: %u")
 						% resId % fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType);
 
 		ChunkInfo info;
@@ -243,7 +243,7 @@ bool DirectorFile::readAfterburnerMap() {
 
 	ChunkInfo &ilsInfo = chunkInfo[2];
 	uint32_t ilsUnk1 = stream->readVarInt();
-	Common::debug(boost::format("ILS: length: %d unk1: %d") % ilsInfo.len % ilsUnk1);
+	Common::debug(boost::format("ILS: length: %u unk1: %u") % ilsInfo.len % ilsUnk1);
 	_ilsBodyOffset = stream->pos();
 	_ilsBuf.resize(ilsInfo.uncompressedLen);
 	ssize_t ilsActualUncompLength = stream->readZlibBytes(ilsInfo.len, _ilsBuf.data(), _ilsBuf.size());
@@ -702,7 +702,7 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	size_t len = stream.pos() - mapEntry.offset - 8;
 	if ((unsigned)mapEntry.len != len) {
 		Common::log(
-			boost::format("Size estimate for '%s' was incorrect! (Expected %d bytes, wrote %d)")
+			boost::format("Size estimate for '%s' was incorrect! (Expected %u bytes, wrote %zu)")
 				% fourCCToString(mapEntry.fourCC) % mapEntry.len % len
 		);
 	}

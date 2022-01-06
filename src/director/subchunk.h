@@ -49,7 +49,7 @@ void to_json(ordered_json &j, const CastListEntry &c);
 
 struct MemoryMapEntry {
 	uint32_t fourCC;
-	int32_t len;
+	uint32_t len;
 	int32_t offset;
 	uint16_t flags;
 	int16_t unknown0;
