@@ -52,7 +52,7 @@ DirectorFile::~DirectorFile() = default;
 
 // read stuff
 
-void DirectorFile::read(Common::ReadStream *s, bool decompile) {
+bool DirectorFile::read(Common::ReadStream *s, bool decompile) {
 	stream = s;
 	stream->endianness = Common::kBigEndian; // we set this properly when we create the RIFX chunk
 
@@ -71,19 +71,22 @@ void DirectorFile::read(Common::ReadStream *s, bool decompile) {
 	} else if (codec == FOURCC('F', 'G', 'D', 'M') || codec == FOURCC('F', 'G', 'D', 'C')) {
 		afterburned = true;
 		if (!readAfterburnerMap())
-			return;
+			return false;
 	} else {
-		throw std::runtime_error("Codec unsupported: " + fourCCToString(codec));
+		Common::log("Codec unsupported: " + fourCCToString(codec));
+		return false;
 	}
 
 	if (!readKeyTable())
-		return;
+		return false;
 	if (!readConfig())
-		return;
+		return false;
 	if (decompile) {
 		if (!readCasts())
-			return;
+			return false;
 	}
+
+	return true;
 }
 
 void DirectorFile::readMemoryMap() {

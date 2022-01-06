@@ -65,7 +65,8 @@ int main(int argc, char *argv[]) {
 	auto buf = Common::readFile(fileName);
 	Common::ReadStream stream(buf.data(), buf.size());
 	auto dir = std::make_unique<DirectorFile>();
-	dir->read(&stream, decompile);
+	if (!dir->read(&stream, decompile))
+		return -1;
 
 	if (decompile) {
 		dir->dumpScripts();
