@@ -66,7 +66,7 @@ BufferView ReadStream::readByteView(size_t len) {
 	return res;
 }
 
-size_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
+ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	size_t p = _pos;
 	_pos += len;
 	if (pastEOF())
@@ -76,7 +76,7 @@ size_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	int ret = uncompress(dest, &outLen, &_data[p], len);
 	if (ret != Z_OK) {
 		Common::log(boost::format("zlib decompression error %d!") % ret);
-		return 0;
+		return -1;
 	}
 
 	return outLen;

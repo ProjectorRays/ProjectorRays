@@ -150,8 +150,13 @@ bool DirectorFile::readAfterburnerMap() {
 
 	uint32_t fcdrLength = stream->readVarInt();
 	std::vector<uint8_t> fcdrBuf(10 * fcdrLength); // Should be big enough...
-	size_t fcdrUncompLength = stream->readZlibBytes(fcdrLength, fcdrBuf.data(), fcdrBuf.size());
-	Common::ReadStream fcdrStream(fcdrBuf.data(), fcdrUncompLength, endianness);
+	ssize_t fcdrUncompLength = stream->readZlibBytes(fcdrLength, fcdrBuf.data(), fcdrBuf.size());
+	if (fcdrUncompLength == -1) {
+		Common::log("Fcdr: Could not decompress");
+		return false;
+	}
+
+	Common::ReadStream fcdrStream(fcdrBuf.data(), (unsigned)fcdrUncompLength, endianness);
 
 	uint16_t compressionTypeCount = fcdrStream.readUint16();
 	std::vector<MoaID> compressionIDs(compressionTypeCount);
@@ -162,9 +167,9 @@ bool DirectorFile::readAfterburnerMap() {
 	for (auto &compressionDesc : compressionDescs) {
 		compressionDesc = fcdrStream.readCString();
 	}
-	if (fcdrStream.pos() != fcdrUncompLength) {
+	if (fcdrStream.pos() != (unsigned)fcdrUncompLength) {
 		Common::log(boost::format("readAfterburnerMap(): Fcdr has uncompressed length %zu but read %zu bytes")
-						% fcdrUncompLength % fcdrStream.pos());
+						% (unsigned)fcdrUncompLength % fcdrStream.pos());
 	}
 
 	Common::debug(boost::format("Fcdr: %d compression types") % compressionTypeCount);
@@ -186,10 +191,14 @@ bool DirectorFile::readAfterburnerMap() {
 					% abmpLength % abmpCompressionType % abmpUncompLength);
 
 	std::vector<uint8_t> abmpBuf(abmpUncompLength);
-	size_t abmpActualUncompLength = stream->readZlibBytes(abmpEnd - stream->pos(), abmpBuf.data(), abmpBuf.size());
-	if (abmpUncompLength != abmpActualUncompLength) {
+	ssize_t abmpActualUncompLength = stream->readZlibBytes(abmpEnd - stream->pos(), abmpBuf.data(), abmpBuf.size());
+	if (abmpActualUncompLength == -1) {
+		Common::log("ABMP: Could not decompress");
+		return false;
+	}
+	if ((unsigned)abmpActualUncompLength != abmpUncompLength) {
 		Common::log(boost::format("ABMP: Expected uncompressed length %u but got length %zu")
-						% abmpUncompLength % abmpActualUncompLength);
+						% abmpUncompLength % (unsigned)abmpActualUncompLength);
 	}
 	Common::ReadStream abmpStream(abmpBuf.data(), abmpBuf.size(), endianness);
 
@@ -237,10 +246,14 @@ bool DirectorFile::readAfterburnerMap() {
 	Common::debug(boost::format("ILS: length: %d unk1: %d") % ilsInfo.len % ilsUnk1);
 	_ilsBodyOffset = stream->pos();
 	_ilsBuf.resize(ilsInfo.uncompressedLen);
-	size_t ilsActualUncompLength = stream->readZlibBytes(ilsInfo.len, _ilsBuf.data(), _ilsBuf.size());
-	if (ilsInfo.uncompressedLen != ilsActualUncompLength) {
+	ssize_t ilsActualUncompLength = stream->readZlibBytes(ilsInfo.len, _ilsBuf.data(), _ilsBuf.size());
+	if (ilsActualUncompLength == -1) {
+		Common::log("ILS: Could not decompress");
+		return false;
+	}
+	if ((unsigned)ilsActualUncompLength != ilsInfo.uncompressedLen) {
 		Common::log(boost::format("ILS: Expected uncompressed length %u but got length %zu")
-						% ilsInfo.uncompressedLen % ilsActualUncompLength);
+						% ilsInfo.uncompressedLen % (unsigned)ilsActualUncompLength);
 	}
 	Common::ReadStream ilsStream(_ilsBuf.data(), ilsInfo.uncompressedLen, endianness);
 

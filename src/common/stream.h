@@ -83,7 +83,7 @@ public:
 		: Stream(view, e, p) {}
 
 	BufferView readByteView(size_t len);
-	size_t readZlibBytes(size_t len, uint8_t *dest, size_t destLen);
+	ssize_t readZlibBytes(size_t len, uint8_t *dest, size_t destLen);
 	uint8_t readUint8();
 	int8_t readInt8();
 	uint16_t readUint16();
