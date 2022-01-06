@@ -531,7 +531,7 @@ void DirectorFile::generateMemoryMap() {
 	memoryMap->chunkCountUsed = maxID + 1;
 	memoryMap->freeHead = -1;
 	memoryMap->junkHead = -1;
-	memoryMap->junkHead = -1;
+	memoryMap->junkHead2 = -1;
 
 	// Fill the map with free entries
 	memoryMap->mapArray.resize(maxID + 1);
