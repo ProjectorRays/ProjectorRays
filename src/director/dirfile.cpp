@@ -38,6 +38,7 @@ using ordered_json = nlohmann::ordered_json;
 namespace Director {
 
 static const size_t kRIFXHeaderSize = 12;
+static const size_t kChunkHeaderSize = 8;
 
 /* DirectorFile */
 
@@ -544,7 +545,7 @@ void DirectorFile::writeToFile(std::string fileName) {
 void DirectorFile::generateInitialMap() {
 	initialMap = std::make_unique<InitialMapChunk>(this);
 	initialMap->one = 1;
-	initialMap->mmapOffset = kRIFXHeaderSize + initialMap->size();
+	initialMap->mmapOffset = kRIFXHeaderSize + kChunkHeaderSize + initialMap->size();
 	initialMap->version = (version < 500) ? 0 : config->directorVersion;
 	initialMap->unused1 = 0;
 	initialMap->unused2 = 0;
@@ -599,7 +600,7 @@ void DirectorFile::generateMemoryMap() {
 	imapEntry.flags = 1;
 	imapEntry.unknown0 = 0;
 	imapEntry.next = 0;
-	nextOffset += imapEntry.len;
+	nextOffset += imapEntry.len + kChunkHeaderSize;
 
 	auto &mmapEntry = memoryMap->mapArray[2];
 	mmapEntry.fourCC = FOURCC('m', 'm', 'a', 'p');
@@ -608,7 +609,7 @@ void DirectorFile::generateMemoryMap() {
 	mmapEntry.flags = 0;
 	mmapEntry.unknown0 = 0;
 	mmapEntry.next = 0;
-	nextOffset += mmapEntry.len;
+	nextOffset += mmapEntry.len + kChunkHeaderSize;
 
 	for (auto [id, info] : chunkInfo) {
 		if (id <= 2) // Ignore RIFX, imap, mmap
@@ -621,10 +622,10 @@ void DirectorFile::generateMemoryMap() {
 		entry.flags = 0;
 		entry.unknown0 = 0;
 		entry.next = 0;
-		nextOffset += 8 + entry.len;
+		nextOffset += entry.len + kChunkHeaderSize;
 	}
 
-	rifxEntry.len = nextOffset - 8; // minus fourCC and len
+	rifxEntry.len = nextOffset - kChunkHeaderSize;
 
 	// Now link the free entries
 	for (int32_t id = maxID; id >= 0; id--) {
@@ -637,7 +638,7 @@ void DirectorFile::generateMemoryMap() {
 }
 
 size_t DirectorFile::size() {
-	return memoryMap->mapArray[0].len + 8; // plus fourCC and len
+	return memoryMap->mapArray[0].len + kChunkHeaderSize;
 }
 
 size_t DirectorFile::chunkSize(int32_t id) {
