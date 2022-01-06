@@ -401,7 +401,9 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 
 	if (afterburned) {
 		stream->seek(info.offset + _ilsBodyOffset);
-		if (compressionImplemented(info.compressionID)) {
+		if (info.len == 0 && info.uncompressedLen == 0) {
+			_cachedChunkViews[id] = stream->readByteView(info.len);
+		} else if (compressionImplemented(info.compressionID)) {
 			ssize_t actualUncompLength = -1;
 			_cachedChunkBufs[id] = std::vector<uint8_t>(info.uncompressedLen);
 			if (info.compressionID == ZLIB_COMPRESSION_GUID) {
