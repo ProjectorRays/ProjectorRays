@@ -560,7 +560,7 @@ void DirectorFile::generateMemoryMap() {
 	imapEntry.fourCC = FOURCC('i', 'm', 'a', 'p');
 	imapEntry.len = initialMap->size();
 	imapEntry.offset = nextOffset;
-	imapEntry.flags = 0;
+	imapEntry.flags = 1;
 	imapEntry.unknown0 = 0;
 	imapEntry.next = 0;
 	nextOffset += imapEntry.len;
