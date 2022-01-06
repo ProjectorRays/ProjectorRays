@@ -26,11 +26,11 @@ namespace Common {
 bool g_verbose = false;
 
 void log(const std::string &msg) {
-	std::cout << msg << std::endl;
+	std::cout << msg << "\n";
 }
 
 void log(const boost::format &msg) {
-	std::cout << msg << std::endl;
+	std::cout << msg << "\n";
 }
 
 void debug(const std::string &msg) {

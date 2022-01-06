@@ -813,7 +813,7 @@ void DirectorFile::dumpJSON() {
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
 			ordered_json j = *deserializedChunks[info.id];
 			std::stringstream ss;
-			ss << j.dump(4) << std::endl;
+			ss << j.dump(4) << "\n";
 			Common::writeFile(fileName + ".json", ss.str());
 		}
 	}
