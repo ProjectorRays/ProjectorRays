@@ -31,6 +31,7 @@ using ordered_json = nlohmann::ordered_json;
 #include "director/dirfile.h"
 #include "director/fontmap.h"
 #include "director/guid.h"
+#include "director/sound.h"
 #include "director/subchunk.h"
 #include "director/util.h"
 
@@ -400,13 +401,26 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 
 	if (afterburned) {
 		stream->seek(info.offset + _ilsBodyOffset);
-		if (info.compressionID == ZLIB_COMPRESSION_GUID) {
+		if (compressionImplemented(info.compressionID)) {
+			ssize_t actualUncompLength = -1;
 			_cachedChunkBufs[id] = std::vector<uint8_t>(info.uncompressedLen);
-			size_t actualUncompLength = stream->readZlibBytes(info.len, _cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
-			if (info.uncompressedLen != actualUncompLength) {
+			if (info.compressionID == ZLIB_COMPRESSION_GUID) {
+				actualUncompLength = stream->readZlibBytes(info.len, _cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
+			} else if (info.compressionID == SND_COMPRESSION_GUID) {
+				Common::BufferView chunkView = stream->readByteView(info.len);
+				Common::ReadStream chunkStream(chunkView, endianness);
+				Common::WriteStream uncompStream(_cachedChunkBufs[id].data(), _cachedChunkBufs[id].size(), endianness);
+				actualUncompLength = decompressSnd(chunkStream, uncompStream);
+			}
+			if (actualUncompLength == -1) {
 				throw std::runtime_error(boost::str(
-					boost::format("Chunk %d: Expected uncompressed length %d but got length %zu")
-						% id % info.uncompressedLen % actualUncompLength
+					boost::format("Chunk %d: Could not decompress") % id
+				));
+			}
+			if ((unsigned)actualUncompLength != info.uncompressedLen) {
+				throw std::runtime_error(boost::str(
+					boost::format("Chunk %d: Expected uncompressed length %u but got length %zu")
+						% id % info.uncompressedLen % (unsigned)actualUncompLength
 				));
 			}
 			_cachedChunkViews[id] = Common::BufferView(_cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
@@ -505,6 +519,13 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::Bu
 	res->read(chunkStream);
 
 	return res;
+}
+
+// compression
+
+bool DirectorFile::compressionImplemented(MoaID compressionID) {
+	return compressionID == ZLIB_COMPRESSION_GUID
+		|| compressionID == SND_COMPRESSION_GUID;
 }
 
 // write stuff
@@ -635,7 +656,7 @@ size_t DirectorFile::chunkSize(int32_t id) {
 
 	// If we've implemented this compression algorithm,
 	// return the uncompressed size.
-	if (info.compressionID == ZLIB_COMPRESSION_GUID) {
+	if (compressionImplemented(info.compressionID)) {
 		return info.uncompressedLen;
 	}
 

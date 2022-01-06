@@ -94,6 +94,8 @@ public:
 	Common::BufferView readChunkData(uint32_t fourCC, uint32_t len);
 	std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, const Common::BufferView &view);
 
+	bool compressionImplemented(MoaID compressionID);
+
 	size_t size();
 	size_t chunkSize(int32_t id);
 

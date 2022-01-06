@@ -1,5 +1,5 @@
 CXXFLAGS=-std=c++17 -Wall -Wextra -Isrc
-LDFLAGS=-lz
+LDFLAGS=-lz -lmpg123
 LDFLAGS_RELEASE=-s -Os
 
 ifeq ($(OS),Windows_NT)
@@ -24,6 +24,7 @@ OBJS = \
 	src/director/guid.o \
 	src/director/handler.o \
 	src/director/lingo.o \
+	src/director/sound.o \
 	src/director/subchunk.o \
 	src/director/util.o
 
