@@ -219,7 +219,7 @@ struct ConfigChunk : Chunk {
 	/* 30 */ uint8_t field17;
 	/* 31 */ uint8_t field18;
 	/* 32 */ int32_t field19;
-	/* 36 */ int16_t directorVersion;
+	/* 36 */ uint16_t directorVersion;
 	/* 38 */ int16_t field21;
 	/* 40 */ int32_t field22;
 	/* 44 */ int32_t field23;

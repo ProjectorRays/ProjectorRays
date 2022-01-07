@@ -380,7 +380,7 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 30 */ field17 = stream.readUint8();
 	/* 31 */ field18 = stream.readUint8();
 	/* 32 */ field19 = stream.readInt32();
-	/* 36 */ directorVersion = stream.readInt16();
+	/* 36 */ directorVersion = stream.readUint16();
 	/* 38 */ field21 = stream.readInt16();
 	/* 40 */ field22 = stream.readInt32();
 	/* 44 */ field23 = stream.readInt32();
