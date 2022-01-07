@@ -101,6 +101,8 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 		if (sectionID > 0) {
 			auto member = std::static_pointer_cast<CastMemberChunk>(dir->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
 			member->id = i + minMember;
+			Common::debug(boost::format("Member %u: name: \"%s\" chunk: %d")
+							% member->id % member->info->name % sectionID);
 			if (lctx && (lctx->scripts.find(member->info->scriptId) != lctx->scripts.end())) {
 				member->script = lctx->scripts[member->info->scriptId].get();
 				member->script->member = member.get();
