@@ -102,9 +102,12 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 			auto member = std::static_pointer_cast<CastMemberChunk>(dir->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
 			member->id = i + minMember;
 			Common::debug(boost::format("Member %u: name: \"%s\" chunk: %d")
-							% member->id % member->info->name % sectionID);
-			if (lctx && (lctx->scripts.find(member->info->scriptId) != lctx->scripts.end())) {
-				member->script = lctx->scripts[member->info->scriptId].get();
+							% member->id % member->getName() % sectionID);
+			if (!member->info) {
+				Common::debug(boost::format("Member %u: No info!") % member->id);
+			}
+			if (lctx && (lctx->scripts.find(member->getScriptID()) != lctx->scripts.end())) {
+				member->script = lctx->scripts[member->getScriptID()].get();
 				member->script->member = member.get();
 			}
 			members[member->id] = std::move(member);
@@ -162,9 +165,11 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		specificDataLen = stream.readUint32();
 
 		// info
-		Common::ReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
-		info = std::make_shared<CastInfoChunk>(dir);
-		info->read(infoStream);
+		if (infoLen) {
+			Common::ReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
+			info = std::make_shared<CastInfoChunk>(dir);
+			info->read(infoStream);
+		}
 
 		// specific data
 		hasFlags1 = false;
@@ -207,7 +212,7 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 }
 
 size_t CastMemberChunk::size() {
-	infoLen = info->size();
+	infoLen = info ? info->size() : 0;
 	specificDataLen = specificData.size();
 
 	size_t len = 0;
@@ -238,18 +243,51 @@ void CastMemberChunk::write(Common::WriteStream &stream) {
 		stream.writeUint32(type);
 		stream.writeUint32(infoLen);
 		stream.writeUint32(specificDataLen);
-		info->write(stream);
+		if (info) {
+			info->write(stream);
+		}
 		stream.writeBytes(specificData);
 	} else {
 		stream.writeUint16(specificDataLen);
 		stream.writeUint32(infoLen);
-		info->write(stream);
+		if (info) {
+			info->write(stream);
+		}
 		stream.writeUint8(type);
 		if (hasFlags1) {
 			stream.writeUint8(flags1);
 		}
 		stream.writeBytes(specificData);
 	}
+}
+
+uint32_t CastMemberChunk::getScriptID() const {
+	if (info) {
+		return info->scriptId;
+	}
+	return 0;
+}
+
+std::string CastMemberChunk::getScriptText() const {
+	if (info) {
+		return info->scriptSrcText;
+	}
+	return "";
+}
+
+void CastMemberChunk::setScriptText(std::string val) {
+	if (!info) {
+		Common::warning("Tried to set scriptText on member with no info!");
+		return;
+	}
+	info->scriptSrcText = val;
+}
+
+std::string CastMemberChunk::getName() const {
+	if (info) {
+		return info->name;
+	}
+	return "";
 }
 
 void to_json(ordered_json &j, const CastMemberChunk &c) {

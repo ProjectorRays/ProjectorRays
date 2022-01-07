@@ -740,7 +740,7 @@ void DirectorFile::restoreScriptText() {
 		for (auto [scriptId, script] : cast->lctx->scripts) {
 			CastMemberChunk *member = script->member;
 			if (member) {
-				member->info->scriptSrcText = script->scriptText();
+				member->setScriptText(script->scriptText());
 			}
 		}
 	}
@@ -777,9 +777,9 @@ void DirectorFile::dumpScripts() {
 				} else {
 					scriptType = "CastScript";
 				}
-				id = member->info->name.empty()
+				id = member->getName().empty()
 					? std::to_string(member->id)
-					: member->info->name;
+					: member->getName();
 			} else {
 				scriptType = "UnknownScript";
 				id = std::to_string(it->first);

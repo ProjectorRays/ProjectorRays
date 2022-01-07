@@ -154,6 +154,11 @@ struct CastMemberChunk : Chunk {
 	virtual void read(Common::ReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
+
+	uint32_t getScriptID() const;
+	std::string getScriptText() const;
+	void setScriptText(std::string val);
+	std::string getName() const;
 };
 void to_json(ordered_json &j, const CastMemberChunk &c);
 
