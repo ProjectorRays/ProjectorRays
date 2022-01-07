@@ -769,6 +769,13 @@ void to_json(ordered_json &j, const MemoryMapChunk &c) {
 
 /* ScriptChunk */
 
+ScriptChunk::ScriptChunk(DirectorFile *m) :
+	Chunk(m, kScriptChunk),
+	context(nullptr),
+	member(nullptr) {}
+
+ScriptChunk::~ScriptChunk() = default;
+
 void ScriptChunk::read(Common::ReadStream &stream) {
 	stream.seek(8);
 	// Lingo scripts are always big endian regardless of file endianness

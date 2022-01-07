@@ -326,8 +326,8 @@ struct ScriptChunk : Chunk {
 
 	CastMemberChunk *member;
 
-	ScriptChunk(DirectorFile *m) : Chunk(m, kScriptChunk), context(nullptr), member(nullptr) {}
-	virtual ~ScriptChunk() = default;
+	ScriptChunk(DirectorFile *m);
+	virtual ~ScriptChunk();
 	virtual void read(Common::ReadStream &stream);
 	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
 	std::string getName(int id);
