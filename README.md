@@ -2,20 +2,15 @@
 
 ProjectorRays is a decompiler for [Adobe Shockwave](https://en.wikipedia.org/wiki/Adobe_Shockwave) and [Adobe Director](https://en.wikipedia.org/wiki/Adobe_Director) (formerly known as Macromedia Shockwave and Macromedia Director, and not to be confused with [Shockwave Flash](https://en.wikipedia.org/wiki/Adobe_Flash)).
 
-Director was released in 1987 and for decades was a leading multimedia platform. In 1995, Director made its debut on the World Wide Web, allowing Director movies to be "afterburned" into DCR files which could be played by the Shockwave browser plugin. Shockwave was discontinued in 2019, leaving a wealth of old web games unplayable.
+Director was released in 1987, and it quickly became the world's leading multimedia platform. Beginning in 1995, Director movies could be published as DCR files and played on the web with the Shockwave plugin. Over the years, the platform was used for countless CD-ROM and web games, before being fully discontinued in 2019.
 
-Shockwave games were programmed in [Lingo](https://en.wikipedia.org/wiki/Lingo_(programming_language)), but nowadays, their original source code is often lost or unavailable. Fortunately, ProjectorRays can reconstruct this lost source code from compiled Lingo bytecode.
+Nowadays, Shockwave games are unplayable on the modern web, and their original source code is often lost or unavailable. ProjectorRays can take a published game, reconstruct its [Lingo](https://en.wikipedia.org/wiki/Lingo_(programming_language)) source code, and generate editable project files to aid preservation efforts.
 
-ProjectorRays currently supports these file types:
+If you have a DCR (published Shockwave movie) or DXR (protected Director movie), ProjectorRays can generate a DIR (editable Director movie).
 
-| File extension | Description |
-| - | - |
-| DCR | Shockwave movie |
-| DIR | Director movie |
-| DXR | Protected Director movie |
-| CCT | Shockwave cast |
-| CST | Director cast |
-| CXT | Protected Director cast |
+If you have a CCT (published Shockwave cast) or CXT (protected Director cast), ProjectorRays can generate a CST (editable Director cast).
+
+ProjectorRays is a work in progress. If you encounter issues, please report them on the [issues page](https://github.com/ProjectorRays/ProjectorRays/issues).
 
 ## How do I use it?
 
@@ -23,13 +18,13 @@ ProjectorRays currently supports these file types:
 
 Development builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
 
-To use it, drop a movie or cast file on `projectorrays.exe`. ProjectorRays will output `.ls` files with decompiled source code in the same folder as the movie.
+To use it, run `projectorrays.exe INPUT_FILE OUTPUT_FILE`. ProjectorRays will take the input file, unprotect/decompress it, restore its source code, and output it to the specified location. The outputted file can then be opened in Director.
 
 ### *nix
 
-Install Boost 1.72.0 or later, zlib, and nlohmann JSON. Run `make` to build.
+Install Boost 1.72.0 or later, nlohmann JSON, mpg123, and zlib. Run `make` to build.
 
-To use it, run `./projectorrays FILE`. ProjectorRays will output `.ls` files with decompiled source code in the current working directory.
+To use it, run `./projectorrays INPUT_FILE OUTPUT_FILE`. ProjectorRays will take the input file, unprotect/decompress it, restore its source code, and output it to the specified location. The outputted file can then be opened in Director.
 
 ## Credits
 
@@ -41,7 +36,7 @@ The projector icon is by [DangerouslySlowCat](https://twitter.com/DangerSlowCat)
 
 ## License
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
