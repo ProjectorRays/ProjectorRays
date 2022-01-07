@@ -10,7 +10,7 @@ If you have a DCR (published Shockwave movie) or DXR (protected Director movie),
 
 If you have a CCT (published Shockwave cast) or CXT (protected Director cast), ProjectorRays can generate a CST (editable Director cast).
 
-ProjectorRays is a work in progress. If you encounter issues, please report them on the [issues page](https://github.com/ProjectorRays/ProjectorRays/issues).
+ProjectorRays is a work in progress. If you run into any issues, please report them on the [issue tracker](https://github.com/ProjectorRays/ProjectorRays/issues).
 
 ## How do I use it?
 
