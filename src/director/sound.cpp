@@ -205,7 +205,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out) {
 		/* uint32_t futureUse3 = */ in.readUint32();
 		/* uint32_t futureUse4 = */ in.readUint32();
 	} else {
-		Common::warning(boost::format("Unhandled sound encode option 0x%02X!") % (uint)encode);
+		Common::warning(boost::format("Unhandled sound encode option 0x%02X!") % (unsigned int)encode);
 		return -1;
 	}
 

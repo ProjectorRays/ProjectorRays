@@ -39,8 +39,8 @@ std::string MoaID::toString() const {
 	return boost::str(
 		boost::format("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X")
 			% data1 % data2 % data3
-			% (uint)data4[0] % (uint)data4[1] % (uint)data4[2] % (uint)data4[3]
-			% (uint)data4[4] % (uint)data4[5] % (uint)data4[6] % (uint)data4[7]
+			% (unsigned int)data4[0] % (unsigned int)data4[1] % (unsigned int)data4[2] % (unsigned int)data4[3]
+			% (unsigned int)data4[4] % (unsigned int)data4[5] % (unsigned int)data4[6] % (unsigned int)data4[7]
 	);
 }
 

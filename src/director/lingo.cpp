@@ -24,7 +24,7 @@ namespace Director {
 
 /* Lingo */
 
-std::map<uint, std::string> Lingo::opcodeNames = {
+std::map<unsigned int, std::string> Lingo::opcodeNames = {
 	// single-byte
 	{ kOpRet,				"ret" },
 	{ kOpRetFactory,		"retfactory" },
@@ -102,7 +102,7 @@ std::map<uint, std::string> Lingo::opcodeNames = {
 	{ kOpGetTopLevelProp,	"gettoplevelprop" }
 };
 
-std::map<uint, std::string> Lingo::binaryOpNames = {
+std::map<unsigned int, std::string> Lingo::binaryOpNames = {
 	{ kOpMul,			"*" },
 	{ kOpAdd,			"+" },
 	{ kOpSub,			"-" },
@@ -122,20 +122,20 @@ std::map<uint, std::string> Lingo::binaryOpNames = {
 	{ kOpContains0Str,	"starts" }
 };
 
-std::map<uint, std::string> Lingo::chunkTypeNames = {
+std::map<unsigned int, std::string> Lingo::chunkTypeNames = {
 	{ kChunkChar, "char" },
 	{ kChunkWord, "word" },
 	{ kChunkItem, "item" },
 	{ kChunkLine, "line" }
 };
 
-std::map<uint, std::string> Lingo::putTypeNames = {
+std::map<unsigned int, std::string> Lingo::putTypeNames = {
 	{ kPutInto,		"into" },
 	{ kPutAfter,	"after" },
 	{ kPutBefore,	"before" }
 };
 
-std::map<uint, std::string> Lingo::moviePropertyNames00 = {
+std::map<unsigned int, std::string> Lingo::moviePropertyNames00 = {
 	{ 0x00, "floatPrecision" },
 	{ 0x01, "mouseDownScript" },
 	{ 0x02, "mouseUpScript" },
@@ -150,23 +150,23 @@ std::map<uint, std::string> Lingo::moviePropertyNames00 = {
 	{ 0x0b, "long date" }
 };
 
-std::map<uint, std::string> Lingo::menuPropertyNames = {
+std::map<unsigned int, std::string> Lingo::menuPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "number of menuItems" }
 };
 
-std::map<uint, std::string> Lingo::menuItemPropertyNames = {
+std::map<unsigned int, std::string> Lingo::menuItemPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "checkMark" },
 	{ 0x03, "enabled" },
 	{ 0x04, "script" }
 };
 
-std::map<uint, std::string> Lingo::soundPropertyNames = {
+std::map<unsigned int, std::string> Lingo::soundPropertyNames = {
 	{ 0x01, "volume" }
 };
 
-std::map<uint, std::string> Lingo::spritePropertyNames = {
+std::map<unsigned int, std::string> Lingo::spritePropertyNames = {
 	{ 0x01, "type" },
 	{ 0x02, "backColor" },
 	{ 0x03, "bottom" },
@@ -203,7 +203,7 @@ std::map<uint, std::string> Lingo::spritePropertyNames = {
 	{ 0x22, "rect" }
 };
 
-std::map<uint, std::string> Lingo::moviePropertyNames07 = {
+std::map<unsigned int, std::string> Lingo::moviePropertyNames07 = {
 	{ 0x01, "beepOn" },
 	{ 0x02, "buttonStyle" },
 	{ 0x03, "centerStage" },
@@ -241,13 +241,13 @@ std::map<uint, std::string> Lingo::moviePropertyNames07 = {
 	{ 0x23, "preLoadRAM" }
 };
 
-std::map<uint, std::string> Lingo::moviePropertyNames08 = {
+std::map<unsigned int, std::string> Lingo::moviePropertyNames08 = {
 	{ 0x01, "perFrameHook" },
 	{ 0x02, "number of castMembers" },
 	{ 0x03, "number of menus" }
 };
 
-std::map<uint, std::string> Lingo::memberPropertyNames = {
+std::map<unsigned int, std::string> Lingo::memberPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "text" },
 	{ 0x03, "textStyle" },
@@ -282,7 +282,7 @@ std::string Lingo::getOpcodeName(uint8_t id) {
 	return it->second;
 }
 
-std::string Lingo::getName(const std::map<uint, std::string> &nameMap, uint id) {
+std::string Lingo::getName(const std::map<unsigned int, std::string> &nameMap, unsigned int id) {
 	auto it = nameMap.find(id);
 	if (it == nameMap.end())
 		return "ERROR";

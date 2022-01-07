@@ -42,8 +42,6 @@ struct Node;
 struct RepeatWithInStmtNode;
 struct ScriptChunk;
 
-typedef unsigned int uint;
-
 const char kLingoLineEnding = '\r';
 
 enum OpCode {
@@ -216,22 +214,22 @@ enum CaseExpect {
 /* Lingo */
 
 struct Lingo {
-	static std::map<uint, std::string> opcodeNames;
-	static std::map<uint, std::string> binaryOpNames;
-	static std::map<uint, std::string> chunkTypeNames;
-	static std::map<uint, std::string> putTypeNames;
-	static std::map<uint, std::string> moviePropertyNames00;
-	static std::map<uint, std::string> timeNames;
-	static std::map<uint, std::string> menuPropertyNames;
-	static std::map<uint, std::string> menuItemPropertyNames;
-	static std::map<uint, std::string> soundPropertyNames;
-	static std::map<uint, std::string> spritePropertyNames;
-	static std::map<uint, std::string> moviePropertyNames07;
-	static std::map<uint, std::string> moviePropertyNames08;
-	static std::map<uint, std::string> memberPropertyNames;
+	static std::map<unsigned int, std::string> opcodeNames;
+	static std::map<unsigned int, std::string> binaryOpNames;
+	static std::map<unsigned int, std::string> chunkTypeNames;
+	static std::map<unsigned int, std::string> putTypeNames;
+	static std::map<unsigned int, std::string> moviePropertyNames00;
+	static std::map<unsigned int, std::string> timeNames;
+	static std::map<unsigned int, std::string> menuPropertyNames;
+	static std::map<unsigned int, std::string> menuItemPropertyNames;
+	static std::map<unsigned int, std::string> soundPropertyNames;
+	static std::map<unsigned int, std::string> spritePropertyNames;
+	static std::map<unsigned int, std::string> moviePropertyNames07;
+	static std::map<unsigned int, std::string> moviePropertyNames08;
+	static std::map<unsigned int, std::string> memberPropertyNames;
 
 	static std::string getOpcodeName(uint8_t id);
-	static std::string getName(const std::map<uint, std::string> &nameMap, uint id);
+	static std::string getName(const std::map<unsigned int, std::string> &nameMap, unsigned int id);
 };
 
 /* Datum */
@@ -889,9 +887,9 @@ struct StringChunkCountExprNode : ExprNode {
 
 struct MenuPropExprNode : ExprNode {
 	std::shared_ptr<Node> menuID;
-	uint prop;
+	unsigned int prop;
 
-	MenuPropExprNode(std::shared_ptr<Node> m, uint p)
+	MenuPropExprNode(std::shared_ptr<Node> m, unsigned int p)
 		: ExprNode(kMenuPropExprNode), prop(p) {
 		menuID = std::move(m);
 		menuID->parent = this;
@@ -905,9 +903,9 @@ struct MenuPropExprNode : ExprNode {
 struct MenuItemPropExprNode : ExprNode {
 	std::shared_ptr<Node> menuID;
 	std::shared_ptr<Node> itemID;
-	uint prop;
+	unsigned int prop;
 
-	MenuItemPropExprNode(std::shared_ptr<Node> m, std::shared_ptr<Node> i, uint p)
+	MenuItemPropExprNode(std::shared_ptr<Node> m, std::shared_ptr<Node> i, unsigned int p)
 		: ExprNode(kMenuItemPropExprNode), prop(p) {
 		menuID = std::move(m);
 		menuID->parent = this;
@@ -922,9 +920,9 @@ struct MenuItemPropExprNode : ExprNode {
 
 struct SoundPropExprNode : ExprNode {
 	std::shared_ptr<Node> soundID;
-	uint prop;
+	unsigned int prop;
 
-	SoundPropExprNode(std::shared_ptr<Node> s, uint p)
+	SoundPropExprNode(std::shared_ptr<Node> s, unsigned int p)
 		: ExprNode(kSoundPropExprNode), prop(p) {
 		soundID = std::move(s);
 		soundID->parent = this;
@@ -937,9 +935,9 @@ struct SoundPropExprNode : ExprNode {
 
 struct SpritePropExprNode : ExprNode {
 	std::shared_ptr<Node> spriteID;
-	uint prop;
+	unsigned int prop;
 
-	SpritePropExprNode(std::shared_ptr<Node> s, uint p)
+	SpritePropExprNode(std::shared_ptr<Node> s, unsigned int p)
 		: ExprNode(kSpritePropExprNode), prop(p) {
 		spriteID = std::move(s);
 		spriteID->parent = this;
