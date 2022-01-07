@@ -24,6 +24,7 @@
 #include "common/fileio.h"
 #include "common/log.h"
 #include "common/stream.h"
+#include "director/chunk.h"
 #include "director/dirfile.h"
 
 using namespace Director;
@@ -89,6 +90,7 @@ int main(int argc, char *argv[]) {
 		dir->dumpScripts();
 	}
 
+	dir->config->unprotect();
 	dir->restoreScriptText();
 	dir->writeToFile(output);
 

@@ -240,6 +240,7 @@ struct ConfigChunk : Chunk {
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
 	uint32_t computeChecksum();
+	void unprotect();
 };
 void to_json(ordered_json &j, const ConfigChunk &c);
 

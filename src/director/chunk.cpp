@@ -486,6 +486,13 @@ uint32_t ConfigChunk::computeChecksum() {
 	return (uint32_t)check;
 }
 
+void ConfigChunk::unprotect() {
+	fileVersion = directorVersion;
+	if (protection % 23 == 0) {
+		protection += 1;
+	}
+}
+
 void to_json(ordered_json &j, const ConfigChunk &c) {
 	j["len"] = c.len;
 	j["fileVersion"] = c.fileVersion;
