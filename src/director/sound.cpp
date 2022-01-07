@@ -29,11 +29,11 @@
 
 namespace Director {
 
-mpg123_ssize_t ReadStream_read(void *stream, void *buf, size_t count) {
+ssize_t ReadStream_read(void *stream, void *buf, size_t count) {
 	return ((Common::ReadStream *)stream)->readUpToBytes(count, (uint8_t *)buf);
 }
 
-mpg123_ssize_t ReadStream_lseek(void *stream, off_t offset, int whence) {
+off_t ReadStream_lseek(void *stream, off_t offset, int whence) {
 	return ((Common::ReadStream *)stream)->lseek(offset, whence);
 }
 
