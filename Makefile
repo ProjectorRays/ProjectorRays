@@ -1,13 +1,21 @@
 CXXFLAGS=-std=c++17 -Wall -Wextra -Isrc
-LDFLAGS=-lz -lmpg123
+LDLIBS=-lz -lmpg123
+LDFLAGS=
 LDFLAGS_RELEASE=-s -Os
+BINARY=projectorrays
 
 ifeq ($(OS),Windows_NT)
+# shlwapi is required by mpg123
+	LDLIBS+=-lshlwapi
 	LDFLAGS+=-static -static-libgcc
+	BINARY=projectorrays.exe
 endif
 
 FONTMAPS = $(wildcard fontmaps/*.txt)
 FONTMAP_HEADERS = $(patsubst %.txt,%.h,$(FONTMAPS))
+
+.PHONY: all
+all: $(BINARY)
 
 fontmaps/%.h: $(patsubst %.h,%.txt,$@)
 	xxd -i $(patsubst %.h,%.txt,$@) > $@
@@ -30,15 +38,13 @@ OBJS = \
 
 src/director/fontmap.o: $(FONTMAP_HEADERS)
 
-projectorrays: $(OBJS)
-	$(CXX) -o projectorrays $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LDFLAGS_RELEASE)
-
-all: projectorrays
+$(BINARY): $(OBJS)
+	$(CXX) -o $(BINARY) $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LDFLAGS_RELEASE) $(LDLIBS)
 
 debug: CXXFLAGS+=-g -fsanitize=address
 debug: LDFLAGS_RELEASE=
-debug: projectorrays
+debug: $(BINARY)
 
 .PHONY: clean
 clean:
-	-rm projectorrays $(FONTMAP_HEADERS) $(OBJS)
+	-rm $(BINARY) $(FONTMAP_HEADERS) $(OBJS)
