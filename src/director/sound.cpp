@@ -60,13 +60,14 @@ bool decodeMP3(
 	Common::ReadStream &in,
 	Common::WriteStream &out,
 	int hdrSampleRate,
-	size_t hdrNumSamples,
 	int hdrChannels,
 	int hdrSampleSize,
-	size_t hdrSkipSamples
+	size_t hdrSkipSamples,
+	int32_t chunkID
 ) {
-	Common::debug(boost::format("Decoding %zu MP3 samples (rate: %d channels: %d bitdepth: %d)")
-					% hdrNumSamples % hdrSampleRate % hdrChannels % hdrSampleSize);
+	size_t bytesToRead = out.size() - out.pos();
+	Common::debug(boost::format("Chunk %d: Decoding %zu bytes of MP3 data (rate: %d channels: %d bitdepth: %d)")
+					% chunkID % bytesToRead % hdrSampleRate % hdrChannels % hdrSampleSize);
 
 	int err;
 	mpg123_handle *mh;
@@ -134,7 +135,6 @@ bool decodeMP3(
 		bytesToSkip -= done;
 	}
 
-	size_t bytesToRead = samplesToBytes(hdrNumSamples, hdrChannels, hdrSampleSize);
 	while (bytesToRead && err != MPG123_DONE) {
 		err = mpg123_read(mh, &out.data()[out.pos()], bytesToRead, &done);
 		out.skip(done);
@@ -148,7 +148,7 @@ bool decodeMP3(
 	return true;
 }
 
-ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out) {
+ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t chunkID) {
 	if (in.size() == 0)
 		return 0;
 
@@ -182,19 +182,18 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out) {
 	uint8_t encode = in.readUint8();
 	/* uint8_t baseFrequency = */ in.readUint8();
 
-	uint32_t numSamples;
 	uint32_t numChannels;
 	uint16_t sampleSize;
 
 	if (encode == 0x00) {
 		// Standard header
-		numSamples = encodeDependent;
+		/* uint16_t numSamples = encodeDependent; */
 		numChannels = 1;
 		sampleSize = 8;
 	} else if (encode == 0xFF) {
 		// Extended header
 		numChannels = encodeDependent;
-		numSamples = in.readUint32();
+		/* uint32_t numSamples = */ in.readUint32();
 		/* Extended80 AIFFSampleRate = */ in.skip(10);
 		/* uint32_t markerChunk = */ in.readUint32();
 		/* uint32_t instrumentChunks = */ in.readUint32();
@@ -219,7 +218,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out) {
 
 	Common::BufferView mp3View = in.readByteView(in.size() - in.pos());
 	Common::ReadStream mp3Stream(mp3View, in.endianness);
-	if (!decodeMP3(mp3Stream, out, sampleRate, numSamples, numChannels, sampleSize, skipSamples))
+	if (!decodeMP3(mp3Stream, out, sampleRate, numChannels, sampleSize, skipSamples, chunkID))
 		return -1;
 
 	return out.size();

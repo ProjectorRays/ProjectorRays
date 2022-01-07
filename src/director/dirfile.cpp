@@ -412,7 +412,7 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 				Common::BufferView chunkView = stream->readByteView(info.len);
 				Common::ReadStream chunkStream(chunkView, endianness);
 				Common::WriteStream uncompStream(_cachedChunkBufs[id].data(), _cachedChunkBufs[id].size(), endianness);
-				actualUncompLength = decompressSnd(chunkStream, uncompStream);
+				actualUncompLength = decompressSnd(chunkStream, uncompStream, id);
 			}
 			if (actualUncompLength == -1) {
 				throw std::runtime_error(boost::str(

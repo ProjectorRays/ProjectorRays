@@ -27,7 +27,7 @@ class WriteStream;
 
 namespace Director {
 
-ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out);
+ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t castID);
 
 }
 
