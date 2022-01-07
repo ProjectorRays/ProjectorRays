@@ -99,8 +99,9 @@ ssize_t ReadStream::readUpToBytes(size_t len, uint8_t *dest) {
 ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	size_t p = _pos;
 	_pos += len;
-	if (pastEOF())
-		return 0;
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readZlibBytes: Read past end of stream!");
+	}
 
 	unsigned long outLen = destLen;
 	int ret = uncompress(dest, &outLen, &_data[p], len);
@@ -115,8 +116,9 @@ ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 uint8_t ReadStream::readUint8() {
 	size_t p = _pos;
 	_pos += 1;
-	if (pastEOF())
-		return 0;
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readUint8: Read past end of stream!");
+	}
 
 	return _data[p];
 }
@@ -128,8 +130,9 @@ int8_t ReadStream::readInt8() {
 uint16_t ReadStream::readUint16() {
 	size_t p = _pos;
 	_pos += 2;
-	if (pastEOF())
-		return 0;
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readUint16: Read past end of stream!");
+	}
 
 	return endianness
 		? boost::endian::load_little_u16(&_data[p])
@@ -143,8 +146,9 @@ int16_t ReadStream::readInt16() {
 uint32_t ReadStream::readUint32() {
 	size_t p = _pos;
 	_pos += 4;
-	if (pastEOF())
-		return 0;
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readUint32: Read past end of stream!");
+	}
 
 	return endianness
 		? boost::endian::load_little_u32(&_data[p])
@@ -158,8 +162,9 @@ int32_t ReadStream::readInt32() {
 double ReadStream::readDouble() {
 	size_t p = _pos;
 	_pos += 4;
-	if (pastEOF())
-		return 0;
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readDouble: Read past end of stream!");
+	}
 
 	uint64_t f64bin = endianness
 		? boost::endian::load_little_u64(&_data[p])
@@ -178,8 +183,9 @@ double ReadStream::readAppleFloat80() {
 
 	size_t p = _pos;
 	_pos += 10;
-	if (pastEOF())
-		return 0.0;
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readAppleFloat80: Read past end of stream!");
+	}
 
 	uint16_t exponent = boost::endian::load_big_u16(&_data[p]);
 	uint64_t f64sign = (uint64_t)(exponent & 0x8000) << 48;
@@ -217,8 +223,9 @@ uint32_t ReadStream::readVarInt() {
 std::string ReadStream::readString(size_t len) {
 	size_t p = _pos;
 	_pos += len;
-	if (pastEOF())
-		return "";
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readString: Read past end of stream!");
+	}
 
 	char *str = new char[len + 1];
 	memcpy(str, &_data[p], len);
@@ -248,10 +255,12 @@ std::string ReadStream::readPascalString() {
 size_t WriteStream::writeBytes(const void *dataPtr, size_t dataSize) {
 	size_t p = _pos;
 	_pos += dataSize;
+	if (pastEOF()) {
+		throw std::runtime_error("WriteStream::writeBytes: Write past end of stream!");
+	}
 
-	size_t writeSize = std::min(dataSize, _size - p);
-	memcpy(&_data[p], dataPtr, writeSize);
-	return writeSize;
+	memcpy(&_data[p], dataPtr, dataSize);
+	return dataSize;
 }
 
 size_t WriteStream::writeBytes(const Common::BufferView &view) {
@@ -259,46 +268,64 @@ size_t WriteStream::writeBytes(const Common::BufferView &view) {
 }
 
 void WriteStream::writeUint8(uint8_t value) {
-	writeBytes(&value, 1);
+	size_t p = _pos;
+	_pos += 1;
+	if (pastEOF()) {
+		throw std::runtime_error("WriteStream::writeUint8: Write past end of stream!");
+	}
+
+	_data[p] = value;
 }
 
 void WriteStream::writeInt8(int8_t value) {
-	writeUint8(value);
+	writeUint8((uint8_t)value);
 }
 
 void WriteStream::writeUint16(uint16_t value) {
+	size_t p = _pos;
+	_pos += 2;
+	if (pastEOF()) {
+		throw std::runtime_error("WriteStream::writeUint16: Write past end of stream!");
+	}
+
 	if (endianness)
-		boost::endian::native_to_little_inplace(value);
+		boost::endian::store_little_u16(&_data[p], value);
 	else
-		boost::endian::native_to_big_inplace(value);
-	
-	writeBytes(&value, 2);
+		boost::endian::store_big_u16(&_data[p], value);
 }
 
 void WriteStream::writeInt16(int16_t value) {
-	writeUint16(value);
+	writeUint16((uint16_t)value);
 }
 
 void WriteStream::writeUint32(uint32_t value) {
+	size_t p = _pos;
+	_pos += 4;
+	if (pastEOF()) {
+		throw std::runtime_error("WriteStream::writeUint32: Write past end of stream!");
+	}
+
 	if (endianness)
-		boost::endian::native_to_little_inplace(value);
+		boost::endian::store_little_u32(&_data[p], value);
 	else
-		boost::endian::native_to_big_inplace(value);
-	
-	writeBytes(&value, 4);
+		boost::endian::store_big_u32(&_data[p], value);
 }
 
 void WriteStream::writeInt32(int32_t value) {
-	writeUint32(value);
+	writeUint32((uint32_t)value);
 }
 
 void WriteStream::writeDouble(double value) {
+	size_t p = _pos;
+	_pos += 8;
+	if (pastEOF()) {
+		throw std::runtime_error("WriteStream::writeDouble: Write past end of stream!");
+	}
+
 	if (endianness)
-		boost::endian::native_to_little_inplace(value);
+		boost::endian::store_little_u64(&_data[p], *(uint64_t *)(&value));
 	else
-		boost::endian::native_to_big_inplace(value);
-	
-	writeBytes(&value, 8);
+		boost::endian::store_big_u64(&_data[p], *(uint64_t *)(&value));
 }
 
 void WriteStream::writeString(const std::string &value) {
