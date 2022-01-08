@@ -1113,6 +1113,12 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				auto propExpr = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i), std::move(i2));
 				auto val = rawArgList[nargs - 1];
 				translation = std::make_shared<AssignmentStmtNode>(std::move(propExpr), std::move(val));
+			} else if (method == "count" && nargs == 2 && rawArgList[1]->getValue()->type == kDatumSymbol) {
+				// obj.count(#prop) => obj.prop.count
+				auto obj = rawArgList[0];
+				std::string propName  = rawArgList[1]->getValue()->s;
+				auto propExpr = std::make_shared<ObjPropExprNode>(std::move(obj), propName);
+				translation = std::make_shared<ObjPropExprNode>(std::move(propExpr), "count");
 			} else if ((method == "setContents" || method == "setContentsAfter" || method == "setContentsBefore") && nargs == 2) {
 				// var.setContents(val) => put val into var
 				// var.setContentsAfter(val) => put val after var
