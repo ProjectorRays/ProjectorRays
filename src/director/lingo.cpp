@@ -322,6 +322,8 @@ std::string Datum::toString(bool dot, bool sum) {
 	case kDatumVarRef:
 		return s;
 	case kDatumString:
+		if (s.size() == 0)
+			return "EMPTY";
 		if (s.size() == 1) {
 			switch (s[0]) {
 			case '\x03':
