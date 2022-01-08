@@ -322,7 +322,7 @@ std::string Datum::toString(bool dot, bool sum) {
 	case kDatumVarRef:
 		return s;
 	case kDatumString:
-		if (s.length() == 1) {
+		if (s.size() == 1) {
 			switch (s[0]) {
 			case '\x03':
 				return "ENTER";

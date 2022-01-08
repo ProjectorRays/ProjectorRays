@@ -1232,7 +1232,7 @@ std::string Handler::bytecodeText() {
 		}
 		if (bytecode.translation) {
 			line += " ...";
-			while (line.length() < 49) {
+			while (line.size() < 49) {
 				line += ".";
 			}
 			line += " ";
