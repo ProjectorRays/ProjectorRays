@@ -152,6 +152,14 @@ std::map<unsigned int, std::string> Lingo::moviePropertyNames00 = {
 	{ 0x0b, "long date" }
 };
 
+std::map<unsigned int, std::string> Lingo::whenEventNames = {
+	{ 0x01, "mouseDown" },
+	{ 0x02, "mouseUp" },
+	{ 0x03, "keyDown" },
+	{ 0x04, "keyUp" },
+	{ 0x05, "timeOut" },
+};
+
 std::map<unsigned int, std::string> Lingo::menuPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "number of menuItems" }
@@ -884,6 +892,44 @@ std::string PutStmtNode::toString(bool dot, bool sum) {
 	auto typeString = Lingo::getName(Lingo::putTypeNames, type);
 	// we want the variable to always be verbose
 	return "put " + value->toString(dot, sum) + " " + typeString + " " + variable->toString(false, sum);
+}
+
+/* WhenStmtNode */
+
+std::string WhenStmtNode::toString(bool dot, bool sum) {
+	std::string eventName = Lingo::getName(Lingo::whenEventNames, event);
+	std::string res = "when " + eventName + " then ";
+
+	// Reformat the script to conform to our auto-indentation...
+
+	size_t i = 0;
+	while (true) {
+		// Skip spaces.
+		while (i < script.size() && isspace(script[i]) && script[i] != kLingoLineEnding) {
+			i++;
+		}
+		if (i == script.size())
+			break;
+
+		// Copy script until the end of the line.
+		while (i < script.size() && script[i] != kLingoLineEnding) {
+			res += script[i];
+			i++;
+		}
+		if (i == script.size())
+			break;
+
+		// If there's more script, add a line break and indent.
+		if (i < script.size() - 1) {
+			res += kLingoLineEnding;
+			res += "  ";
+		}
+		i++;
+		if (i == script.size())
+			break;
+	}
+
+	return res;
 }
 
 }

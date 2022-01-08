@@ -949,11 +949,22 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		{
 			int propertyID = pop()->getValue()->toInt();
 			auto value = pop();
-			auto prop = readV4Property(bytecode.obj, propertyID);
-			if (prop->type == kCommentNode) { // error comment
-				translation = prop;
-			} else {
-				translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
+			if (bytecode.obj == 0x00 && 0x01 <= propertyID && propertyID <= 0x05 && value->getValue()->type == kDatumString) {
+				// This is either a `set eventScript to "script"` or `when event then script` statement.
+				// If the script starts with a space, it's probably a when statement.
+				// If the script contains a line break, it's definitely a when statement.
+				std::string script = value->getValue()->s;
+				if (script.size() > 0 && (script[0] == ' ' || script.find(kLingoLineEnding) != std::string::npos)) {
+					translation = std::make_shared<WhenStmtNode>(propertyID, script);
+				}
+			}
+			if (!translation) {
+				auto prop = readV4Property(bytecode.obj, propertyID);
+				if (prop->type == kCommentNode) { // error comment
+					translation = prop;
+				} else {
+					translation = std::make_shared<AssignmentStmtNode>(std::move(prop), std::move(value), true);
+				}
 			}
 		}
 		break;

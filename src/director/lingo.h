@@ -193,7 +193,8 @@ enum NodeType {
 	kObjPropIndexExprNode,
 	kExitRepeatStmtNode,
 	kNextRepeatStmtNode,
-	kPutStmtNode
+	kPutStmtNode,
+	kWhenStmtNode
 };
 
 enum BytecodeTag {
@@ -221,6 +222,7 @@ struct Lingo {
 	static std::map<unsigned int, std::string> chunkTypeNames;
 	static std::map<unsigned int, std::string> putTypeNames;
 	static std::map<unsigned int, std::string> moviePropertyNames00;
+	static std::map<unsigned int, std::string> whenEventNames;
 	static std::map<unsigned int, std::string> timeNames;
 	static std::map<unsigned int, std::string> menuPropertyNames;
 	static std::map<unsigned int, std::string> menuItemPropertyNames;
@@ -1049,6 +1051,18 @@ struct PutStmtNode : StmtNode {
 		value->parent = this;
 	}
 	virtual ~PutStmtNode() = default;
+	virtual std::string toString(bool dot, bool sum);
+};
+
+/* WhenStmtNode */
+
+struct WhenStmtNode : StmtNode {
+	int event;
+	std::string script;
+
+	WhenStmtNode(int e, std::string s)
+		: StmtNode(kWhenStmtNode), event(e), script(s) {}
+	virtual ~WhenStmtNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 };
 
