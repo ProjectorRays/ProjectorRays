@@ -77,6 +77,7 @@ enum OpCode {
 	kOpEndTell			= 0x1d,
 	kOpPushList			= 0x1e,
 	kOpPushPropList		= 0x1f,
+	kOpSwap				= 0x21,
 
 	// multi-byte
 	kOpPushInt8			= 0x41,
@@ -115,6 +116,7 @@ enum OpCode {
 	kOpPop				= 0x65,
 	kOpTheBuiltin		= 0x66,
 	kOpObjCall			= 0x67,
+	kOpPushChunkVarRef	= 0x6d,
 	kOpPushInt16		= 0x6e,
 	kOpPushInt32		= 0x6f,
 	kOpGetChainedProp	= 0x70,

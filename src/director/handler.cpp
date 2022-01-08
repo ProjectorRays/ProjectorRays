@@ -676,6 +676,13 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			translation = list;
 		}
 		break;
+	case kOpSwap:
+		if (stack.size() >= 2) {
+			std::swap(stack[stack.size() - 1], stack[stack.size() - 2]);
+		} else {
+			Common::warning("kOpSwap: Stack too small!");
+		}
+		return 1;
 	case kOpPushInt8:
 	case kOpPushInt16:
 	case kOpPushInt32:
@@ -1106,10 +1113,36 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				auto propExpr = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i), std::move(i2));
 				auto val = rawArgList[nargs - 1];
 				translation = std::make_shared<AssignmentStmtNode>(std::move(propExpr), std::move(val));
+			} else if ((method == "setContents" || method == "setContentsAfter" || method == "setContentsBefore") && nargs == 2) {
+				// var.setContents(val) => put val into var
+				// var.setContentsAfter(val) => put val after var
+				// var.setContentsBefore(val) => put val before var
+				PutType putType;
+				if (method == "setContents") {
+					putType = kPutInto;
+				} else if (method == "setContentsAfter") {
+					putType = kPutAfter;
+				} else {
+					putType = kPutBefore;
+				}
+				auto var = rawArgList[0];
+				auto val = rawArgList[1];
+				translation = std::make_shared<PutStmtNode>(putType, std::move(var), std::move(val));
+			} else if (method == "hilite" && nargs == 1) {
+				// chunk.hilite() => hilite chunk
+				auto chunk = rawArgList[0];
+				translation = std::make_shared<ChunkHiliteStmtNode>(chunk);
+			} else if (method == "delete" && nargs == 1) {
+				// chunk.delete() => delete chunk
+				auto chunk = rawArgList[0];
+				translation = std::make_shared<ChunkDeleteStmtNode>(chunk);
 			} else {
 				translation = std::make_shared<ObjCallNode>(method, std::move(argList));
 			}
 		}
+		break;
+	case kOpPushChunkVarRef:
+		translation = readVar(bytecode.obj);
 		break;
 	case kOpGetTopLevelProp:
 		{

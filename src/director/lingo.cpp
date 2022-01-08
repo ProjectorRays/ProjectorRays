@@ -57,6 +57,7 @@ std::map<unsigned int, std::string> Lingo::opcodeNames = {
 	{ kOpEndTell,			"endtell" },
 	{ kOpPushList,			"pushlist" },
 	{ kOpPushPropList,		"pushproplist" },
+	{ kOpSwap,				"swap" },
 
 	// multi-byte
 	{ kOpPushInt8,			"pushint8" },
@@ -95,6 +96,7 @@ std::map<unsigned int, std::string> Lingo::opcodeNames = {
 	{ kOpPop,				"pop" },
 	{ kOpTheBuiltin,		"thebuiltin" },
 	{ kOpObjCall,			"objcall" },
+	{ kOpPushChunkVarRef,	"pushchunkvarref" },
 	{ kOpPushInt16,			"pushint16" },
 	{ kOpPushInt32,			"pushint32" },
 	{ kOpGetChainedProp,	"getchainedprop" },
