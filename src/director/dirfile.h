@@ -62,7 +62,7 @@ public:
 	std::shared_ptr<ConfigChunk> config;
 
 	Common::Endianness endianness;
-	int version;
+	unsigned int version;
 	bool capitalX;
 	bool dotSyntax;
 	uint32_t codec;

@@ -485,7 +485,7 @@ void ConfigChunk::write(Common::WriteStream &stream) {
 }
 
 uint32_t ConfigChunk::computeChecksum() {
-	int ver = humanVersion(directorVersion);
+	unsigned int ver = humanVersion(directorVersion);
 
 	int32_t check = len + 1;
 	check *= fileVersion + 2;

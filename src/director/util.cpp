@@ -47,7 +47,7 @@ std::string indent(std::string str) {
 	return res;
 }
 
-int humanVersion(int ver) {
+unsigned int humanVersion(unsigned int ver) {
 	if (ver >= 0x79F)
 		return 1201;
 	if (ver >= 0x783)
