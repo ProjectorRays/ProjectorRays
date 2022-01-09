@@ -300,8 +300,7 @@ bool DirectorFile::readConfig() {
 	if (info) {
 		config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
 		version = humanVersion(config->directorVersion);
-		Common::log(boost::format("Director version: %d.%d.%d")
-						% (version / 100) % ((version / 10) % 10) % (version % 10));
+		Common::log("Version: " + versionString(version));
 		dotSyntax = (version >= 700); // TODO: Check for verbose/dot syntax opcodes, allow users to toggle this
 
 		return true;

@@ -79,6 +79,27 @@ unsigned int humanVersion(unsigned int ver) {
 	return 200;
 }
 
+std::string versionString(unsigned int ver) {
+	unsigned int major = ver / 100;
+	unsigned int minor = (ver / 10) % 10;
+	unsigned int patch = ver % 10;
+
+	std::string versionNumber = std::to_string(major) + "." + std::to_string(minor);
+	if (patch)
+		versionNumber += "." + std::to_string(patch);
+
+	if (major >= 11)
+		return "Adobe Director " + versionNumber;
+
+	if (major == 10)
+		return "Macromedia Director MX 2004 (" + versionNumber + ")";
+
+	if (major == 9)
+		return "Macromedia Director MX (" + versionNumber + ")";
+
+	return "Macromedia Director " + versionNumber;
+}
+
 std::string cleanFileName(const std::string &fileName) {
 	// Replace any characters that are forbidden in a Windows file name
 	// https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
