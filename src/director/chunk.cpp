@@ -439,7 +439,6 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	uint32_t computedChecksum = computeChecksum();
 	if (checksum != computedChecksum) {
 		Common::warning(boost::format("Checksums don't match! Stored: %u Computed: %u") % checksum % computedChecksum);
-		writable = false;
 	}
 }
 

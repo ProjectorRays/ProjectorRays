@@ -90,9 +90,7 @@ int main(int argc, char *argv[]) {
 		dir->dumpScripts();
 	}
 
-	if (dir->config->writable) {
-		dir->config->unprotect();
-	}
+	dir->config->unprotect();
 	dir->restoreScriptText();
 	dir->writeToFile(output);
 
