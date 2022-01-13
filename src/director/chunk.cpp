@@ -195,8 +195,10 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 
 		// info
 		Common::ReadStream infoStream (stream.readByteView(infoLen), stream.endianness);
-		info = std::make_shared<CastInfoChunk>(dir);
-		info->read(infoStream);
+		if (infoLen) {
+			info = std::make_shared<CastInfoChunk>(dir);
+			info->read(infoStream);
+		}
 	}
 
 	switch (type) {
