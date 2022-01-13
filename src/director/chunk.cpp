@@ -403,16 +403,16 @@ void to_json(ordered_json &j, const CastInfoChunk &c) {
 void ConfigChunk::read(Common::ReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 
-	/*  0 */ len = stream.readUint16();
-	/*  2 */ fileVersion = stream.readUint16();
+	/*  0 */ len = stream.readInt16();
+	/*  2 */ fileVersion = stream.readInt16();
 	/*  4 */ movieTop = stream.readInt16();
 	/*  6 */ movieLeft = stream.readInt16();
 	/*  8 */ movieBottom = stream.readInt16();
 	/* 10 */ movieRight = stream.readInt16();
-	/* 12 */ minMember = stream.readUint16();
-	/* 14 */ maxMember = stream.readUint16();
-	/* 16 */ field9 = stream.readUint8();
-	/* 17 */ field10 = stream.readUint8();
+	/* 12 */ minMember = stream.readInt16();
+	/* 14 */ maxMember = stream.readInt16();
+	/* 16 */ field9 = stream.readInt8();
+	/* 17 */ field10 = stream.readInt8();
 	/* 18 */ field11 = stream.readInt16();
 	/* 20 */ commentFont = stream.readInt16();
 	/* 22 */ commentSize = stream.readInt16();
@@ -422,12 +422,12 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 30 */ field17 = stream.readUint8();
 	/* 31 */ field18 = stream.readUint8();
 	/* 32 */ field19 = stream.readInt32();
-	/* 36 */ directorVersion = stream.readUint16();
+	/* 36 */ directorVersion = stream.readInt16();
 	/* 38 */ field21 = stream.readInt16();
 	/* 40 */ field22 = stream.readInt32();
 	/* 44 */ field23 = stream.readInt32();
 	/* 48 */ field24 = stream.readInt32();
-	/* 52 */ field25 = stream.readUint8();
+	/* 52 */ field25 = stream.readInt8();
 	/* 53 */ field26 = stream.readUint8();
 	/* 54 */ frameRate = stream.readInt16();
 	/* 56 */ platform = stream.readInt16();
@@ -452,16 +452,16 @@ void ConfigChunk::write(Common::WriteStream &stream) {
 
 	checksum = computeChecksum();
 
-	/*  0 */ stream.writeUint16(len);
-	/*  2 */ stream.writeUint16(fileVersion);
+	/*  0 */ stream.writeInt16(len);
+	/*  2 */ stream.writeInt16(fileVersion);
 	/*  4 */ stream.writeInt16(movieTop);
 	/*  6 */ stream.writeInt16(movieLeft);
 	/*  8 */ stream.writeInt16(movieBottom);
 	/* 10 */ stream.writeInt16(movieRight);
-	/* 12 */ stream.writeUint16(minMember);
-	/* 14 */ stream.writeUint16(maxMember);
-	/* 16 */ stream.writeUint8(field9);
-	/* 17 */ stream.writeUint8(field10);
+	/* 12 */ stream.writeInt16(minMember);
+	/* 14 */ stream.writeInt16(maxMember);
+	/* 16 */ stream.writeInt8(field9);
+	/* 17 */ stream.writeInt8(field10);
 	/* 18 */ stream.writeInt16(field11);
 	/* 20 */ stream.writeInt16(commentFont);
 	/* 22 */ stream.writeInt16(commentSize);
@@ -476,7 +476,7 @@ void ConfigChunk::write(Common::WriteStream &stream) {
 	/* 40 */ stream.writeInt32(field22);
 	/* 44 */ stream.writeInt32(field23);
 	/* 48 */ stream.writeInt32(field24);
-	/* 52 */ stream.writeUint8(field25);
+	/* 52 */ stream.writeInt8(field25);
 	/* 53 */ stream.writeUint8(field26);
 	/* 54 */ stream.writeInt16(frameRate);
 	/* 56 */ stream.writeInt16(platform);
@@ -503,14 +503,14 @@ uint32_t ConfigChunk::computeChecksum() {
 	check *= commentFont + 12;
 	check += commentSize + 13;
 	if (ver < 800) {
-		check *= ((commentStyle >> 8) & 0xFF) + 14;
+		check *= (uint8_t)((commentStyle >> 8) & 0xFF) + 14;
 	} else {
 		check *= commentStyle + 14;
 	}
 	if (ver < 700) {
 		check += stageColor + 15;
 	} else {
-		check += (stageColor & 0xFF) + 15;
+		check += (uint8_t)(stageColor & 0xFF) + 15;
 	}
 	check += bitDepth + 16;
 	check += field17 + 17;

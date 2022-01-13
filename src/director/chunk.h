@@ -205,16 +205,16 @@ struct CastInfoChunk : ListChunk {
 void to_json(ordered_json &j, const CastInfoChunk &c);
 
 struct ConfigChunk : Chunk {
-	/*  0 */ uint16_t len;
-	/*  2 */ uint16_t fileVersion;
+	/*  0 */ int16_t len;
+	/*  2 */ int16_t fileVersion;
 	/*  4 */ int16_t movieTop;
 	/*  6 */ int16_t movieLeft;
 	/*  8 */ int16_t movieBottom;
 	/* 10 */ int16_t movieRight;
-	/* 12 */ uint16_t minMember;
-	/* 14 */ uint16_t maxMember;
-	/* 16 */ uint8_t field9;
-	/* 17 */ uint8_t field10;
+	/* 12 */ int16_t minMember;
+	/* 14 */ int16_t maxMember;
+	/* 16 */ int8_t field9;
+	/* 17 */ int8_t field10;
 	/* 18 */ int16_t field11;
 	/* 20 */ int16_t commentFont;
 	/* 22 */ int16_t commentSize;
@@ -224,12 +224,12 @@ struct ConfigChunk : Chunk {
 	/* 30 */ uint8_t field17;
 	/* 31 */ uint8_t field18;
 	/* 32 */ int32_t field19;
-	/* 36 */ uint16_t directorVersion;
+	/* 36 */ int16_t directorVersion;
 	/* 38 */ int16_t field21;
 	/* 40 */ int32_t field22;
 	/* 44 */ int32_t field23;
 	/* 48 */ int32_t field24;
-	/* 52 */ uint8_t field25;
+	/* 52 */ int8_t field25;
 	/* 53 */ uint8_t field26;
 	/* 54 */ int16_t frameRate;
 	/* 56 */ int16_t platform;
