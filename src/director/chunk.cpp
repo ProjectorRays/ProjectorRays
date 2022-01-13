@@ -252,14 +252,14 @@ void CastMemberChunk::write(Common::WriteStream &stream) {
 	} else {
 		stream.writeUint16(specificDataLen);
 		stream.writeUint32(infoLen);
-		if (info) {
-			info->write(stream);
-		}
 		stream.writeUint8(type);
 		if (hasFlags1) {
 			stream.writeUint8(flags1);
 		}
 		stream.writeBytes(specificData);
+		if (info) {
+			info->write(stream);
+		}
 	}
 }
 
