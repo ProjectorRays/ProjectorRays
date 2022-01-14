@@ -215,11 +215,23 @@ struct ConfigChunk : Chunk {
 	/* 14 */ int16_t maxMember;
 	/* 16 */ int8_t field9;
 	/* 17 */ int8_t field10;
-	/* 18 */ int16_t field11;
+
+	// Director 6 and below
+		/* 18 */ int16_t preD7field11;
+	// Director 7 and above
+		/* 18 */ uint8_t D7stageColorG;
+		/* 19 */ uint8_t D7stageColorB;
+
 	/* 20 */ int16_t commentFont;
 	/* 22 */ int16_t commentSize;
 	/* 24 */ uint16_t commentStyle;
-	/* 26 */ int16_t stageColor;
+
+	// Director 6 and below
+		/* 26 */ int16_t preD7stageColor;
+	// Director 7 and above
+		/* 26 */ uint8_t D7stageColorIsRGB;
+		/* 27 */ uint8_t D7stageColorR;
+
 	/* 28 */ int16_t bitDepth;
 	/* 30 */ uint8_t field17;
 	/* 31 */ uint8_t field18;

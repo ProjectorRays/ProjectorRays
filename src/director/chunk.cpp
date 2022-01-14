@@ -403,6 +403,11 @@ void to_json(ordered_json &j, const CastInfoChunk &c) {
 void ConfigChunk::read(Common::ReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 
+	stream.seek(36);
+	directorVersion = stream.readInt16();
+	unsigned int ver = humanVersion(directorVersion);
+
+	stream.seek(0);
 	/*  0 */ len = stream.readInt16();
 	/*  2 */ fileVersion = stream.readInt16();
 	/*  4 */ movieTop = stream.readInt16();
@@ -413,16 +418,26 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 14 */ maxMember = stream.readInt16();
 	/* 16 */ field9 = stream.readInt8();
 	/* 17 */ field10 = stream.readInt8();
-	/* 18 */ field11 = stream.readInt16();
+	if (ver < 700) {
+		/* 18 */ preD7field11 = stream.readInt16();
+	} else {
+		/* 18 */ D7stageColorG = stream.readUint8();
+		/* 19 */ D7stageColorB = stream.readUint8();
+	}
 	/* 20 */ commentFont = stream.readInt16();
 	/* 22 */ commentSize = stream.readInt16();
 	/* 24 */ commentStyle = stream.readUint16();
-	/* 26 */ stageColor = stream.readInt16();
+	if (ver < 700) {
+		/* 26 */ preD7stageColor = stream.readInt16();
+	} else {
+		/* 26 */ D7stageColorIsRGB = stream.readUint8();
+		/* 27 */ D7stageColorR = stream.readUint8();
+	}
 	/* 28 */ bitDepth = stream.readInt16();
 	/* 30 */ field17 = stream.readUint8();
 	/* 31 */ field18 = stream.readUint8();
 	/* 32 */ field19 = stream.readInt32();
-	/* 36 */ directorVersion = stream.readInt16();
+	/* 36 */ /* directorVersion = */ stream.readInt16();
 	/* 38 */ field21 = stream.readInt16();
 	/* 40 */ field22 = stream.readInt32();
 	/* 44 */ field23 = stream.readInt32();
@@ -449,6 +464,8 @@ size_t ConfigChunk::size() {
 void ConfigChunk::write(Common::WriteStream &stream) {
 	stream.endianness = Common::kBigEndian;
 
+	unsigned int ver = humanVersion(directorVersion);
+
 	checksum = computeChecksum();
 
 	/*  0 */ stream.writeInt16(len);
@@ -461,11 +478,21 @@ void ConfigChunk::write(Common::WriteStream &stream) {
 	/* 14 */ stream.writeInt16(maxMember);
 	/* 16 */ stream.writeInt8(field9);
 	/* 17 */ stream.writeInt8(field10);
-	/* 18 */ stream.writeInt16(field11);
+	if (ver < 700) {
+		/* 18 */ stream.writeInt16(preD7field11);
+	} else {
+		/* 18 */ stream.writeUint8(D7stageColorG);
+		/* 19 */ stream.writeUint8(D7stageColorB);
+	}
 	/* 20 */ stream.writeInt16(commentFont);
 	/* 22 */ stream.writeInt16(commentSize);
 	/* 24 */ stream.writeUint16(commentStyle);
-	/* 26 */ stream.writeInt16(stageColor);
+	if (ver < 700) {
+		/* 26 */ stream.writeInt16(preD7stageColor);
+	} else {
+		/* 26 */ stream.writeUint8(D7stageColorIsRGB);
+		/* 27 */ stream.writeUint8(D7stageColorR);
+	}
 	/* 28 */ stream.writeInt16(bitDepth);
 	/* 30 */ stream.writeUint8(field17);
 	/* 31 */ stream.writeUint8(field18);
@@ -518,8 +545,16 @@ uint32_t ConfigChunk::computeChecksum() {
 	check -= field10 + 10;
 	Common::debug(boost::format("Checksum step 10 (-= %1% + 10): %2%") % (int)field10 % check);
 
-	check += field11 + 11;
-	Common::debug(boost::format("Checksum step 11 (+= %1% + 11): %2%") % field11 % check);
+	int32_t operand11;
+	if (ver < 700) {
+		operand11 = preD7field11;
+	} else {
+		operand11 = dir->endianness
+						? (int16_t)((D7stageColorB << 8) | D7stageColorG)
+						: (int16_t)((D7stageColorG << 8) | D7stageColorB);
+	}
+	check += operand11 + 11;
+	Common::debug(boost::format("Checksum step 11 (+= %1% + 11): %2%") % operand11 % check);
 
 	check *= commentFont + 12;
 	Common::debug(boost::format("Checksum step 12 (*= %1% + 12): %2%") % commentFont % check);
@@ -531,7 +566,7 @@ uint32_t ConfigChunk::computeChecksum() {
 	check *= operand14 + 14;
 	Common::debug(boost::format("Checksum step 14 (*= %1% + 14): %2%") % operand14 % check);
 
-	int32_t operand15 = (ver < 700) ? stageColor : (uint8_t)(stageColor & 0xFF);
+	int32_t operand15 = (ver < 700) ? preD7stageColor : D7stageColorR;
 	check += operand15 + 15;
 	Common::debug(boost::format("Checksum step 15 (+= %1% + 15): %2%") % operand15 % check);
 
@@ -588,6 +623,8 @@ void ConfigChunk::unprotect() {
 }
 
 void to_json(ordered_json &j, const ConfigChunk &c) {
+	unsigned int ver = humanVersion(c.directorVersion);
+
 	j["len"] = c.len;
 	j["fileVersion"] = c.fileVersion;
 	j["movieTop"] = c.movieTop;
@@ -598,11 +635,21 @@ void to_json(ordered_json &j, const ConfigChunk &c) {
 	j["maxMember"] = c.maxMember;
 	j["field9"] = c.field9;
 	j["field10"] = c.field10;
-	j["field11"] = c.field11;
+	if (ver < 700) {
+		j["preD7field11"] = c.preD7field11;
+	} else {
+		j["D7stageColorG"] = c.D7stageColorG;
+		j["D7stageColorB"] = c.D7stageColorB;
+	}
 	j["commentFont"] = c.commentFont;
 	j["commentSize"] = c.commentSize;
 	j["commentStyle"] = c.commentStyle;
-	j["stageColor"] = c.stageColor;
+	if (ver < 700) {
+		j["preD7stageColor"] = c.preD7stageColor;
+	} else {
+		j["D7stageColorIsRGB"] = c.D7stageColorIsRGB;
+		j["D7stageColorR"] = c.D7stageColorR;
+	}
 	j["bitDepth"] = c.bitDepth;
 	j["field17"] = c.field17;
 	j["field18"] = c.field18;
