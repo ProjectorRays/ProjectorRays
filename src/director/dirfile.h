@@ -62,6 +62,7 @@ public:
 	std::shared_ptr<ConfigChunk> config;
 
 	Common::Endianness endianness;
+	std::string fverVersionString;
 	unsigned int version;
 	bool capitalX;
 	bool dotSyntax;

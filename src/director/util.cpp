@@ -79,14 +79,19 @@ unsigned int humanVersion(unsigned int ver) {
 	return 200;
 }
 
-std::string versionString(unsigned int ver) {
+std::string versionString(unsigned int ver, const std::string &fverVersionString) {
 	unsigned int major = ver / 100;
 	unsigned int minor = (ver / 10) % 10;
 	unsigned int patch = ver % 10;
 
-	std::string versionNumber = std::to_string(major) + "." + std::to_string(minor);
-	if (patch)
-		versionNumber += "." + std::to_string(patch);
+	std::string versionNumber;
+	if (fverVersionString.empty()) {
+		versionNumber = std::to_string(major) + "." + std::to_string(minor);
+		if (patch)
+			versionNumber += "." + std::to_string(patch);
+	} else {
+		versionNumber = fverVersionString;
+	}
 
 	if (major >= 11)
 		return "Adobe Director " + versionNumber;

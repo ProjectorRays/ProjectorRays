@@ -132,8 +132,18 @@ bool DirectorFile::readAfterburnerMap() {
 
 	uint32_t fverLength = stream->readVarInt();
 	start = stream->pos();
-	uint32_t version = stream->readVarInt();
-	Common::debug(boost::format("Fver: version: %x") % version);
+	uint32_t fverVersion = stream->readVarInt();
+	Common::debug(boost::format("Fver: version: 0x%X") % fverVersion);
+	if (fverVersion >= 0x401) {
+		uint32_t imapVersion = stream->readVarInt();
+		uint32_t directorVersion = stream->readVarInt();
+		Common::debug(boost::format("Fver: imapVersion: %u directorVersion: 0x%X") % imapVersion % directorVersion);
+	}
+	if (fverVersion >= 0x501) {
+		uint8_t versionStringLen = stream->readUint8();
+		fverVersionString = stream->readString(versionStringLen);
+		Common::debug(boost::format("Fver: versionString: %s") % fverVersionString);
+	}
 	end = stream->pos();
 
 	if (end - start != fverLength) {
@@ -300,7 +310,7 @@ bool DirectorFile::readConfig() {
 	if (info) {
 		config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
 		version = humanVersion(config->directorVersion);
-		Common::log("Version: " + versionString(version));
+		Common::log("Version: " + versionString(version, fverVersionString));
 		dotSyntax = (version >= 700); // TODO: Check for verbose/dot syntax opcodes, allow users to toggle this
 
 		return true;
