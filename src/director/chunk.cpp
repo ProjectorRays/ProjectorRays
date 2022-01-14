@@ -671,9 +671,9 @@ void to_json(ordered_json &j, const ConfigChunk &c) {
 /* InitialMapChunk */
 
 void InitialMapChunk::read(Common::ReadStream &stream) {
-	one = stream.readUint32();
-	mmapOffset = stream.readUint32();
 	version = stream.readUint32();
+	mmapOffset = stream.readUint32();
+	directorVersion = stream.readUint32();
 	unused1 = stream.readUint32();
 	unused2 = stream.readUint32();
 	unused3 = stream.readUint32();
@@ -684,18 +684,18 @@ size_t InitialMapChunk::size() {
 }
 
 void InitialMapChunk::write(Common::WriteStream &stream) {
-	stream.writeUint32(one);
-	stream.writeUint32(mmapOffset);
 	stream.writeUint32(version);
+	stream.writeUint32(mmapOffset);
+	stream.writeUint32(directorVersion);
 	stream.writeUint32(unused1);
 	stream.writeUint32(unused2);
 	stream.writeUint32(unused3);
 }
 
 void to_json(ordered_json &j, const InitialMapChunk &c) {
-	j["one"] = c.one;
-	j["mmapOffset"] = c.mmapOffset;
 	j["version"] = c.version;
+	j["mmapOffset"] = c.mmapOffset;
+	j["directorVersion"] = c.directorVersion;
 	j["unused1"] = c.unused1;
 	j["unused2"] = c.unused2;
 	j["unused3"] = c.unused3;

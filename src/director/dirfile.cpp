@@ -542,9 +542,9 @@ void DirectorFile::writeToFile(std::string fileName) {
 
 void DirectorFile::generateInitialMap() {
 	initialMap = std::make_unique<InitialMapChunk>(this);
-	initialMap->one = 1;
+	initialMap->version = 1;
 	initialMap->mmapOffset = kRIFXHeaderSize + kChunkHeaderSize + initialMap->size();
-	initialMap->version = (version < 500) ? 0 : config->directorVersion;
+	initialMap->directorVersion = (version < 500) ? 0 : config->directorVersion;
 	initialMap->unused1 = 0;
 	initialMap->unused2 = 0;
 	initialMap->unused3 = 0;

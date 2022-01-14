@@ -262,9 +262,9 @@ struct ConfigChunk : Chunk {
 void to_json(ordered_json &j, const ConfigChunk &c);
 
 struct InitialMapChunk : Chunk {
-	uint32_t one; // always 1
+	uint32_t version; // always 1
 	uint32_t mmapOffset;
-	uint32_t version;
+	uint32_t directorVersion;
 	uint32_t unused1;
 	uint32_t unused2;
 	uint32_t unused3;
