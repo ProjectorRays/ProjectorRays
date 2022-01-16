@@ -78,10 +78,10 @@ void Handler::readData(Common::ReadStream &stream) {
 		uint32_t pos = stream.pos() - compiledOffset;
 		uint8_t op = stream.readUint8();
 		OpCode opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
-		// instructions can be one, two or three bytes
+		// argument can be one, two or four bytes
 		int32_t obj = 0;
 		if (op >= 0xc0) {
-			// three bytes
+			// four bytes
 			obj = stream.readInt32();
 		} else if (op >= 0x80) {
 			// two bytes
