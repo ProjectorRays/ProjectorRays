@@ -607,7 +607,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpGetChunk:
 		{
 			auto string = pop();
-			translation = readChunkRef(string);
+			translation = readChunkRef(std::move(string));
 		}
 		break;
 	case kOpHiliteChunk:
@@ -617,7 +617,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				castID = pop();
 			auto fieldID = pop();
 			auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
-			auto chunk = readChunkRef(field);
+			auto chunk = readChunkRef(std::move(field));
 			if (chunk->type == kCommentNode) { // error comment
 				translation = chunk;
 			} else {
@@ -919,7 +919,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			PutType putType = static_cast<PutType>((bytecode.obj >> 4) & 0xF);
 			uint32_t varType = bytecode.obj & 0xF;
 			auto var = readVar(varType);
-			auto chunk = readChunkRef(var);
+			auto chunk = readChunkRef(std::move(var));
 			auto val = pop();
 			if (chunk->type == kCommentNode) { // error comment
 				translation = chunk;
@@ -931,7 +931,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpDeleteChunk:
 		{
 			auto var = readVar(bytecode.obj);
-			auto chunk = readChunkRef(var);
+			auto chunk = readChunkRef(std::move(var));
 			if (chunk->type == kCommentNode) { // error comment
 				translation = chunk;
 			} else {
