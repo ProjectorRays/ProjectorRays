@@ -210,7 +210,9 @@ std::map<unsigned int, std::string> Lingo::spritePropertyNames = {
 	{ 0x1f, "editableText" },
 	{ 0x20, "scoreColor" },
 	{ 0x21, "loc" },
-	{ 0x22, "rect" }
+	{ 0x22, "rect" },
+	{ 0x23, "memberNum" },
+	{ 0x24, "castlibnum" }
 };
 
 std::map<unsigned int, std::string> Lingo::moviePropertyNames07 = {
@@ -254,7 +256,9 @@ std::map<unsigned int, std::string> Lingo::moviePropertyNames07 = {
 std::map<unsigned int, std::string> Lingo::moviePropertyNames08 = {
 	{ 0x01, "perFrameHook" },
 	{ 0x02, "number of castMembers" },
-	{ 0x03, "number of menus" }
+	{ 0x03, "number of menus" },
+	{ 0x04, "number of castLibs" },
+	{ 0x05, "number of xtras" }
 };
 
 std::map<unsigned int, std::string> Lingo::memberPropertyNames = {
