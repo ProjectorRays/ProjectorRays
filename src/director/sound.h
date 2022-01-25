@@ -20,6 +20,8 @@
 #ifndef DIRECTOR_SOUND_H
 #define DIRECTOR_SOUND_H
 
+#include <sys/types.h> // for ssize_t. not portable...
+
 namespace Common {
 class ReadStream;
 class WriteStream;
