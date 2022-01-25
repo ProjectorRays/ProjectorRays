@@ -20,6 +20,8 @@
 #ifndef COMMON_STREAM_H
 #define COMMON_STREAM_H
 
+#include <sys/types.h> // for off_t and ssize_t. not portable...
+
 #include <cstdint>
 #include <istream>
 #include <memory>
