@@ -171,7 +171,7 @@ std::shared_ptr<Node> Handler::pop() {
 
 int Handler::variableMultiplier() {
 	// TODO: Determine what version this changed to 1.
-	// For now approximating it with the point at which Ltcx changed to LctX.
+	// For now approximating it with the point at which Lctx changed to LctX.
 	if (script->dir->capitalX)
 		return 1;
 	if (script->dir->version >= 500)
