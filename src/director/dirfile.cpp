@@ -803,7 +803,7 @@ void DirectorFile::dumpScripts() {
 void DirectorFile::dumpChunks() {
 	for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
 		const auto &info = it->second;
-		if (info.offset == 0) // RIFX
+		if (info.id == 0) // RIFX
 			continue;
 
 		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
@@ -814,7 +814,7 @@ void DirectorFile::dumpChunks() {
 void DirectorFile::dumpJSON() {
 	for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
 		const auto &info = it->second;
-		if (info.offset == 0) // RIFX
+		if (info.id == 0) // RIFX
 			continue;
 
 		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
