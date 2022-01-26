@@ -356,7 +356,7 @@ std::shared_ptr<Node> Handler::readChunkRef(std::shared_ptr<Node> string) {
 	if (!(firstLine->type == kLiteralNode && firstLine->getValue()->type == kDatumInt && firstLine->getValue()->toInt() == 0))
 		return std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
 
-	return std::make_shared<CommentNode>("ERROR: Unknown chunk expression type");
+	return string;
 }
 
 void Handler::tagLoops() {
