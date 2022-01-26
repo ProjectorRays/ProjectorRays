@@ -281,6 +281,8 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 			return std::make_shared<SoundPropExprNode>(std::move(soundID), propertyID);
 		}
 		break;
+	case 0x05: // resource property - unused?
+		return std::make_shared<CommentNode>("ERROR: Resource property");
 	case 0x06: // sprite property
 		{
 			auto spriteID = pop();
