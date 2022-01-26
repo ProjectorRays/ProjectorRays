@@ -298,6 +298,14 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	case 0x0b: // field
 	case 0x0c: // chunk of field
 	case 0x0d: // digital video
+	case 0x0e: // bitmap
+	case 0x0f: // sound
+	case 0x10: // button
+	case 0x11: // shape
+	case 0x12: // movie
+	case 0x13: // script
+	case 0x14: // scriptText
+	case 0x15: // chunk of scriptText
 		{
 			auto propName = Lingo::getName(Lingo::memberPropertyNames, propertyID);
 			std::shared_ptr<Node> castID;
@@ -308,12 +316,14 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 			std::string prefix;
 			if (propertyType == 0x0b || propertyType == 0x0c) {
 				prefix = "field";
+			} else if (propertyType == 0x14 || propertyType == 0x15) {
+				prefix = "script";
 			} else {
 				prefix = (script->dir->version >= 500) ? "member" : "cast";
 			}
 			auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
 			std::shared_ptr<Node> entity;
-			if (propertyType == 0x0a || propertyType == 0x0c) {
+			if (propertyType == 0x0a || propertyType == 0x0c || propertyType == 0x15) {
 				entity = readChunkRef(std::move(member));
 			} else {
 				entity = member;
