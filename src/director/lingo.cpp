@@ -234,10 +234,10 @@ std::map<unsigned int, std::string> Lingo::animationPropertyNames = {
 	{ 0x0a, "fullColorPermit" },
 	{ 0x0b, "imageDirect" },
 	{ 0x0c, "doubleClick" },
-//  { 0x0d, ??? },
+	{ 0x0d, "key" },
 	{ 0x0e, "lastClick" },
 	{ 0x0f, "lastEvent" },
-//  { 0x10, ??? },
+	{ 0x10, "keyCode" },
 	{ 0x11, "lastKey" },
 	{ 0x12, "lastRoll"},
 	{ 0x13, "timeoutLapsed" },
@@ -249,14 +249,20 @@ std::map<unsigned int, std::string> Lingo::animationPropertyNames = {
 	{ 0x19, "soundEnabled" },
 	{ 0x1a, "soundLevel" },
 	{ 0x1b, "stageColor" },
-//	{ 0x1c, ??? },
+	// 0x1c indicates dontPassEvent was called.
+	// It doesn't seem to have a Lingo-accessible name.
 	{ 0x1d, "switchColorDepth" },
 	{ 0x1e, "timeoutKeyDown" },
 	{ 0x1f, "timeoutLength" },
 	{ 0x20, "timeoutMouse" },
 	{ 0x21, "timeoutPlay" },
 	{ 0x22, "timer" },
-	{ 0x23, "preLoadRAM" }
+	{ 0x23, "preLoadRAM" },
+	{ 0x24, "videoForWindowsPresent" },
+	{ 0x25, "netPresent" },
+	{ 0x26, "safePlayer" },
+	{ 0x27, "soundKeepDevice" },
+	{ 0x28, "soundMixMedia" }
 };
 
 std::map<unsigned int, std::string> Lingo::animation2PropertyNames = {
