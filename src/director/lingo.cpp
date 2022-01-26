@@ -137,7 +137,7 @@ std::map<unsigned int, std::string> Lingo::putTypeNames = {
 	{ kPutBefore,	"before" }
 };
 
-std::map<unsigned int, std::string> Lingo::moviePropertyNames00 = {
+std::map<unsigned int, std::string> Lingo::moviePropertyNames = {
 	{ 0x00, "floatPrecision" },
 	{ 0x01, "mouseDownScript" },
 	{ 0x02, "mouseUpScript" },
@@ -215,7 +215,7 @@ std::map<unsigned int, std::string> Lingo::spritePropertyNames = {
 	{ 0x24, "castLibNum" }
 };
 
-std::map<unsigned int, std::string> Lingo::moviePropertyNames07 = {
+std::map<unsigned int, std::string> Lingo::animationPropertyNames = {
 	{ 0x01, "beepOn" },
 	{ 0x02, "buttonStyle" },
 	{ 0x03, "centerStage" },
@@ -253,7 +253,7 @@ std::map<unsigned int, std::string> Lingo::moviePropertyNames07 = {
 	{ 0x23, "preLoadRAM" }
 };
 
-std::map<unsigned int, std::string> Lingo::moviePropertyNames08 = {
+std::map<unsigned int, std::string> Lingo::animation2PropertyNames = {
 	{ 0x01, "perFrameHook" },
 	{ 0x02, "number of castMembers" },
 	{ 0x03, "number of menus" },

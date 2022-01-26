@@ -221,15 +221,15 @@ struct Lingo {
 	static std::map<unsigned int, std::string> binaryOpNames;
 	static std::map<unsigned int, std::string> chunkTypeNames;
 	static std::map<unsigned int, std::string> putTypeNames;
-	static std::map<unsigned int, std::string> moviePropertyNames00;
+	static std::map<unsigned int, std::string> moviePropertyNames;
 	static std::map<unsigned int, std::string> whenEventNames;
 	static std::map<unsigned int, std::string> timeNames;
 	static std::map<unsigned int, std::string> menuPropertyNames;
 	static std::map<unsigned int, std::string> menuItemPropertyNames;
 	static std::map<unsigned int, std::string> soundPropertyNames;
 	static std::map<unsigned int, std::string> spritePropertyNames;
-	static std::map<unsigned int, std::string> moviePropertyNames07;
-	static std::map<unsigned int, std::string> moviePropertyNames08;
+	static std::map<unsigned int, std::string> animationPropertyNames;
+	static std::map<unsigned int, std::string> animation2PropertyNames;
 	static std::map<unsigned int, std::string> memberPropertyNames;
 
 	static std::string getOpcodeName(uint8_t id);

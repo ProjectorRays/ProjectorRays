@@ -247,7 +247,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	case 0x00:
 		{
 			if (propertyID <= 0x0b) { // movie property
-				auto propName = Lingo::getName(Lingo::moviePropertyNames00, propertyID);
+				auto propName = Lingo::getName(Lingo::moviePropertyNames, propertyID);
 				return std::make_shared<TheExprNode>(propName);
 			} else { // last chunk
 				auto string = pop();
@@ -287,10 +287,10 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 			return std::make_shared<SpritePropExprNode>(std::move(spriteID), propertyID);
 		}
 		break;
-	case 0x07: // movie property
-		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames07, propertyID));
-	case 0x08: // movie property
-		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::moviePropertyNames08, propertyID));
+	case 0x07: // animation property
+		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::animationPropertyNames, propertyID));
+	case 0x08: // animation 2 property
+		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::animation2PropertyNames, propertyID));
 	case 0x09: // generic cast member
 	case 0x0a: // chunk of cast member
 	case 0x0b: // field
