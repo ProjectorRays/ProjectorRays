@@ -212,7 +212,13 @@ std::map<unsigned int, std::string> Lingo::spritePropertyNames = {
 	{ 0x21, "loc" },
 	{ 0x22, "rect" },
 	{ 0x23, "memberNum" },
-	{ 0x24, "castLibNum" }
+	{ 0x24, "castLibNum" },
+	{ 0x25, "member" },
+	{ 0x26, "scriptInstanceList" },
+	{ 0x27, "currentTime" },
+	{ 0x28, "mostRecentCuePoint" },
+	{ 0x29, "tweened" },
+	{ 0x2a, "name" }
 };
 
 std::map<unsigned int, std::string> Lingo::animationPropertyNames = {
