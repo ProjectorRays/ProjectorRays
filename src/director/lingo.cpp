@@ -291,7 +291,8 @@ std::map<unsigned int, std::string> Lingo::memberPropertyNames = {
 	{ 0x0f, "directToStage" },
 	{ 0x10, "sound" },
 	{ 0x11, "foreColor" },
-	{ 0x12, "backColor" }
+	{ 0x12, "backColor" },
+	{ 0x13, "type" }
 };
 
 std::string Lingo::getOpcodeName(uint8_t id) {
