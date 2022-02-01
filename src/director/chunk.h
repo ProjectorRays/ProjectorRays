@@ -293,8 +293,8 @@ struct KeyTableChunk : Chunk {
 void to_json(ordered_json &j, const KeyTableChunk &c);
 
 struct MemoryMapChunk : Chunk {
-	uint16_t headerLength; // should be 24
-	uint16_t entryLength; // should be 20
+	int16_t headerLength; // should be 24
+	int16_t entryLength; // should be 20
 	int32_t chunkCountMax;
 	int32_t chunkCountUsed;
 	int32_t junkHead;
