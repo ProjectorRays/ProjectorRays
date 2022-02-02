@@ -874,8 +874,8 @@ void ListChunk::writeItem(Common::WriteStream &stream, uint16_t index) {
 /* MemoryMapChunk */
 
 void MemoryMapChunk::read(Common::ReadStream &stream) {
-	headerLength = stream.readUint16();
-	entryLength = stream.readUint16();
+	headerLength = stream.readInt16();
+	entryLength = stream.readInt16();
 	chunkCountMax = stream.readInt32();
 	chunkCountUsed = stream.readInt32();
 	junkHead = stream.readInt32();
@@ -892,8 +892,8 @@ size_t MemoryMapChunk::size() {
 }
 
 void MemoryMapChunk::write(Common::WriteStream &stream) {
-	stream.writeUint16(headerLength);
-	stream.writeUint16(entryLength);
+	stream.writeInt16(headerLength);
+	stream.writeInt16(entryLength);
 	stream.writeInt32(chunkCountMax);
 	stream.writeInt32(chunkCountUsed);
 	stream.writeInt32(junkHead);
