@@ -447,7 +447,7 @@ void AST::exitBlock() {
 
 /* Node */
 
-std::string Node::toString(bool dot, bool sum) {
+std::string Node::toString(bool, bool) {
 	return "";
 }
 
@@ -473,19 +473,19 @@ LoopNode *Node::ancestorLoop() {
 
 /* ErrorNode */
 
-std::string ErrorNode::toString(bool dot, bool sum) {
+std::string ErrorNode::toString(bool, bool) {
 	return "ERROR";
 }
 
 /* TempNode */
 
-std::string TempNode::toString(bool dot, bool sum) {
+std::string TempNode::toString(bool, bool) {
 	return "TEMP";
 }
 
 /* CommentNode */
 
-std::string CommentNode::toString(bool dot, bool sum) {
+std::string CommentNode::toString(bool, bool) {
 	return "-- " + text;
 }
 
@@ -544,7 +544,7 @@ std::string HandlerNode::toString(bool dot, bool sum) {
 
 /* ExitStmtNode */
 
-std::string ExitStmtNode::toString(bool dot, bool sum) {
+std::string ExitStmtNode::toString(bool, bool) {
 	return "exit";
 }
 
@@ -621,7 +621,7 @@ std::string MemberExprNode::toString(bool dot, bool sum) {
 
 /* VarNode */
 
-std::string VarNode::toString(bool dot, bool sum) {
+std::string VarNode::toString(bool, bool) {
 	return varName;
 }
 
@@ -813,13 +813,13 @@ std::string ObjCallV4Node::toString(bool dot, bool sum) {
 
 /* TheExprNode */
 
-std::string TheExprNode::toString(bool dot, bool sum) {
+std::string TheExprNode::toString(bool, bool) {
 	return "the " + prop;
 }
 
 /* LastStringChunkExprNode */
 
-std::string LastStringChunkExprNode::toString(bool dot, bool sum) {
+std::string LastStringChunkExprNode::toString(bool, bool sum) {
 	auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
 	// we want the string to always be verbose
 	return "the last " + typeString + " in " + string->toString(false, sum);
@@ -827,7 +827,7 @@ std::string LastStringChunkExprNode::toString(bool dot, bool sum) {
 
 /* StringChunkCountExprNode */
 
-std::string StringChunkCountExprNode::toString(bool dot, bool sum) {
+std::string StringChunkCountExprNode::toString(bool, bool sum) {
 	auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
 	// we want the string to always be verbose
 	return "the number of " + typeString + "s in " + string->toString(false, sum);
@@ -863,7 +863,7 @@ std::string SpritePropExprNode::toString(bool dot, bool sum) {
 
 /* ThePropExprNode */
 
-std::string ThePropExprNode::toString(bool dot, bool sum) {
+std::string ThePropExprNode::toString(bool, bool sum) {
 	// we want the object to always be verbose
 	return "the " + prop + " of " + obj->toString(false, sum);
 }
@@ -895,13 +895,13 @@ std::string ObjPropIndexExprNode::toString(bool dot, bool sum) {
 
 /* ExitRepeatStmtNode */
 
-std::string ExitRepeatStmtNode::toString(bool dot, bool sum) {
+std::string ExitRepeatStmtNode::toString(bool, bool) {
 	return "exit repeat";
 }
 
 /* NextRepeatStmtNode */
 
-std::string NextRepeatStmtNode::toString(bool dot, bool sum) {
+std::string NextRepeatStmtNode::toString(bool, bool) {
 	return "next repeat";
 }
 
@@ -915,7 +915,7 @@ std::string PutStmtNode::toString(bool dot, bool sum) {
 
 /* WhenStmtNode */
 
-std::string WhenStmtNode::toString(bool dot, bool sum) {
+std::string WhenStmtNode::toString(bool, bool) {
 	std::string eventName = Lingo::getName(Lingo::whenEventNames, event);
 	std::string res = "when " + eventName + " then ";
 
