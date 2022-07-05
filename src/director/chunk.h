@@ -69,7 +69,7 @@ struct Chunk {
 	virtual ~Chunk() = default;
 	virtual void read(Common::ReadStream &stream) = 0;
 	virtual size_t size() { return 0; }
-	virtual void write(Common::WriteStream &stream) {}
+	virtual void write(Common::WriteStream&) {}
 };
 void to_json(ordered_json &j, const Chunk &c);
 

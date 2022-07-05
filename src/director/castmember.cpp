@@ -27,7 +27,7 @@ namespace Director {
 
 /* CastMember */
 
-void CastMember::read(Common::ReadStream &stream) {}
+void CastMember::read(Common::ReadStream&) {}
 
 void to_json(ordered_json &j, const CastMember &c) {
 	switch (c.type) {
