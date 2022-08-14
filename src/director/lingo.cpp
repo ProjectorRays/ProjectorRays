@@ -101,7 +101,8 @@ std::map<unsigned int, std::string> Lingo::opcodeNames = {
 	{ kOpPushInt32,			"pushint32" },
 	{ kOpGetChainedProp,	"getchainedprop" },
 	{ kOpPushFloat32,		"pushfloat32" },
-	{ kOpGetTopLevelProp,	"gettoplevelprop" }
+	{ kOpGetTopLevelProp,   "gettoplevelprop" },
+	{ kOpNewObj,			"newobj" }
 };
 
 std::map<unsigned int, std::string> Lingo::binaryOpNames = {
@@ -949,6 +950,12 @@ std::string WhenStmtNode::toString(bool, bool) {
 	}
 
 	return res;
+}
+
+/* NewObjNode */
+
+std::string NewObjNode::toString(bool dot, bool sum) {
+	return "new " + objType + "(" + objArgs->toString(dot, sum) + ")";
 }
 
 }
