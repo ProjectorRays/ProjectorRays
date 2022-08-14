@@ -122,7 +122,7 @@ enum OpCode {
 	kOpGetChainedProp	= 0x70,
 	kOpPushFloat32		= 0x71,
 	kOpGetTopLevelProp	= 0x72,
-	kOpNewObj		= 0x73
+	kOpNewObj			= 0x73
 };
 
 enum DatumType {
@@ -1071,8 +1071,8 @@ struct WhenStmtNode : StmtNode {
 /* NewObjNode */
 
 struct NewObjNode : ExprNode {
- std::string objType;
- std::shared_ptr<Node> objArgs;
+	std::string objType;
+	std::shared_ptr<Node> objArgs;
 
 	NewObjNode(std::string o, std::shared_ptr<Node> args) : ExprNode(kNewObjNode), objType(o), objArgs(args) {}
 	virtual ~NewObjNode() = default;

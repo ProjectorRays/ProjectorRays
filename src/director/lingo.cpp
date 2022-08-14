@@ -101,7 +101,7 @@ std::map<unsigned int, std::string> Lingo::opcodeNames = {
 	{ kOpPushInt32,			"pushint32" },
 	{ kOpGetChainedProp,	"getchainedprop" },
 	{ kOpPushFloat32,		"pushfloat32" },
-	{ kOpGetTopLevelProp,   "gettoplevelprop" },
+	{ kOpGetTopLevelProp,	"gettoplevelprop" },
 	{ kOpNewObj,			"newobj" }
 };
 
