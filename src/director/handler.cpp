@@ -373,7 +373,7 @@ void Handler::tagLoops() {
 		uint32_t jmpPos = jmpifz.pos + jmpifz.obj;
 		uint32_t endIndex = bytecodePosMap[jmpPos];
 		auto &endRepeat = bytecodeArray[endIndex - 1];
-		if (endRepeat.opcode != kOpEndRepeat)
+		if (endRepeat.opcode != kOpEndRepeat || (endRepeat.pos - endRepeat.obj) > jmpifz.pos)
 			continue;
 
 		BytecodeTag loopType = identifyLoop(startIndex, endIndex);
