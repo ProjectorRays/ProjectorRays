@@ -810,6 +810,16 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		{
 			uint32_t targetPos = bytecode.pos + bytecode.obj;
 			uint32_t targetIndex = bytecodePosMap[targetPos];
+			auto ancestorLoop = ast->currentBlock->ancestorLoop();
+			if (ancestorLoop) {
+				if (bytecodeArray[targetIndex - 1].opcode == kOpEndRepeat && bytecodeArray[targetIndex - 1].ownerLoop == ancestorLoop->startIndex) {
+					translation = std::make_shared<ExitRepeatStmtNode>();
+					break;
+				} else if (bytecodeArray[targetIndex].tag == kTagNextRepeatTarget && bytecodeArray[targetIndex].ownerLoop == ancestorLoop->startIndex) {
+					translation = std::make_shared<NextRepeatStmtNode>();
+					break;
+				}
+			}
 			auto &nextBytecode = bytecodeArray[index + 1];
 			auto ancestorStatement = ast->currentBlock->ancestorStatement();
 			if (ancestorStatement && nextBytecode.pos == ast->currentBlock->endPos) {
@@ -826,17 +836,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 					return 1;
 				}
 			}
-			auto ancestorLoop = ast->currentBlock->ancestorLoop();
-			if (ancestorLoop) {
-				if (bytecodeArray[targetIndex - 1].opcode == kOpEndRepeat && bytecodeArray[targetIndex - 1].ownerLoop == ancestorLoop->startIndex) {
-					translation = std::make_shared<ExitRepeatStmtNode>();
-				} else if (bytecodeArray[targetIndex].tag == kTagNextRepeatTarget && bytecodeArray[targetIndex].ownerLoop == ancestorLoop->startIndex) {
-					translation = std::make_shared<NextRepeatStmtNode>();
-				}
-			}
-			if (!translation) {
-				translation = std::make_shared<CommentNode>("ERROR: Could not identify jmp");
-			}
+			translation = std::make_shared<CommentNode>("ERROR: Could not identify jmp");
 		}
 		break;
 	case kOpEndRepeat:
