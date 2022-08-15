@@ -644,15 +644,15 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		break;
 	case kOpOntoSpr:
 		{
-			auto firstSprite = pop();
 			auto secondSprite = pop();
+			auto firstSprite = pop();
 			translation = std::make_shared<SpriteIntersectsExprNode>(std::move(firstSprite), std::move(secondSprite));
 		}
 		break;
 	case kOpIntoSpr:
 		{
-			auto firstSprite = pop();
 			auto secondSprite = pop();
+			auto firstSprite = pop();
 			translation = std::make_shared<SpriteWithinExprNode>(std::move(firstSprite), std::move(secondSprite));
 		}
 		break;
