@@ -42,8 +42,8 @@ void Handler::readRecord(Common::ReadStream &stream) {
 	argumentOffset = stream.readUint32();
 	localsCount = stream.readUint16();
 	localsOffset = stream.readUint32();
-	unknown0Count = stream.readUint16();
-	unknown0Offset = stream.readUint32();
+	globalsCount = stream.readUint16();
+	globalsOffset = stream.readUint32();
 	unknown1 = stream.readUint32();
 	unknown2 = stream.readUint16();
 	lineCount = stream.readUint16();
@@ -62,8 +62,8 @@ void to_json(ordered_json &j, const Handler &c) {
 	j["argumentOffset"] = c.argumentOffset;
 	j["localsCount"] = c.localsCount;
 	j["localsOffset"] = c.localsOffset;
-	j["unknown0Count"] = c.unknown0Count;
-	j["unknown0Offset"] = c.unknown0Offset;
+	j["globalsCount"] = c.globalsCount;
+	j["globalsOffset"] = c.globalsOffset;
 	j["unknown1"] = c.unknown1;
 	j["unknown2"] = c.unknown2;
 	j["lineCount"] = c.lineCount;
@@ -108,6 +108,7 @@ void Handler::readData(Common::ReadStream &stream) {
 
 	argumentNameIDs = readVarnamesTable(stream, argumentCount, argumentOffset);
 	localNameIDs = readVarnamesTable(stream, localsCount, localsOffset);
+	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
 }
 
 std::vector<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
@@ -127,6 +128,10 @@ void Handler::readNames() {
 	}
 	for (auto nameID : localNameIDs) {
 		localNames.push_back(getName(nameID));
+	}
+	for (auto nameID : globalNameIDs) {
+		if (nameID >= 0)	// Some global nameIDs = -1 might exist
+			globalNames.push_back(getName(nameID));
 	}
 }
 
@@ -179,13 +184,6 @@ int Handler::variableMultiplier() {
 	return 6;
 }
 
-void Handler::registerGlobal(const std::string &name) {
-	if (std::find(script->globalNames.begin(), script->globalNames.end(), name) == script->globalNames.end()
-			&& std::find(globalNames.begin(), globalNames.end(), name) == globalNames.end()) {
-		globalNames.push_back(name);
-	}
-}
-
 std::shared_ptr<Node> Handler::readVar(int varType) {
 	std::shared_ptr<Node> castID;
 	if (varType == 0x6 && script->dir->version >= 500) // field cast ID
@@ -224,7 +222,6 @@ std::string Handler::getVarNameFromSet(const Bytecode &bytecode) {
 	case kOpSetGlobal:
 	case kOpSetGlobal2:
 		varName = getName(bytecode.obj);
-		registerGlobal(varName);
 		break;
 	case kOpSetProp:
 		varName = getName(bytecode.obj);
@@ -767,7 +764,6 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpGetGlobal2:
 		{
 			auto name = getName(bytecode.obj);
-			registerGlobal(name);
 			translation = std::make_shared<VarNode>(name);
 		}
 		break;
@@ -784,7 +780,6 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpSetGlobal2:
 		{
 			auto varName = getName(bytecode.obj);
-			registerGlobal(varName);
 			auto var = std::make_shared<VarNode>(varName);
 			auto value = pop();
 			translation = std::make_shared<AssignmentStmtNode>(std::move(var), std::move(value));

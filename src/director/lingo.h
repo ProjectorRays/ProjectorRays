@@ -281,8 +281,8 @@ struct Handler {
 	uint32_t argumentOffset;
 	uint16_t localsCount;
 	uint32_t localsOffset;
-	uint16_t unknown0Count;
-	uint32_t unknown0Offset;
+	uint16_t globalsCount;
+	uint32_t globalsOffset;
 	uint32_t unknown1;
 	uint16_t unknown2;
 	uint16_t lineCount;
@@ -291,6 +291,7 @@ struct Handler {
 
 	std::vector<int16_t> argumentNameIDs;
 	std::vector<int16_t> localNameIDs;
+	std::vector<int16_t> globalNameIDs;
 
 	ScriptChunk *script;
 	std::vector<Bytecode> bytecodeArray;
@@ -318,7 +319,6 @@ struct Handler {
 	std::shared_ptr<Node> peek();
 	std::shared_ptr<Node> pop();
 	int variableMultiplier();
-	void registerGlobal(const std::string &name);
 	std::shared_ptr<Node> readVar(int varType);
 	std::string getVarNameFromSet(const Bytecode &bytecode);
 	std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
