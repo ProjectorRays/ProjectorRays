@@ -564,7 +564,8 @@ std::string NotOpNode::toString(bool dot, bool sum) {
 
 std::string BinaryOpNode::toString(bool dot, bool sum) {
 	auto opString = Lingo::getName(Lingo::binaryOpNames, opcode);
-	return left->toString(dot, sum) + " " +  opString + " " + right->toString(dot, sum);
+	// added "(" and ")" to fix op. precedence problems (not always needed, it can be improved)
+	return "(" + left->toString(dot, sum) + " " +  opString + " " + right->toString(dot, sum) + ")";
 }
 
 /* ChunkExprNode */
