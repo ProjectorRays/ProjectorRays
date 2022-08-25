@@ -1182,6 +1182,13 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			translation = std::make_shared<VarNode>(name);
 		}
 		break;
+	case kOpNewObj:
+		{
+			auto objType = getName(bytecode.obj);
+			auto objArgs = pop();
+			translation = std::make_shared<NewObjNode>(objType, std::move(objArgs));
+		}
+		break;
 	default:
 		{
 			auto commentText = Lingo::getOpcodeName(bytecode.opID);
