@@ -344,14 +344,14 @@ std::shared_ptr<Node> Handler::readChunkRef(std::shared_ptr<Node> string) {
 	auto lastChar = pop();
 	auto firstChar = pop();
 
-	if (!(firstChar->type == kLiteralNode && firstChar->getValue()->type == kDatumInt && firstChar->getValue()->toInt() == 0))
-		return std::make_shared<ChunkExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
-	if (!(firstWord->type == kLiteralNode && firstWord->getValue()->type == kDatumInt && firstWord->getValue()->toInt() == 0))
-		return std::make_shared<ChunkExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
-	if (!(firstItem->type == kLiteralNode && firstItem->getValue()->type == kDatumInt && firstItem->getValue()->toInt() == 0))
-		return std::make_shared<ChunkExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
 	if (!(firstLine->type == kLiteralNode && firstLine->getValue()->type == kDatumInt && firstLine->getValue()->toInt() == 0))
-		return std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+		string = std::make_shared<ChunkExprNode>(kChunkLine, std::move(firstLine), std::move(lastLine), std::move(string));
+	if (!(firstItem->type == kLiteralNode && firstItem->getValue()->type == kDatumInt && firstItem->getValue()->toInt() == 0))
+		string = std::make_shared<ChunkExprNode>(kChunkItem, std::move(firstItem), std::move(lastItem), std::move(string));
+	if (!(firstWord->type == kLiteralNode && firstWord->getValue()->type == kDatumInt && firstWord->getValue()->toInt() == 0))
+		string = std::make_shared<ChunkExprNode>(kChunkWord, std::move(firstWord), std::move(lastWord), std::move(string));
+	if (!(firstChar->type == kLiteralNode && firstChar->getValue()->type == kDatumInt && firstChar->getValue()->toInt() == 0))
+		string = std::make_shared<ChunkExprNode>(kChunkChar, std::move(firstChar), std::move(lastChar), std::move(string));
 
 	return string;
 }
