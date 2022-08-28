@@ -526,6 +526,7 @@ struct BinaryOpNode : ExprNode {
 	}
 	virtual ~BinaryOpNode() = default;
 	virtual std::string toString(bool dot, bool sum);
+	virtual unsigned int getPriority();
 };
 
 /* ChunkExprNode */
