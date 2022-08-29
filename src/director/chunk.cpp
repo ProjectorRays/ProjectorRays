@@ -329,6 +329,10 @@ void CastInfoChunk::read(Common::ReadStream &stream) {
 	// cProp19 = readProperty(19);
 	// cProp20 = readProperty(20);
 	// imageCompression = readProperty(21);
+	if (offsetTableLen == 0) { // Workaround: Increase table len to have at least one entry for decompilation results
+		offsetTableLen = 1;
+		offsetTable.resize(offsetTableLen);
+	}
 }
 
 void CastInfoChunk::readHeader(Common::ReadStream &stream) {
