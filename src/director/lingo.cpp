@@ -843,7 +843,12 @@ std::string CallNode::toString(bool dot, bool sum) {
 
 std::string ObjCallNode::toString(bool dot, bool sum) {
 	auto rawArgs = argList->getValue()->l;
-	std::string res = rawArgs[0]->toString(dot, sum) + "." + name + "(";
+	auto obj = rawArgs[0];
+	std::string leftOp = obj->toString(dot, sum);
+	if (obj->type != kVarNode && obj->type != kObjCallNode && obj->type != kObjCallV4Node && obj->type != kCallNode &&
+			obj->type != kObjPropExprNode && obj->type != kObjBracketExprNode && obj->type != kObjPropIndexExprNode)
+		leftOp = "(" + leftOp + ")";
+	std::string res = leftOp + "." + name + "(";
 	for (size_t i = 1; i < rawArgs.size(); i++) {
 		if (i > 1)
 			res += ", ";
@@ -919,9 +924,13 @@ std::string ThePropExprNode::toString(bool, bool sum) {
 /* ObjPropExprNode */
 
 std::string ObjPropExprNode::toString(bool dot, bool sum) {
-	if (dot)
-		return obj->toString(dot, sum) + "." + prop;
-
+	if (dot) {
+		std::string leftOp = obj->toString(dot, sum);
+		if (obj->type != kVarNode && obj->type != kObjCallNode && obj->type != kObjCallV4Node && obj->type != kCallNode &&
+				obj->type != kObjPropExprNode && obj->type != kObjBracketExprNode && obj->type != kObjPropIndexExprNode)
+			leftOp = "(" + leftOp + ")";
+		return leftOp + "." + prop;
+	}
 	return "the " + prop + " of " + obj->toString(dot, sum);
 }
 
@@ -934,7 +943,11 @@ std::string ObjBracketExprNode::toString(bool dot, bool sum) {
 /* ObjPropIndexExprNode */
 
 std::string ObjPropIndexExprNode::toString(bool dot, bool sum) {
-	std::string res = obj->toString(dot, sum) + "." + prop + "[" + index->toString(dot, sum);
+	std::string leftOp = obj->toString(dot, sum);
+	if (obj->type != kVarNode && obj->type != kObjCallNode && obj->type != kObjCallV4Node && obj->type != kCallNode &&
+			obj->type != kObjPropExprNode && obj->type != kObjBracketExprNode && obj->type != kObjPropIndexExprNode)
+		leftOp = "(" + leftOp + ")";
+	std::string res = leftOp + "." + prop + "[" + index->toString(dot, sum);
 	if (index2)
 		res += ".." + index2->toString(dot, sum);
 	res += "]";
