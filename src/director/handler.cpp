@@ -289,6 +289,13 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	case 0x07: // animation property
 		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::animationPropertyNames, propertyID));
 	case 0x08: // animation 2 property
+		if (propertyID == 0x02 && script->dir->version >= 500) { // the number of castMembers supports castLib selection from Director 5.0
+			auto castLib = pop();
+			if (!(castLib->type == kLiteralNode && castLib->getValue()->type == kDatumInt && castLib->getValue()->toInt() == 0)) {
+				auto castLibNode = std::make_shared<MemberExprNode>("castLib", castLib, nullptr);
+				return std::make_shared<ThePropExprNode>(castLibNode, Lingo::getName(Lingo::animation2PropertyNames, propertyID));
+			}
+		}
 		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::animation2PropertyNames, propertyID));
 	case 0x09: // generic cast member
 	case 0x0a: // chunk of cast member
