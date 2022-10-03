@@ -1014,7 +1014,7 @@ struct ObjPropIndexExprNode : ExprNode {
 		obj->parent = this;
 		index = std::move(i);
 		index->parent = this;
-		if (index2) {
+		if (i2) {
 			index2 = std::move(i2);
 			index2->parent = this;
 		}
