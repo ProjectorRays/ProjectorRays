@@ -786,9 +786,10 @@ void DirectorFile::dumpScripts() {
 				} else {
 					scriptType = "CastScript";
 				}
-				id = member->getName().empty()
-					? std::to_string(member->id)
-					: member->getName();
+				id = std::to_string(member->id);
+				if (!member->getName().empty()) {
+					id += " - " + member->getName();
+				}
 			} else {
 				scriptType = "UnknownScript";
 				id = std::to_string(it->first);
