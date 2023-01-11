@@ -415,14 +415,6 @@ struct ErrorNode : ExprNode {
 	virtual std::string toString(bool dot, bool sum);
 };
 
-/* TempNode */
-
-struct TempNode : ExprNode {
-	TempNode() : ExprNode(kTempNode) {}
-	virtual ~TempNode() = default;
-	virtual std::string toString(bool dot, bool sum);
-};
-
 /* CommentNode */
 
 struct CommentNode : Node {

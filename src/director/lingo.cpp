@@ -478,12 +478,6 @@ std::string ErrorNode::toString(bool, bool) {
 	return "ERROR";
 }
 
-/* TempNode */
-
-std::string TempNode::toString(bool, bool) {
-	return "TEMP";
-}
-
 /* CommentNode */
 
 std::string CommentNode::toString(bool, bool) {
