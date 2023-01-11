@@ -1,7 +1,7 @@
 /**
  * ProjectorRays Shockwave Decompiler
- * Copyright (C) 2017 Anthony Kleine, Deborah Servilla
- * Copyright (C) 2020-2022 Deborah Servilla
+ * Copyright (C) 2017 Anthony Kleine, Debby Servilla
+ * Copyright (C) 2020-2023 Debby Servilla
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
