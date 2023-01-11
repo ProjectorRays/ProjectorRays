@@ -753,14 +753,20 @@ std::string CaseNode::toString(bool dot, bool sum) {
 				res += "..., ";
 			}
 		}
-		res += value->toString(dot, sum);
+		std::string valueString = value->toString(dot, sum);
+		if (value->needsParens())
+			valueString = "(" + valueString + ")";
+		res += valueString;
 		if (nextOr) {
 			res += ", ...";
 		} else {
 			res += ":";
 		}
 	} else {
-		res += value->toString(dot, sum);
+		std::string valueString = value->toString(dot, sum);
+		if (value->needsParens())
+			valueString = "(" + valueString + ")";
+		res += valueString;
 		if (nextOr) {
 			res += ", " + nextOr->toString(dot, sum);
 		} else {
@@ -838,11 +844,10 @@ std::string CallNode::toString(bool dot, bool sum) {
 std::string ObjCallNode::toString(bool dot, bool sum) {
 	auto rawArgs = argList->getValue()->l;
 	auto obj = rawArgs[0];
-	std::string leftOp = obj->toString(dot, sum);
-	if (obj->type != kVarNode && obj->type != kObjCallNode && obj->type != kObjCallV4Node && obj->type != kCallNode &&
-			obj->type != kObjPropExprNode && obj->type != kObjBracketExprNode && obj->type != kObjPropIndexExprNode)
-		leftOp = "(" + leftOp + ")";
-	std::string res = leftOp + "." + name + "(";
+	std::string objString = obj->toString(dot, sum);
+	if (obj->needsParens())
+		objString = "(" + objString + ")";
+	std::string res = objString + "." + name + "(";
 	for (size_t i = 1; i < rawArgs.size(); i++) {
 		if (i > 1)
 			res += ", ";
@@ -919,11 +924,10 @@ std::string ThePropExprNode::toString(bool, bool sum) {
 
 std::string ObjPropExprNode::toString(bool dot, bool sum) {
 	if (dot) {
-		std::string leftOp = obj->toString(dot, sum);
-		if (obj->type != kVarNode && obj->type != kObjCallNode && obj->type != kObjCallV4Node && obj->type != kCallNode &&
-				obj->type != kObjPropExprNode && obj->type != kObjBracketExprNode && obj->type != kObjPropIndexExprNode)
-			leftOp = "(" + leftOp + ")";
-		return leftOp + "." + prop;
+		std::string objString = obj->toString(dot, sum);
+		if (obj->needsParens())
+			objString = "(" + objString + ")";
+		return objString + "." + prop;
 	}
 	return "the " + prop + " of " + obj->toString(dot, sum);
 }
@@ -931,17 +935,19 @@ std::string ObjPropExprNode::toString(bool dot, bool sum) {
 /* ObjBracketExprNode */
 
 std::string ObjBracketExprNode::toString(bool dot, bool sum) {
-	return obj->toString(dot, sum) + "[" + prop->toString(dot, sum) + "]";
+	std::string objString = obj->toString(dot, sum);
+	if (obj->needsParens())
+		objString = "(" + objString + ")";
+	return objString + "[" + prop->toString(dot, sum) + "]";
 }
 
 /* ObjPropIndexExprNode */
 
 std::string ObjPropIndexExprNode::toString(bool dot, bool sum) {
-	std::string leftOp = obj->toString(dot, sum);
-	if (obj->type != kVarNode && obj->type != kObjCallNode && obj->type != kObjCallV4Node && obj->type != kCallNode &&
-			obj->type != kObjPropExprNode && obj->type != kObjBracketExprNode && obj->type != kObjPropIndexExprNode)
-		leftOp = "(" + leftOp + ")";
-	std::string res = leftOp + "." + prop + "[" + index->toString(dot, sum);
+	std::string objString = obj->toString(dot, sum);
+	if (obj->needsParens())
+		objString = "(" + objString + ")";
+	std::string res = objString + "." + prop + "[" + index->toString(dot, sum);
 	if (index2)
 		res += ".." + index2->toString(dot, sum);
 	res += "]";
