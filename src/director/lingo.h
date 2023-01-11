@@ -440,14 +440,14 @@ struct LiteralNode : ExprNode {
 
 /* BlockNode */
 
-struct BlockNode : ExprNode {
+struct BlockNode : Node {
 	std::vector<std::shared_ptr<Node>> children;
 
 	// for use during translation:
 	uint32_t endPos;
 	CaseNode *currentCase;
 
-	BlockNode() : ExprNode(kBlockNode), endPos(-1), currentCase(nullptr) {}
+	BlockNode() : Node(kBlockNode), endPos(-1), currentCase(nullptr) {}
 	virtual ~BlockNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 	void addChild(std::shared_ptr<Node> child);
