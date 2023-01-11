@@ -569,13 +569,11 @@ std::string BinaryOpNode::toString(bool dot, bool sum) {
 	if (precedence) {
 		if (left->type == kBinaryOpNode) {
 			auto leftBinaryOpNode = static_cast<BinaryOpNode *>(left.get());
-			if (leftBinaryOpNode->getPrecedence() > precedence)
+			if (leftBinaryOpNode->getPrecedence() != precedence)
 				leftString = "(" + leftString + ")";
 		}
 		if (right->type == kBinaryOpNode) {
-			auto rightBinaryOpNode = static_cast<BinaryOpNode *>(right.get());
-			if (rightBinaryOpNode->getPrecedence() >= precedence)
-				rightString = "(" + rightString + ")";
+			rightString = "(" + rightString + ")";
 		}
 	}
 	return leftString + " " +  opString + " " + rightString;
