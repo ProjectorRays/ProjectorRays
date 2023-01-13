@@ -33,4 +33,4 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 
 }
 
-#endif
+#endif // DIRECTOR_SOUND_H

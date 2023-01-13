@@ -127,4 +127,4 @@ public:
 
 }
 
-#endif
+#endif // COMMON_STREAM_H

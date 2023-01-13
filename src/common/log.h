@@ -36,4 +36,4 @@ void warning(const boost::format &msg);
 
 }
 
-#endif
+#endif // COMMON_LOG_H

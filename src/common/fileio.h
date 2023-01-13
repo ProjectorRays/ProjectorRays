@@ -36,4 +36,4 @@ void writeFile(const std::string &fileName, const BufferView &view);
 
 }
 
-#endif
+#endif // COMMON_FILEIO_H

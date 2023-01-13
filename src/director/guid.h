@@ -69,4 +69,4 @@ struct MoaID {
 
 }
 
-#endif
+#endif // DIRECTOR_GUID_H

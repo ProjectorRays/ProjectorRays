@@ -28,4 +28,4 @@ Common::BufferView getFontMap(int version);
 
 }
 
-#endif
+#endif // DIRECTOR_FONTMAP_H

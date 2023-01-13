@@ -97,4 +97,4 @@ void to_json(ordered_json &j, const LiteralStore &c);
 
 }
 
-#endif
+#endif // DIRECTOR_SUBCHUNK_H

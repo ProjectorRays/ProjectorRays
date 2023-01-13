@@ -36,4 +36,4 @@ std::string floatToString(double f);
 
 }
 
-#endif
+#endif // DIRECTOR_UTIL_H

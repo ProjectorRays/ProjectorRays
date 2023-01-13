@@ -74,4 +74,4 @@ void to_json(ordered_json &j, const ScriptMember &c);
 
 }
 
-#endif
+#endif // DIRECTOR_CASTMEMBER_H
