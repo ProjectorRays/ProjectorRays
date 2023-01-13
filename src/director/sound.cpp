@@ -51,7 +51,7 @@ size_t samplesToBytes(size_t samples, int channels, int sampleSize) {
 		bytes *= 2;
 	}
 	if (sampleSize == 16) {
-		bytes*= 2;
+		bytes *= 2;
 	}
 	return bytes;
 }
