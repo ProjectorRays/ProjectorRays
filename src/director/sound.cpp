@@ -174,7 +174,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 	// https://developer.apple.com/library/archive/documentation/mac/Sound/Sound-75.html
 
 	/* uint32_t samplePtr = */ in.readUint32();
-	uint16_t encodeDependent = in.readUint32();
+	uint32_t encodeDependent = in.readUint32();
 	uint16_t sampleRate = in.readUint16();
 	/* uint16_t sampleRateFrac = */ in.readUint16();
 	/* uint32_t loopStart = */ in.readUint32();
@@ -187,7 +187,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 
 	if (encode == 0x00) {
 		// Standard header
-		/* uint16_t numSamples = encodeDependent; */
+		/* uint32_t numSamples = encodeDependent; */
 		numChannels = 1;
 		sampleSize = 8;
 	} else if (encode == 0xFF) {
