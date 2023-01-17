@@ -230,7 +230,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 		numSamples = encodeDependent;
 		numChannels = 1;
 		sampleSize = 8;
-	} else if (encode == 0xFF) {
+	} else if (encode == 0xFF || encode == 0xFD) {
 		// Extended header
 		numChannels = encodeDependent;
 
