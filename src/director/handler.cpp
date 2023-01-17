@@ -130,7 +130,7 @@ void Handler::readNames() {
 		localNames.push_back(getName(nameID));
 	}
 	for (auto nameID : globalNameIDs) {
-		if (nameID >= 0)	// Some global nameIDs = -1 might exist
+		if (nameID >= 0) // Some global nameIDs = -1 might exist
 			globalNames.push_back(getName(nameID));
 	}
 }
