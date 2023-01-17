@@ -153,62 +153,120 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 		return 0;
 
 	in.endianness = Common::kBigEndian;
+	out.endianness = Common::kBigEndian;
 
 	// 'snd ' header
 	// https://developer.apple.com/library/archive/documentation/mac/Sound/Sound-60.html
 
 	uint16_t format = in.readUint16();
+	out.writeUint16(format);
+
 	if (format == 1) {
 		// Format 1
 		uint16_t dataFormatCount = in.readUint16();
-		in.skip(6 * dataFormatCount);
+		out.writeUint16(dataFormatCount);
+
+		for (uint16_t i = 0; i < dataFormatCount; i++) {
+			uint16_t dataFormatID = in.readUint16();
+			out.writeUint16(dataFormatID);
+
+			uint32_t initOption = in.readUint32();
+			out.writeUint32(initOption);
+		}
 	} else {
 		// Format 2
-		/* uint16_t referenceCount = */ in.readUint16();
+		uint16_t referenceCount = in.readUint16();
+		out.writeUint16(referenceCount);
 	}
+
 	uint16_t soundCommandCount = in.readUint16();
-	in.skip(8 * soundCommandCount);
+	out.writeUint16(soundCommandCount);
+
+	for (uint16_t i = 0; i < soundCommandCount; i++) {
+		uint16_t cmd = in.readUint16();
+		out.writeUint16(cmd);
+
+		uint16_t param1 = in.readUint16();
+		out.writeUint16(param1);
+
+		uint32_t param2 = in.readUint32();
+		out.writeUint32(param2);
+	}
 
 	// sound header record
 	// https://developer.apple.com/library/archive/documentation/mac/Sound/Sound-74.html
 	// https://developer.apple.com/library/archive/documentation/mac/Sound/Sound-75.html
 
-	/* uint32_t samplePtr = */ in.readUint32();
-	uint32_t encodeDependent = in.readUint32();
-	uint16_t sampleRate = in.readUint16();
-	/* uint16_t sampleRateFrac = */ in.readUint16();
-	/* uint32_t loopStart = */ in.readUint32();
-	/* uint32_t loopEnd = */ in.readUint32();
-	uint8_t encode = in.readUint8();
-	/* uint8_t baseFrequency = */ in.readUint8();
+	uint32_t samplePtr = in.readUint32();
+	out.writeUint32(samplePtr);
 
+	uint32_t encodeDependent = in.readUint32();
+	out.writeUint32(encodeDependent);
+
+	uint16_t sampleRate = in.readUint16();
+	out.writeUint16(sampleRate);
+
+	uint16_t sampleRateFrac = in.readUint16();
+	out.writeUint16(sampleRateFrac);
+
+	uint32_t loopStart = in.readUint32();
+	out.writeUint32(loopStart);
+
+	uint32_t loopEnd = in.readUint32();
+	out.writeUint32(loopEnd);
+
+	uint8_t encode = in.readUint8();
+	out.writeUint8(encode);
+
+	uint8_t baseFrequency = in.readUint8();
+	out.writeUint8(baseFrequency);
+
+	uint32_t numSamples;
 	uint32_t numChannels;
 	uint16_t sampleSize;
 
 	if (encode == 0x00) {
 		// Standard header
-		/* uint32_t numSamples = encodeDependent; */
+		numSamples = encodeDependent;
 		numChannels = 1;
 		sampleSize = 8;
 	} else if (encode == 0xFF) {
 		// Extended header
 		numChannels = encodeDependent;
-		/* uint32_t numSamples = */ in.readUint32();
-		/* Extended80 AIFFSampleRate = */ in.skip(10);
-		/* uint32_t markerChunk = */ in.readUint32();
-		/* uint32_t instrumentChunks = */ in.readUint32();
-		/* uint32_t AESRecording = */ in.readUint32();
+
+		numSamples = in.readUint32();
+		out.writeUint32(numSamples);
+
+		Common::BufferView AIFFSampleRate = in.readByteView(10);
+		out.writeBytes(AIFFSampleRate);
+
+		uint32_t markerChunk = in.readUint32();
+		out.writeUint32(markerChunk);
+
+		uint32_t instrumentChunks = in.readUint32();
+		out.writeUint32(instrumentChunks);
+
+		uint32_t AESRecording = in.readUint32();
+		out.writeUint32(AESRecording);
+
 		sampleSize = in.readUint16();
-		/* uint16_t futureUse1 = */ in.readUint16();
-		/* uint32_t futureUse2 = */ in.readUint32();
-		/* uint32_t futureUse3 = */ in.readUint32();
-		/* uint32_t futureUse4 = */ in.readUint32();
+		out.writeUint16(sampleSize);
+
+		uint16_t futureUse1 = in.readUint16();
+		out.writeUint16(futureUse1);
+
+		uint32_t futureUse2 = in.readUint32();
+		out.writeUint32(futureUse2);
+
+		uint32_t futureUse3 = in.readUint32();
+		out.writeUint32(futureUse3);
+
+		uint32_t futureUse4 = in.readUint32();
+		out.writeUint32(futureUse4);
 	} else {
 		Common::warning(boost::format("Unhandled sound encode option 0x%02X!") % (unsigned int)encode);
 		return -1;
 	}
-
-	out.writeBytes(in.data(), in.pos());
 
 	// skip samples
 
