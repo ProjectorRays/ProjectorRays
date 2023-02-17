@@ -815,4 +815,4 @@ void DirectorFile::dumpJSON() {
 	}
 }
 
-}
+} // namespace Director

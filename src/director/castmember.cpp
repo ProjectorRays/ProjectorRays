@@ -36,4 +36,4 @@ void to_json(ordered_json &j, const ScriptMember &c) {
 	j["scriptType"] = c.scriptType;
 }
 
-}
+} // namespace Director

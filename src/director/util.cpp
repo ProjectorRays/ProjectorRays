@@ -128,4 +128,4 @@ std::string floatToString(double f) {
 	return res;
 }
 
-}
+} // namespace Director

@@ -47,4 +47,4 @@ void writeFile(const std::string &fileName, const BufferView &view) {
 	writeFile(fileName, view.data(), view.size());
 }
 
-}
+} // namespace Common

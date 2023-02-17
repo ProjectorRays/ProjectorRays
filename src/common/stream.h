@@ -112,6 +112,6 @@ public:
 	void writePascalString(const std::string &value);
 };
 
-}
+} // namespace Common
 
 #endif // COMMON_STREAM_H

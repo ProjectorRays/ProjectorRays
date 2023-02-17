@@ -1003,4 +1003,4 @@ std::string NewObjNode::toString(bool dot, bool sum) {
 	return "new " + objType + "(" + objArgs->toString(dot, sum) + ")";
 }
 
-}
+} // namespace Director

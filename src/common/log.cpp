@@ -38,4 +38,4 @@ void warning(const boost::format &msg) {
 	std::cerr << msg << "\n";
 }
 
-}
+} // namespace Common

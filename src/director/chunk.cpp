@@ -1164,4 +1164,4 @@ std::string ScriptNamesChunk::getName(int id) {
 	return "UNKNOWN_NAME_" + std::to_string(id);
 }
 
-}
+} // namespace Director

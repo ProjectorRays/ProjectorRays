@@ -82,6 +82,6 @@ struct LiteralStore {
 };
 void to_json(ordered_json &j, const LiteralStore &c);
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_SUBCHUNK_H

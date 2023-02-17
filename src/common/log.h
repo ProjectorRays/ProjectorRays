@@ -21,6 +21,6 @@ void debug(const boost::format &msg);
 void warning(const std::string &msg);
 void warning(const boost::format &msg);
 
-}
+} // namespace Common
 
 #endif // COMMON_LOG_H

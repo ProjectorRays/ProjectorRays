@@ -39,4 +39,4 @@ Common::BufferView getFontMap(int version) {
 	return Common::BufferView(fontmaps_fontmap_D6_txt, fontmaps_fontmap_D6_txt_len);
 }
 
-}
+} // namespace Director

@@ -59,6 +59,6 @@ struct ScriptMember : CastMember {
 };
 void to_json(ordered_json &j, const ScriptMember &c);
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_CASTMEMBER_H

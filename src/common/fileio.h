@@ -21,6 +21,6 @@ void writeFile(const std::string &fileName, const std::string &contents);
 void writeFile(const std::string &fileName, const uint8_t *contents, size_t size);
 void writeFile(const std::string &fileName, const BufferView &view);
 
-}
+} // namespace Common
 
 #endif // COMMON_FILEIO_H

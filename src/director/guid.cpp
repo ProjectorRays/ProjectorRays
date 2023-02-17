@@ -49,4 +49,4 @@ bool MoaID::operator!=(const MoaID &other) const {
 	return !operator==(other);
 }
 
-}
+} // namespace Director

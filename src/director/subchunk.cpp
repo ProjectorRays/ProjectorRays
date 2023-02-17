@@ -122,4 +122,4 @@ void to_json(ordered_json &j, const LiteralStore &c) {
 	j["value"] = *c.value;
 }
 
-}
+} // namespace Director

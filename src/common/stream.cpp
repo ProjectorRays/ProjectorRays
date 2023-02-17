@@ -324,4 +324,4 @@ void WriteStream::writePascalString(const std::string &value) {
 	writeString(value);
 }
 
-}
+} // namespace Common

@@ -21,6 +21,6 @@ std::string versionString(unsigned int ver, const std::string &fverVersionString
 std::string cleanFileName(const std::string &fileName);
 std::string floatToString(double f);
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_UTIL_H

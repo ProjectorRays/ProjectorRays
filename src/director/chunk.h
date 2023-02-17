@@ -386,6 +386,6 @@ struct ScriptNamesChunk : Chunk {
 };
 void to_json(ordered_json &j, const ScriptNamesChunk &c);
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_CHUNK_H

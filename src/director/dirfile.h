@@ -100,6 +100,6 @@ public:
 	void dumpJSON();
 };
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_DIRFILE_H

@@ -1096,6 +1096,6 @@ struct AST {
 	void exitBlock();
 };
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_LINGO_H

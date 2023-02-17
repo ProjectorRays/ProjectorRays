@@ -13,6 +13,6 @@ namespace Director {
 
 Common::BufferView getFontMap(int version);
 
-}
+} // namespace Director
 
 #endif // DIRECTOR_FONTMAP_H

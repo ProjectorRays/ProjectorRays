@@ -1265,4 +1265,4 @@ std::string Handler::bytecodeText() {
 	return res;
 }
 
-}
+} // namespace Director
