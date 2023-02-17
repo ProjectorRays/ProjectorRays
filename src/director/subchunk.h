@@ -12,10 +12,8 @@
 #include <memory>
 #include <string>
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
 namespace Common {
+class JSONWriter;
 class ReadStream;
 class WriteStream;
 }
@@ -31,8 +29,9 @@ struct CastListEntry {
 	uint16_t minMember;
 	uint16_t maxMember;
 	int32_t id;
+
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const CastListEntry &c);
 
 struct MemoryMapEntry {
 	uint32_t fourCC;
@@ -44,8 +43,8 @@ struct MemoryMapEntry {
 
 	void read(Common::ReadStream &stream);
 	void write(Common::WriteStream &stream);
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const MemoryMapEntry &c);
 
 struct ScriptContextMapEntry {
 	int32_t unknown0;
@@ -54,8 +53,8 @@ struct ScriptContextMapEntry {
 	uint16_t unknown2;
 
 	void read(Common::ReadStream &stream);
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const ScriptContextMapEntry &c);
 
 enum LiteralType {
 	kLiteralString	= 1,
@@ -69,8 +68,8 @@ struct KeyTableEntry {
 	uint32_t fourCC;
 
 	void read(Common::ReadStream &stream);
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const KeyTableEntry &c);
 
 struct LiteralStore {
 	LiteralType type;
@@ -79,8 +78,8 @@ struct LiteralStore {
 
 	void readRecord(Common::ReadStream &stream, int version);
 	void readData(Common::ReadStream &stream, uint32_t startOffset);
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const LiteralStore &c);
 
 } // namespace Director
 

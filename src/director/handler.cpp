@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
@@ -40,23 +41,26 @@ void Handler::readRecord(Common::ReadStream &stream) {
 		stackHeight = stream.readUint32();
 }
 
-void to_json(ordered_json &j, const Handler &c) {
-	j["nameID"] = c.nameID;
-	j["vectorPos"] = c.vectorPos;
-	j["compileLen"] = c.compiledLen;
-	j["compiledOffset"] = c.compiledOffset;
-	j["argumentCount"] = c.argumentCount;
-	j["argumentOffset"] = c.argumentOffset;
-	j["localsCount"] = c.localsCount;
-	j["localsOffset"] = c.localsOffset;
-	j["globalsCount"] = c.globalsCount;
-	j["globalsOffset"] = c.globalsOffset;
-	j["unknown1"] = c.unknown1;
-	j["unknown2"] = c.unknown2;
-	j["lineCount"] = c.lineCount;
-	j["lineOffset"] = c.lineOffset;
-	if (c.script->dir->capitalX)
-		j["stackHeight"] = c.stackHeight;
+void Handler::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(nameID);
+		JSON_WRITE_FIELD(vectorPos);
+		JSON_WRITE_FIELD(compiledLen);
+		JSON_WRITE_FIELD(compiledOffset);
+		JSON_WRITE_FIELD(argumentCount);
+		JSON_WRITE_FIELD(argumentOffset);
+		JSON_WRITE_FIELD(localsCount);
+		JSON_WRITE_FIELD(localsOffset);
+		JSON_WRITE_FIELD(globalsCount);
+		JSON_WRITE_FIELD(globalsOffset);
+		JSON_WRITE_FIELD(unknown1);
+		JSON_WRITE_FIELD(unknown2);
+		JSON_WRITE_FIELD(lineCount);
+		JSON_WRITE_FIELD(lineOffset);
+		if (script->dir->capitalX) {
+			JSON_WRITE_FIELD(stackHeight);
+		}
+	json.endObject();
 }
 
 void Handler::readData(Common::ReadStream &stream) {

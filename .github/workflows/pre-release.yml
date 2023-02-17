@@ -22,7 +22,6 @@ jobs:
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-boost
-            mingw-w64-x86_64-nlohmann-json
             mingw-w64-x86_64-mpg123
             vim
       - name: Checkout ProjectorRays

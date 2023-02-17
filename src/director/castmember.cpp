@@ -4,9 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
+#include "common/json.h"
 #include "common/stream.h"
 #include "director/castmember.h"
 
@@ -16,14 +14,9 @@ namespace Director {
 
 void CastMember::read(Common::ReadStream&) {}
 
-void to_json(ordered_json &j, const CastMember &c) {
-	switch (c.type) {
-	case kScriptMember:
-		to_json(j, static_cast<const ScriptMember &>(c));
-		break;
-	default:
-		break;
-	}
+void CastMember::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+	json.endObject();
 }
 
 /* ScriptMember */
@@ -32,8 +25,10 @@ void ScriptMember::read(Common::ReadStream &stream) {
 	scriptType = static_cast<ScriptType>(stream.readUint16());
 }
 
-void to_json(ordered_json &j, const ScriptMember &c) {
-	j["scriptType"] = c.scriptType;
+void ScriptMember::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(scriptType);
+	json.endObject();
 }
 
 } // namespace Director

@@ -7,10 +7,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
 #include "common/fileio.h"
+#include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
@@ -808,10 +806,9 @@ void DirectorFile::dumpJSON() {
 
 		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
-			ordered_json j = *deserializedChunks[info.id];
-			std::stringstream ss;
-			ss << j.dump(4) << "\n";
-			Common::writeFile(fileName + ".json", ss.str());
+			Common::JSONWriter json;
+			deserializedChunks[info.id]->writeJSON(json);
+			Common::writeFile(fileName + ".json", json.str());
 		}
 	}
 }

@@ -24,7 +24,7 @@ To use it, run `projectorrays.exe INPUT_FILE OUTPUT_FILE`. ProjectorRays will ta
 
 ### *nix
 
-Install Boost 1.72.0 or later, nlohmann JSON, mpg123, and zlib. Run `make` to build.
+Install Boost 1.72.0 or later, mpg123, and zlib. Run `make` to build.
 
 To use it, run `./projectorrays INPUT_FILE OUTPUT_FILE`. ProjectorRays will take the input file, unprotect/decompress it, restore its source code, and output it to the specified location. The outputted file can then be opened in Director.
 

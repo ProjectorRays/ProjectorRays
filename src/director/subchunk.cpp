@@ -4,9 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
+#include "common/json.h"
 #include "common/stream.h"
 #include "common/util.h"
 #include "director/lingo.h"
@@ -16,13 +14,15 @@ namespace Director {
 
 /* CastListEntry */
 
-void to_json(ordered_json &j, const CastListEntry &c) {
-	j["name"] = c.name;
-	j["filePath"] = c.filePath;
-	j["preloadSettings"] = c.preloadSettings;
-	j["minMember"] = c.minMember;
-	j["maxMember"] = c.maxMember;
-	j["id"] = c.id;
+void CastListEntry::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(name);
+		JSON_WRITE_FIELD(filePath);
+		JSON_WRITE_FIELD(preloadSettings);
+		JSON_WRITE_FIELD(minMember);
+		JSON_WRITE_FIELD(maxMember);
+		JSON_WRITE_FIELD(id);
+	json.endObject();
 }
 
 /* MemoryMapEntry */
@@ -45,13 +45,15 @@ void MemoryMapEntry::write(Common::WriteStream &stream) {
 	stream.writeInt32(next);
 }
 
-void to_json(ordered_json &j, const MemoryMapEntry &c) {
-	j["fourCC"] = fourCCToString(c.fourCC);
-	j["len"] = c.len;
-	j["offset"] = c.offset;
-	j["flags"] = c.flags;
-	j["unknown0"] = c.unknown0;
-	j["next"] = c.next;
+void MemoryMapEntry::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FOURCC_FIELD(fourCC);
+		JSON_WRITE_FIELD(len);
+		JSON_WRITE_FIELD(offset);
+		JSON_WRITE_FIELD(flags);
+		JSON_WRITE_FIELD(unknown0);
+		JSON_WRITE_FIELD(next);
+	json.endObject();
 }
 
 /* ScriptContextMapEntry */
@@ -63,11 +65,13 @@ void ScriptContextMapEntry::read(Common::ReadStream &stream) {
 	unknown2 = stream.readUint16();
 }
 
-void to_json(ordered_json &j, const ScriptContextMapEntry &c) {
-	j["unknown0"] = c.unknown0;
-	j["sectionID"] = c.sectionID;
-	j["unknown1"] = c.unknown1;
-	j["unknown2"] = c.unknown2;
+void ScriptContextMapEntry::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(unknown0);
+		JSON_WRITE_FIELD(sectionID);
+		JSON_WRITE_FIELD(unknown1);
+		JSON_WRITE_FIELD(unknown2);
+	json.endObject();
 }
 
 /* KeyTableEntry */
@@ -78,10 +82,12 @@ void KeyTableEntry::read(Common::ReadStream &stream) {
 	fourCC = stream.readUint32();
 }
 
-void to_json(ordered_json &j, const KeyTableEntry &c) {
-	j["sectionID"] = c.sectionID;
-	j["castID"] = c.castID;
-	j["fourCC"] = fourCCToString(c.fourCC);
+void KeyTableEntry::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(sectionID);
+		JSON_WRITE_FIELD(castID);
+		JSON_WRITE_FOURCC_FIELD(fourCC);
+	json.endObject();
 }
 
 /* LiteralStore */
@@ -116,10 +122,13 @@ void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
 	}
 }
 
-void to_json(ordered_json &j, const LiteralStore &c) {
-	j["type"] = c.type;
-	j["offset"] = c.offset;
-	j["value"] = *c.value;
+void LiteralStore::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(type);
+		JSON_WRITE_FIELD(offset);
+		json.writeKey("value");
+		value->writeJSON(json);
+	json.endObject();
 }
 
 } // namespace Director

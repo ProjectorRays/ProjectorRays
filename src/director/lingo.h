@@ -12,10 +12,8 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
 namespace Common {
+class JSONWriter;
 class ReadStream;
 }
 
@@ -256,8 +254,8 @@ struct Datum {
 
 	int toInt();
 	std::string toString(bool dot, bool sum);
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const Datum &c);
 
 /* Handler */
 
@@ -318,8 +316,8 @@ struct Handler {
 	void translate();
 	uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
 	std::string bytecodeText();
+	void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const Handler &c);
 
 /* Bytecode */
 

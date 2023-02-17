@@ -7,10 +7,8 @@
 #ifndef DIRECTOR_CASTMEMBER_H
 #define DIRECTOR_CASTMEMBER_H
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
 namespace Common {
+class JSONWriter;
 class ReadStream;
 }
 
@@ -41,8 +39,8 @@ struct CastMember {
 	CastMember(DirectorFile *d, MemberType t) : dir(d), type(t) {}
 	virtual ~CastMember() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const CastMember &c);
 
 enum ScriptType {
 	kScoreScript = 1,
@@ -56,8 +54,8 @@ struct ScriptMember : CastMember {
 	ScriptMember(DirectorFile *m) : CastMember(m, kScriptMember) {}
 	virtual ~ScriptMember() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const ScriptMember &c);
 
 } // namespace Director
 

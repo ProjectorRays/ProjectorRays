@@ -6,6 +6,7 @@
 
 #include <boost/format.hpp>
 
+#include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
@@ -20,42 +21,9 @@ namespace Director {
 
 /* Chunk */
 
-void to_json(ordered_json &j, const Chunk &c) {
-	switch (c.chunkType) {
-	case kCastChunk:
-		to_json(j, static_cast<const CastChunk &>(c));
-		break;
-	case kCastListChunk:
-		to_json(j, static_cast<const CastListChunk &>(c));
-		break;
-	case kCastMemberChunk:
-		to_json(j, static_cast<const CastMemberChunk &>(c));
-		break;
-	case kCastInfoChunk:
-		to_json(j, static_cast<const CastInfoChunk &>(c));
-		break;
-	case kConfigChunk:
-		to_json(j, static_cast<const ConfigChunk &>(c));
-		break;
-	case kInitialMapChunk:
-		to_json(j, static_cast<const InitialMapChunk &>(c));
-		break;
-	case kKeyTableChunk:
-		to_json(j, static_cast<const KeyTableChunk &>(c));
-		break;
-	case kMemoryMapChunk:
-		to_json(j, static_cast<const MemoryMapChunk &>(c));
-		break;
-	case kScriptChunk:
-		to_json(j, static_cast<const ScriptChunk &>(c));
-		break;
-	case kScriptContextChunk:
-		to_json(j, static_cast<const ScriptContextChunk &>(c));
-		break;
-	case kScriptNamesChunk:
-		to_json(j, static_cast<const ScriptNamesChunk &>(c));
-		break;
-	}
+void Chunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+	json.endObject();
 }
 
 /* CastChunk */
@@ -68,8 +36,15 @@ void CastChunk::read(Common::ReadStream &stream) {
 	}
 }
 
-void to_json(ordered_json &j, const CastChunk &c) {
-	j["memberIDs"] = c.memberIDs;
+void CastChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		json.writeKey("memberIDs");
+		json.startArray();
+			for (auto val : memberIDs) {
+				json.writeVal(val);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMember) {
@@ -133,13 +108,20 @@ void CastListChunk::readHeader(Common::ReadStream &stream) {
 	unk1 = stream.readUint16();
 }
 
-void to_json(ordered_json &j, const CastListChunk &c) {
-	j["dataOffset"] = c.dataOffset;
-	j["unk0"] = c.unk0;
-	j["castCount"] = c.itemsPerCast;
-	j["itemsPerCast"] = c.itemsPerCast;
-	j["unk1"] = c.unk1;
-	j["entries"] = c.entries;
+void CastListChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(dataOffset);
+		JSON_WRITE_FIELD(unk0);
+		JSON_WRITE_FIELD(itemsPerCast);
+		JSON_WRITE_FIELD(itemsPerCast);
+		JSON_WRITE_FIELD(unk1);
+		json.writeKey("entries");
+		json.startArray();
+			for (const auto &val : entries) {
+				val.writeJSON(json);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 /* CastMemberChunk */
@@ -280,15 +262,19 @@ std::string CastMemberChunk::getName() const {
 	return "";
 }
 
-void to_json(ordered_json &j, const CastMemberChunk &c) {
-	j["type"] = c.type;
-	j["infoLen"] = c.infoLen;
-	if (c.hasFlags1) {
-		j["flags1"] = c.flags1;
-	}
-	j["specificDataLen"] = c.specificDataLen;
-	j["info"] = *c.info;
-	j["member"] = *c.member;
+void CastMemberChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(type);
+		JSON_WRITE_FIELD(infoLen);
+		if (hasFlags1) {
+			JSON_WRITE_FIELD(flags1);
+		}
+		JSON_WRITE_FIELD(specificDataLen);
+		json.writeKey("info");
+		info->writeJSON(json);
+		json.writeKey("member");
+		member->writeJSON(json);
+	json.endObject();
 }
 
 /* CastInfoChunk */
@@ -376,18 +362,20 @@ void CastInfoChunk::writeItem(Common::WriteStream &stream, uint16_t index) {
 	}
 }
 
-void to_json(ordered_json &j, const CastInfoChunk &c) {
-	j["dataOffset"] = c.dataOffset;
-	j["unk1"] = c.unk1;
-	j["unk2"] = c.unk2;
-	j["flags"] = c.flags;
-	j["scriptId"] = c.scriptId;
-	j["scriptSrcText"] = c.scriptSrcText;
-	j["name"] = c.name;
-	// j["comment"] = c.comment;
-	// j["fileFormatID"] = c.fileFormatID;
-	// j["created"] = c.created;
-	// j["modified"] = c.modified;
+void CastInfoChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(dataOffset);
+		JSON_WRITE_FIELD(unk1);
+		JSON_WRITE_FIELD(unk2);
+		JSON_WRITE_FIELD(flags);
+		JSON_WRITE_FIELD(scriptId);
+		JSON_WRITE_FIELD(scriptSrcText);
+		JSON_WRITE_FIELD(name);
+		// JSON_WRITE_FIELD(comment);
+		// JSON_WRITE_FIELD(fileFormatID);
+		// JSON_WRITE_FIELD(created);
+		// JSON_WRITE_FIELD(modified);
+	json.endObject();
 }
 
 /* ConfigChunk */
@@ -614,50 +602,52 @@ void ConfigChunk::unprotect() {
 	}
 }
 
-void to_json(ordered_json &j, const ConfigChunk &c) {
-	unsigned int ver = humanVersion(c.directorVersion);
+void ConfigChunk::writeJSON(Common::JSONWriter &json) const {
+	unsigned int ver = humanVersion(directorVersion);
 
-	j["len"] = c.len;
-	j["fileVersion"] = c.fileVersion;
-	j["movieTop"] = c.movieTop;
-	j["movieLeft"] = c.movieLeft;
-	j["movieBottom"] = c.movieBottom;
-	j["movieRight"] = c.movieRight;
-	j["minMember"] = c.minMember;
-	j["maxMember"] = c.maxMember;
-	j["field9"] = c.field9;
-	j["field10"] = c.field10;
-	if (ver < 700) {
-		j["preD7field11"] = c.preD7field11;
-	} else {
-		j["D7stageColorG"] = c.D7stageColorG;
-		j["D7stageColorB"] = c.D7stageColorB;
-	}
-	j["commentFont"] = c.commentFont;
-	j["commentSize"] = c.commentSize;
-	j["commentStyle"] = c.commentStyle;
-	if (ver < 700) {
-		j["preD7stageColor"] = c.preD7stageColor;
-	} else {
-		j["D7stageColorIsRGB"] = c.D7stageColorIsRGB;
-		j["D7stageColorR"] = c.D7stageColorR;
-	}
-	j["bitDepth"] = c.bitDepth;
-	j["field17"] = c.field17;
-	j["field18"] = c.field18;
-	j["field19"] = c.field19;
-	j["directorVersion"] = c.directorVersion;
-	j["field21"] = c.field21;
-	j["field22"] = c.field22;
-	j["field23"] = c.field23;
-	j["field24"] = c.field24;
-	j["field25"] = c.field25;
-	j["field26"] = c.field26;
-	j["frameRate"] = c.frameRate;
-	j["platform"] = c.platform;
-	j["protection"] = c.protection;
-	j["field29"] = c.field29;
-	j["checksum"] = c.checksum;
+	json.startObject();
+		JSON_WRITE_FIELD(len);
+		JSON_WRITE_FIELD(fileVersion);
+		JSON_WRITE_FIELD(movieTop);
+		JSON_WRITE_FIELD(movieLeft);
+		JSON_WRITE_FIELD(movieBottom);
+		JSON_WRITE_FIELD(movieRight);
+		JSON_WRITE_FIELD(minMember);
+		JSON_WRITE_FIELD(maxMember);
+		JSON_WRITE_FIELD(field9);
+		JSON_WRITE_FIELD(field10);
+		if (ver < 700) {
+			JSON_WRITE_FIELD(preD7field11);
+		} else {
+			JSON_WRITE_FIELD(D7stageColorG);
+			JSON_WRITE_FIELD(D7stageColorB);
+		}
+		JSON_WRITE_FIELD(commentFont);
+		JSON_WRITE_FIELD(commentSize);
+		JSON_WRITE_FIELD(commentStyle);
+		if (ver < 700) {
+			JSON_WRITE_FIELD(preD7stageColor);
+		} else {
+			JSON_WRITE_FIELD(D7stageColorIsRGB);
+			JSON_WRITE_FIELD(D7stageColorR);
+		}
+		JSON_WRITE_FIELD(bitDepth);
+		JSON_WRITE_FIELD(field17);
+		JSON_WRITE_FIELD(field18);
+		JSON_WRITE_FIELD(field19);
+		JSON_WRITE_FIELD(directorVersion);
+		JSON_WRITE_FIELD(field21);
+		JSON_WRITE_FIELD(field22);
+		JSON_WRITE_FIELD(field23);
+		JSON_WRITE_FIELD(field24);
+		JSON_WRITE_FIELD(field25);
+		JSON_WRITE_FIELD(field26);
+		JSON_WRITE_FIELD(frameRate);
+		JSON_WRITE_FIELD(platform);
+		JSON_WRITE_FIELD(protection);
+		JSON_WRITE_FIELD(field29);
+		JSON_WRITE_FIELD(checksum);
+	json.endObject();
 }
 
 /* InitialMapChunk */
@@ -684,13 +674,15 @@ void InitialMapChunk::write(Common::WriteStream &stream) {
 	stream.writeUint32(unused3);
 }
 
-void to_json(ordered_json &j, const InitialMapChunk &c) {
-	j["version"] = c.version;
-	j["mmapOffset"] = c.mmapOffset;
-	j["directorVersion"] = c.directorVersion;
-	j["unused1"] = c.unused1;
-	j["unused2"] = c.unused2;
-	j["unused3"] = c.unused3;
+void InitialMapChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(version);
+		JSON_WRITE_FIELD(mmapOffset);
+		JSON_WRITE_FIELD(directorVersion);
+		JSON_WRITE_FIELD(unused1);
+		JSON_WRITE_FIELD(unused2);
+		JSON_WRITE_FIELD(unused3);
+	json.endObject();
 }
 
 /* KeyTableChunk */
@@ -707,12 +699,19 @@ void KeyTableChunk::read(Common::ReadStream &stream) {
 	}
 }
 
-void to_json(ordered_json &j, const KeyTableChunk &c) {
-	j["entrySize"] = c.entrySize;
-	j["entrySize2"] = c.entrySize2;
-	j["entryCount"] = c.entryCount;
-	j["usedCount"] = c.usedCount;
-	j["entries"] = c.entries;
+void KeyTableChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(entrySize);
+		JSON_WRITE_FIELD(entrySize2);
+		JSON_WRITE_FIELD(entryCount);
+		JSON_WRITE_FIELD(usedCount);
+		json.writeKey("entries");
+		json.startArray();
+			for (const auto &val : entries) {
+				val.writeJSON(json);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 /* ListChunk */
@@ -896,15 +895,22 @@ void MemoryMapChunk::write(Common::WriteStream &stream) {
 	}
 }
 
-void to_json(ordered_json &j, const MemoryMapChunk &c) {
-	j["headerLength"] = c.headerLength;
-	j["entryLength"] = c.entryLength;
-	j["chunkCountMax"] = c.chunkCountMax;
-	j["chunkCountUsed"] = c.chunkCountUsed;
-	j["junkHead"] = c.junkHead;
-	j["junkHead2"] = c.junkHead2;
-	j["freeHead"] = c.freeHead;
-	j["mapArray"] = c.mapArray;
+void MemoryMapChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(headerLength);
+		JSON_WRITE_FIELD(entryLength);
+		JSON_WRITE_FIELD(chunkCountMax);
+		JSON_WRITE_FIELD(chunkCountUsed);
+		JSON_WRITE_FIELD(junkHead);
+		JSON_WRITE_FIELD(junkHead2);
+		JSON_WRITE_FIELD(freeHead);
+		json.writeKey("mapArray");
+		json.startArray();
+			for (const auto &val : mapArray) {
+				val.writeJSON(json);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 /* ScriptChunk */
@@ -972,32 +978,51 @@ std::vector<int16_t> ScriptChunk::readVarnamesTable(Common::ReadStream &stream, 
 	return nameIDs;
 }
 
-void to_json(ordered_json &j, const ScriptChunk &c) {
-	j["totalLength"] = c.totalLength;
-	j["totalLength2"] = c.totalLength2;
-	j["headerLength"] = c.headerLength;
-	j["scriptNumber"] = c.scriptNumber;
-	j["scriptBehavior"] = c.scriptBehavior;
-	j["handlerVectorsCount"] = c.handlerVectorsCount;
-	j["handlerVectorsOffset"] = c.handlerVectorsOffset;
-	j["handlerVectorsSize"] = c.handlerVectorsSize;
-	j["propertiesCount"] = c.propertiesCount;
-	j["propertiesOffset"] = c.propertiesOffset;
-	j["globalsCount"] = c.globalsCount;
-	j["globalsOffset"] = c.globalsOffset;
-	j["handlersCount"] = c.handlersCount;
-	j["handlersOffset"] = c.handlersOffset;
-	j["literalsCount"] = c.literalsCount;
-	j["literalsOffset"] = c.literalsOffset;
-	j["literalsDataCount"] = c.literalsDataCount;
-	j["literalsDataOffset"] = c.literalsDataOffset;
-	j["propertyNameIDs"] = c.propertyNameIDs;
-	j["globalNameIDs"] = c.globalNameIDs;
-	ordered_json handlers = ordered_json::array();
-	for (const auto &handler : c.handlers)
-		handlers.push_back(*handler);
-	j["handlers"] = handlers;
-	j["literals"] = c.literals;
+void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(totalLength);
+		JSON_WRITE_FIELD(totalLength2);
+		JSON_WRITE_FIELD(headerLength);
+		JSON_WRITE_FIELD(scriptNumber);
+		JSON_WRITE_FIELD(scriptBehavior);
+		JSON_WRITE_FIELD(handlerVectorsCount);
+		JSON_WRITE_FIELD(handlerVectorsOffset);
+		JSON_WRITE_FIELD(handlerVectorsSize);
+		JSON_WRITE_FIELD(propertiesCount);
+		JSON_WRITE_FIELD(propertiesOffset);
+		JSON_WRITE_FIELD(globalsCount);
+		JSON_WRITE_FIELD(globalsOffset);
+		JSON_WRITE_FIELD(handlersCount);
+		JSON_WRITE_FIELD(handlersOffset);
+		JSON_WRITE_FIELD(literalsCount);
+		JSON_WRITE_FIELD(literalsOffset);
+		JSON_WRITE_FIELD(literalsDataCount);
+		JSON_WRITE_FIELD(literalsDataOffset);
+		json.writeKey("propertyNameIDs");
+		json.startArray();
+			for (auto val : propertyNameIDs) {
+				json.writeVal(val);
+			}
+		json.endArray();
+		json.writeKey("globalNameIDs");
+		json.startArray();
+			for (auto val : globalNameIDs) {
+				json.writeVal(val);
+			}
+		json.endArray();
+		json.writeKey("handlers");
+		json.startArray();
+			for (const auto &val : handlers) {
+				val->writeJSON(json);
+			}
+		json.endArray();
+		json.writeKey("literals");
+		json.startArray();
+			for (const auto &val : literals) {
+				val.writeJSON(json);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 std::string ScriptChunk::getName(int id) {
@@ -1107,21 +1132,28 @@ void ScriptContextChunk::read(Common::ReadStream &stream) {
 	}
 }
 
-void to_json(ordered_json &j, const ScriptContextChunk &c) {
-	j["unknown0"] = c.unknown0;
-	j["unknown1"] = c.unknown1;
-	j["entryCount"] = c.entryCount;
-	j["entryCount2"] = c.entryCount2;
-	j["entriesOffset"] = c.entriesOffset;
-	j["unknown2"] = c.unknown2;
-	j["unknown3"] = c.unknown3;
-	j["unknown4"] = c.unknown4;
-	j["unknown5"] = c.unknown5;
-	j["lnamSectionID"] = c.lnamSectionID;
-	j["validCount"] = c.validCount;
-	j["flags"] = c.flags;
-	j["freePointer"] = c.freePointer;
-	j["sectionMap"] = c.sectionMap;
+void ScriptContextChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(unknown0);
+		JSON_WRITE_FIELD(unknown1);
+		JSON_WRITE_FIELD(entryCount);
+		JSON_WRITE_FIELD(entryCount2);
+		JSON_WRITE_FIELD(entriesOffset);
+		JSON_WRITE_FIELD(unknown2);
+		JSON_WRITE_FIELD(unknown3);
+		JSON_WRITE_FIELD(unknown4);
+		JSON_WRITE_FIELD(unknown5);
+		JSON_WRITE_FIELD(lnamSectionID);
+		JSON_WRITE_FIELD(validCount);
+		JSON_WRITE_FIELD(flags);
+		JSON_WRITE_FIELD(freePointer);
+		json.writeKey("sectionMap");
+		json.startArray();
+			for (const auto &val : sectionMap) {
+				val.writeJSON(json);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 std::string ScriptContextChunk::getName(int id) {
@@ -1149,14 +1181,21 @@ void ScriptNamesChunk::read(Common::ReadStream &stream) {
 	}
 }
 
-void to_json(ordered_json &j, const ScriptNamesChunk &c) {
-	j["unknown0"] = c.unknown0;
-	j["unknown1"] = c.unknown1;
-	j["len1"] = c.len1;
-	j["len2"] = c.len2;
-	j["namesOffset"] = c.namesOffset;
-	j["namesCount"] = c.namesCount;
-	j["names"] = c.names;
+void ScriptNamesChunk::writeJSON(Common::JSONWriter &json) const {
+	json.startObject();
+		JSON_WRITE_FIELD(unknown0);
+		JSON_WRITE_FIELD(unknown1);
+		JSON_WRITE_FIELD(len1);
+		JSON_WRITE_FIELD(len2);
+		JSON_WRITE_FIELD(namesOffset);
+		JSON_WRITE_FIELD(namesCount);
+		json.writeKey("names");
+		json.startArray();
+			for (auto val : names) {
+				json.writeVal(val);
+			}
+		json.endArray();
+	json.endObject();
 }
 
 std::string ScriptNamesChunk::getName(int id) {

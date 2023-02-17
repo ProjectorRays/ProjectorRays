@@ -22,7 +22,9 @@ fontmaps/%.h: $(patsubst %.h,%.txt,$@)
 
 OBJS = \
 	src/main.o \
+	src/common/codewriter.o \
 	src/common/fileio.o \
+	src/common/json.o \
 	src/common/log.o \
 	src/common/stream.o \
 	src/common/util.o \

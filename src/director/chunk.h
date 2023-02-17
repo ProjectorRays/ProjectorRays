@@ -13,12 +13,13 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
-using ordered_json = nlohmann::ordered_json;
-
 #include "common/stream.h"
 #include "director/castmember.h"
 #include "director/subchunk.h"
+
+namespace Common {
+class JSONWriter;
+}
 
 namespace Director {
 
@@ -57,8 +58,8 @@ struct Chunk {
 	virtual void read(Common::ReadStream &stream) = 0;
 	virtual size_t size() { return 0; }
 	virtual void write(Common::WriteStream&) {}
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const Chunk &c);
 
 struct ListChunk : Chunk {
 	uint32_t dataOffset;
@@ -104,8 +105,8 @@ struct CastChunk : Chunk {
 	virtual ~CastChunk() = default;
 	virtual void read(Common::ReadStream &stream);
 	void populate(const std::string &castName, int32_t id, uint16_t minMember);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const CastChunk &c);
 
 struct CastListChunk : ListChunk {
 	uint16_t unk0;
@@ -118,8 +119,8 @@ struct CastListChunk : ListChunk {
 	virtual ~CastListChunk() = default;
 	virtual void read(Common::ReadStream &stream);
 	virtual void readHeader(Common::ReadStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const CastListChunk &c);
 
 struct CastMemberChunk : Chunk {
 	MemberType type;
@@ -141,13 +142,13 @@ struct CastMemberChunk : Chunk {
 	virtual void read(Common::ReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 
 	uint32_t getScriptID() const;
 	std::string getScriptText() const;
 	void setScriptText(std::string val);
 	std::string getName() const;
 };
-void to_json(ordered_json &j, const CastMemberChunk &c);
 
 struct CastInfoChunk : ListChunk {
 	uint32_t unk1;
@@ -188,8 +189,8 @@ struct CastInfoChunk : ListChunk {
 	virtual void writeHeader(Common::WriteStream &stream);
 	virtual size_t itemSize(uint16_t index);
 	virtual void writeItem(Common::WriteStream &stream, uint16_t index);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const CastInfoChunk &c);
 
 struct ConfigChunk : Chunk {
 	/*  0 */ int16_t len;
@@ -245,8 +246,8 @@ struct ConfigChunk : Chunk {
 	virtual void write(Common::WriteStream &stream);
 	uint32_t computeChecksum();
 	void unprotect();
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const ConfigChunk &c);
 
 struct InitialMapChunk : Chunk {
 	uint32_t version; // always 1
@@ -263,8 +264,8 @@ struct InitialMapChunk : Chunk {
 	virtual void read(Common::ReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const InitialMapChunk &c);
 
 struct KeyTableChunk : Chunk {
 	uint16_t entrySize; // Should always be 12 (3 uint32's)
@@ -276,8 +277,8 @@ struct KeyTableChunk : Chunk {
 	KeyTableChunk(DirectorFile *m) : Chunk(m, kKeyTableChunk) {}
 	virtual ~KeyTableChunk() = default;
 	virtual void read(Common::ReadStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const KeyTableChunk &c);
 
 struct MemoryMapChunk : Chunk {
 	int16_t headerLength; // should be 24
@@ -296,8 +297,8 @@ struct MemoryMapChunk : Chunk {
 	virtual void read(Common::ReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const MemoryMapChunk &c);
 
 struct ScriptChunk : Chunk {
 	uint32_t totalLength;
@@ -341,8 +342,8 @@ struct ScriptChunk : Chunk {
 	std::string varDeclarations();
 	std::string scriptText();
 	std::string bytecodeText();
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const ScriptChunk &c);
 
 struct ScriptContextChunk : Chunk {
 	int32_t unknown0;
@@ -367,8 +368,8 @@ struct ScriptContextChunk : Chunk {
 	virtual ~ScriptContextChunk() = default;
 	virtual void read(Common::ReadStream &stream);
 	std::string getName(int id);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const ScriptContextChunk &c);
 
 struct ScriptNamesChunk : Chunk {
 	int32_t unknown0;
@@ -383,8 +384,8 @@ struct ScriptNamesChunk : Chunk {
 	virtual ~ScriptNamesChunk() = default;
 	virtual void read(Common::ReadStream &stream);
 	std::string getName(int id);
+	virtual void writeJSON(Common::JSONWriter &json) const;
 };
-void to_json(ordered_json &j, const ScriptNamesChunk &c);
 
 } // namespace Director
 

@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include "common/json.h"
 #include "common/util.h"
 #include "director/lingo.h"
 #include "director/util.h"
@@ -383,19 +384,19 @@ std::string Datum::toString(bool dot, bool sum) {
 	return "ERROR";
 }
 
-void to_json(ordered_json &j, const Datum &c) {
-	switch (c.type) {
+void Datum::writeJSON(Common::JSONWriter &json) const {
+	switch (type) {
 	case kDatumString:
-		j = c.s;
+		json.writeVal(s);
 		break;
 	case kDatumInt:
-		j = c.i;
+		json.writeVal(i);
 		break;
 	case kDatumFloat:
-		j = c.f;
+		json.writeVal(f);
 		break;
 	default:
-		j = nullptr;
+		json.writeNull();
 		break;
 	}
 }
