@@ -55,3 +55,9 @@ std::string floatToString(double f) {
 	}
 	return res;
 }
+
+std::string byteToString(uint8_t byte) {
+	char hex[3];
+	snprintf(hex, sizeof(hex), "%02X", byte);
+	return std::string(hex);
+}

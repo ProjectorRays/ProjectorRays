@@ -15,5 +15,6 @@
 std::string fourCCToString(uint32_t fourcc);
 std::string cleanFileName(const std::string &fileName);
 std::string floatToString(double f);
+std::string byteToString(uint8_t byte);
 
 #endif // COMMON_UTIL_H

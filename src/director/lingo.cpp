@@ -289,11 +289,7 @@ std::string Lingo::getOpcodeName(uint8_t id) {
 		id = 0x40 + id % 0x40;
 	auto it = opcodeNames.find(id);
 	if (it == opcodeNames.end()){
-		char hexID[3];
-		sprintf(hexID, "%02X", id);
-		std::string res = "unk";
-		res.append(hexID);
-		return res;
+		return "unk" + byteToString(id);
 	}
 	return it->second;
 }
