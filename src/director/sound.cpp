@@ -25,12 +25,14 @@ off_t ReadStream_lseek(void *stream, off_t offset, int whence) {
 }
 
 #define CHECK_ERR(name) \
-	if (err != MPG123_OK && err != MPG123_DONE) { \
-		Common::warning(boost::format(name": %s") % mpg123_plain_strerror(err)); \
-		mpg123_close(mh); \
-		mpg123_delete(mh); \
-		return false; \
-	}
+	do { \
+		if (err != MPG123_OK && err != MPG123_DONE) { \
+			Common::warning(boost::format(name": %s") % mpg123_plain_strerror(err)); \
+			mpg123_close(mh); \
+			mpg123_delete(mh); \
+			return false; \
+		} \
+	} while (0)
 
 size_t samplesToBytes(size_t samples, int channels, int sampleSize) {
 	size_t bytes = samples;
