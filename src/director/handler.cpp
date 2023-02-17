@@ -11,10 +11,10 @@
 
 #include "common/log.h"
 #include "common/stream.h"
+#include "common/util.h"
 #include "director/chunk.h"
 #include "director/lingo.h"
 #include "director/dirfile.h"
-#include "director/util.h"
 
 namespace Director {
 

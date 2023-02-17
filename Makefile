@@ -25,6 +25,7 @@ OBJS = \
 	src/common/fileio.o \
 	src/common/log.o \
 	src/common/stream.o \
+	src/common/util.o \
 	src/director/castmember.o \
 	src/director/chunk.o \
 	src/director/dirfile.o \

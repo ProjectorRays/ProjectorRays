@@ -8,6 +8,7 @@
 
 #include "common/log.h"
 #include "common/stream.h"
+#include "common/util.h"
 #include "director/castmember.h"
 #include "director/chunk.h"
 #include "director/lingo.h"

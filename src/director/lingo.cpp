@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include "common/util.h"
 #include "director/lingo.h"
 #include "director/util.h"
 

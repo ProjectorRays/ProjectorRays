@@ -13,6 +13,7 @@ using ordered_json = nlohmann::ordered_json;
 #include "common/fileio.h"
 #include "common/log.h"
 #include "common/stream.h"
+#include "common/util.h"
 #include "director/chunk.h"
 #include "director/lingo.h"
 #include "director/dirfile.h"

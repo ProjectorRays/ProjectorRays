@@ -8,9 +8,9 @@
 using ordered_json = nlohmann::ordered_json;
 
 #include "common/stream.h"
+#include "common/util.h"
 #include "director/lingo.h"
 #include "director/subchunk.h"
-#include "director/util.h"
 
 namespace Director {
 
