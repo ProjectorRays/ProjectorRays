@@ -13,13 +13,12 @@
 #include "common/util.h"
 
 std::string fourCCToString(uint32_t fourcc) {
-	char str[5];
+	char str[4];
 	str[0] = (char)(fourcc >> 24);
 	str[1] = (char)(fourcc >> 16);
 	str[2] = (char)(fourcc >> 8);
 	str[3] = (char)fourcc;
-	str[4] = '\0';
-	return std::string(str);
+	return escapeString(str, sizeof(str));
 }
 
 std::string cleanFileName(const std::string &fileName) {
