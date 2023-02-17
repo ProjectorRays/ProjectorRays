@@ -1,5 +1,7 @@
 # ProjectorRays Shockwave Decompiler
 
+[![Discord](https://img.shields.io/discord/1018389040350896179?label=discord&logo=discord)](https://discord.gg/yCfAraZx5E)
+
 ProjectorRays is a decompiler for [Adobe Shockwave](https://en.wikipedia.org/wiki/Adobe_Shockwave) and [Adobe Director](https://en.wikipedia.org/wiki/Adobe_Director) (formerly known as Macromedia Shockwave and Macromedia Director, and not to be confused with [Shockwave Flash](https://en.wikipedia.org/wiki/Adobe_Flash)).
 
 Director was released in 1987, and it quickly became the world's leading multimedia platform. Beginning in 1995, Director movies could be published as DCR files and played on the web with the Shockwave plugin. Over the years, the platform was used for countless CD-ROM and web games, before being fully discontinued in 2019.
