@@ -4,6 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <stdio.h>
+
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -60,4 +62,49 @@ std::string byteToString(uint8_t byte) {
 	char hex[3];
 	snprintf(hex, sizeof(hex), "%02X", byte);
 	return std::string(hex);
+}
+
+std::string escapeString(const char *str, size_t size) {
+	std::string res;
+	for (size_t i = 0; i < size; i++) {
+		unsigned char ch = str[i];
+		switch (ch) {
+		case '"':
+			res += "\\\"";
+			break;
+		case '\\':
+			res += "\\\\";
+			break;
+		case '\b':
+			res += "\\b";
+			break;
+		case '\f':
+			res += "\\f";
+			break;
+		case '\n':
+			res += "\\n";
+			break;
+		case '\r':
+			res += "\\r";
+			break;
+		case '\t':
+			res += "\\t";
+			break;
+		case '\v':
+			res += "\\v";
+			break;
+		default:
+			if (ch < 0x20 || ch > 0x7f) {
+				res += "\\x" + byteToString(ch);
+			} else {
+				res += ch;
+			}
+			break;
+		}
+    }
+	return res;
+}
+
+std::string escapeString(std::string str) {
+	return escapeString(str.c_str(), str.size());
 }
