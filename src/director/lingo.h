@@ -608,6 +608,7 @@ struct MemberExprNode : ExprNode {
 	}
 	virtual ~MemberExprNode() = default;
 	virtual std::string toString(bool dot, bool sum);
+	virtual bool hasSpaces(bool dot);
 };
 
 /* VarNode */
@@ -790,6 +791,7 @@ struct CallNode : Node {
 	}
 	virtual ~CallNode() = default;
 	bool noParens();
+	bool isMemberExpr();
 	virtual std::string toString(bool dot, bool sum);
 	virtual bool hasSpaces(bool dot);
 };

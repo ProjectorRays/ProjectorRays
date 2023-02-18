@@ -661,19 +661,34 @@ std::string SpriteWithinExprNode::toString(bool dot, bool sum) {
 /* MemberExprNode */
 
 std::string MemberExprNode::toString(bool dot, bool sum) {
+	bool hasCastID = castID && !(castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0);
 	std::string res = type;
-	if (!castID || (castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0)) {
-		if (dot) {
-			res += "(" + memberID->toString(dot, sum) + ")";
-		} else if (memberID->type == kBinaryOpNode) {
-			res += " (" + memberID->toString(dot, sum) + ")";
+	if (dot) {
+		res += "(" + memberID->toString(dot, sum);
+		if (hasCastID) {
+			res += ", " + castID->toString(dot, sum) + ")";
 		} else {
-			res += " " + memberID->toString(dot, sum);
+			res += ")";
 		}
 	} else {
-		res += "(" + memberID->toString(dot, sum) + ", " + castID->toString(dot, sum) + ")";
+		std::string memberIDString = memberID->toString(dot, sum);
+		if (memberID->type == kBinaryOpNode) {
+			memberIDString = "(" + memberIDString + ")";
+		}
+		res += " " + memberIDString;
+		if (hasCastID) {
+			std::string castIDString = castID->toString(dot, sum);
+			if (castID->type == kBinaryOpNode) {
+				castIDString = "(" + castIDString + ")";
+			}
+			res += " of castLib " + castIDString;
+		}
 	}
 	return res;
+}
+
+bool MemberExprNode::hasSpaces(bool dot) {
+	return !dot;
 }
 
 /* VarNode */
@@ -844,6 +859,24 @@ bool CallNode::noParens() {
 	return false;
 }
 
+bool CallNode::isMemberExpr() {
+	if (isExpression) {
+		size_t nargs = argList->getValue()->l.size();
+		if (name == "cast" && (nargs == 1 || nargs == 2))
+			return true;
+		if (name == "member" && (nargs == 1 || nargs == 2))
+			return true;
+		if (name == "script" && (nargs == 1 || nargs == 2))
+			return true;
+		if (name == "castLib" && nargs == 1)
+			return true;
+		if (name == "window" && nargs == 1)
+			return true;
+	}
+
+	return false;
+}
+
 std::string CallNode::toString(bool dot, bool sum) {
 	if (isExpression && argList->getValue()->l.size() == 0) {
 		if (name == "pi")
@@ -854,13 +887,44 @@ std::string CallNode::toString(bool dot, bool sum) {
 			return "VOID";
 	}
 
+	if (!dot && isMemberExpr()) {
+		/**
+		 * In some cases, member expressions such as `member 1 of castLib 1` compile
+		 * to the function call `member(1, 1)`. However, this doesn't parse correctly
+		 * in pre-dot-syntax versions of Director, and `put(member(1, 1))` does not
+		 * compile. Therefore, we rewrite these expressions to the verbose syntax when
+		 * in verbose mode.
+		 */
+		auto memberID = argList->getValue()->l[0];
+		std::string memberIDString = memberID->toString(dot, sum);
+		if (memberID->type == kBinaryOpNode) {
+			memberIDString = "(" + memberIDString + ")";
+		}
+		std::string res = name + " " + memberIDString;
+		if (argList->getValue()->l.size() == 2) {
+			auto castID = argList->getValue()->l[1];
+			std::string castIDString = castID->toString(dot, sum);
+			if (castID->type == kBinaryOpNode) {
+				castIDString = "(" + castIDString + ")";
+			}
+			res += " of castLib " + castIDString;
+		}
+		return res;
+	}
+
 	if (noParens())
 		return name + " " + argList->toString(dot, sum);
 
 	return name + "(" + argList->toString(dot, sum) + ")";
 }
 
-bool CallNode::hasSpaces(bool) {
+bool CallNode::hasSpaces(bool dot) {
+	if (!dot && isMemberExpr())
+		return true;
+
+	if (noParens())
+		return true;
+
 	return false;
 }
 
