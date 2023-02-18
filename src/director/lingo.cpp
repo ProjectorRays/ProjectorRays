@@ -457,10 +457,18 @@ LoopNode *Node::ancestorLoop() {
 	return static_cast<LoopNode *>(ancestor);
 }
 
+bool Node::hasSpaces(bool) {
+	return true;
+}
+
 /* ErrorNode */
 
 std::string ErrorNode::toString(bool, bool) {
 	return "ERROR";
+}
+
+bool ErrorNode::hasSpaces(bool) {
+	return false;
 }
 
 /* CommentNode */
@@ -477,6 +485,10 @@ std::string LiteralNode::toString(bool dot, bool sum) {
 
 std::shared_ptr<Datum> LiteralNode::getValue() {
 	return value;
+}
+
+bool LiteralNode::hasSpaces(bool) {
+	return false;
 }
 
 /* BlockNode */
@@ -650,6 +662,10 @@ std::string VarNode::toString(bool, bool) {
 	return varName;
 }
 
+bool VarNode::hasSpaces(bool) {
+	return false;
+}
+
 /* AssignmentStmtNode */
 
 std::string AssignmentStmtNode::toString(bool dot, bool sum) {
@@ -737,8 +753,9 @@ std::string CaseNode::toString(bool dot, bool sum) {
 			}
 		}
 		std::string valueString = value->toString(dot, sum);
-		if (value->needsParens())
+		if (value->hasSpaces(dot)) {
 			valueString = "(" + valueString + ")";
+		}
 		res += valueString;
 		if (nextOr) {
 			res += ", ...";
@@ -747,8 +764,9 @@ std::string CaseNode::toString(bool dot, bool sum) {
 		}
 	} else {
 		std::string valueString = value->toString(dot, sum);
-		if (value->needsParens())
+		if (value->hasSpaces(dot)) {
 			valueString = "(" + valueString + ")";
+		}
 		res += valueString;
 		if (nextOr) {
 			res += ", " + nextOr->toString(dot, sum);
@@ -822,14 +840,19 @@ std::string CallNode::toString(bool dot, bool sum) {
 	return name + "(" + argList->toString(dot, sum) + ")";
 }
 
+bool CallNode::hasSpaces(bool) {
+	return false;
+}
+
 /* ObjCallNode */
 
 std::string ObjCallNode::toString(bool dot, bool sum) {
 	auto rawArgs = argList->getValue()->l;
 	auto obj = rawArgs[0];
 	std::string objString = obj->toString(dot, sum);
-	if (obj->needsParens())
+	if (obj->hasSpaces(dot)) {
 		objString = "(" + objString + ")";
+	}
 	std::string res = objString + "." + name + "(";
 	for (size_t i = 1; i < rawArgs.size(); i++) {
 		if (i > 1)
@@ -840,10 +863,18 @@ std::string ObjCallNode::toString(bool dot, bool sum) {
 	return res;
 }
 
+bool ObjCallNode::hasSpaces(bool) {
+	return false;
+}
+
 /* ObjCallV4Node */
 
 std::string ObjCallV4Node::toString(bool dot, bool sum) {
 	return obj->toString(dot, sum) + "(" + argList->toString(dot, sum) + ")";
+}
+
+bool ObjCallV4Node::hasSpaces(bool) {
+	return false;
 }
 
 /* TheExprNode */
@@ -908,33 +939,48 @@ std::string ThePropExprNode::toString(bool, bool sum) {
 std::string ObjPropExprNode::toString(bool dot, bool sum) {
 	if (dot) {
 		std::string objString = obj->toString(dot, sum);
-		if (obj->needsParens())
+		if (obj->hasSpaces(dot)) {
 			objString = "(" + objString + ")";
+		}
 		return objString + "." + prop;
 	}
 	return "the " + prop + " of " + obj->toString(dot, sum);
+}
+
+bool ObjPropExprNode::hasSpaces(bool) {
+	return false;
 }
 
 /* ObjBracketExprNode */
 
 std::string ObjBracketExprNode::toString(bool dot, bool sum) {
 	std::string objString = obj->toString(dot, sum);
-	if (obj->needsParens())
+	if (obj->hasSpaces(dot)) {
 		objString = "(" + objString + ")";
+	}
 	return objString + "[" + prop->toString(dot, sum) + "]";
+}
+
+bool ObjBracketExprNode::hasSpaces(bool) {
+	return false;
 }
 
 /* ObjPropIndexExprNode */
 
 std::string ObjPropIndexExprNode::toString(bool dot, bool sum) {
 	std::string objString = obj->toString(dot, sum);
-	if (obj->needsParens())
+	if (obj->hasSpaces(dot)) {
 		objString = "(" + objString + ")";
+	}
 	std::string res = objString + "." + prop + "[" + index->toString(dot, sum);
 	if (index2)
 		res += ".." + index2->toString(dot, sum);
 	res += "]";
 	return res;
+}
+
+bool ObjPropIndexExprNode::hasSpaces(bool) {
+	return false;
 }
 
 /* ExitRepeatStmtNode */

@@ -352,8 +352,7 @@ struct Node {
 	virtual std::shared_ptr<Datum> getValue();
 	Node *ancestorStatement();
 	LoopNode *ancestorLoop();
-
-	virtual bool needsParens() { return true; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* ExprNode */
@@ -400,8 +399,7 @@ struct ErrorNode : ExprNode {
 	ErrorNode() : ExprNode(kErrorNode) {}
 	virtual ~ErrorNode() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* CommentNode */
@@ -425,8 +423,7 @@ struct LiteralNode : ExprNode {
 	virtual ~LiteralNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 	virtual std::shared_ptr<Datum> getValue();
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* BlockNode */
@@ -621,8 +618,7 @@ struct VarNode : ExprNode {
 	VarNode(std::string v) : ExprNode(kVarNode), varName(v) {}
 	virtual ~VarNode() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* AssignmentStmtNode */
@@ -795,8 +791,7 @@ struct CallNode : Node {
 	virtual ~CallNode() = default;
 	bool noParens();
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* ObjCallNode */
@@ -816,8 +811,7 @@ struct ObjCallNode : Node {
 	}
 	virtual ~ObjCallNode() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* ObjCallV4Node */
@@ -837,8 +831,7 @@ struct ObjCallV4Node : Node {
 	}
 	virtual ~ObjCallV4Node() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* TheExprNode */
@@ -972,8 +965,7 @@ struct ObjPropExprNode : ExprNode {
 	}
 	virtual ~ObjPropExprNode() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* ObjBracketExprNode */
@@ -991,8 +983,7 @@ struct ObjBracketExprNode : ExprNode {
 	}
 	virtual ~ObjBracketExprNode() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* ObjPropIndexExprNode */
@@ -1016,8 +1007,7 @@ struct ObjPropIndexExprNode : ExprNode {
 	}
 	virtual ~ObjPropIndexExprNode() = default;
 	virtual std::string toString(bool dot, bool sum);
-
-	virtual bool needsParens() { return false; }
+	virtual bool hasSpaces(bool dot);
 };
 
 /* ExitRepeatStmtNode */
