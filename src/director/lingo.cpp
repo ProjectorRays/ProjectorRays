@@ -543,17 +543,21 @@ std::string ExitStmtNode::toString(bool, bool) {
 /* InverseOpNode */
 
 std::string InverseOpNode::toString(bool dot, bool sum) {
-	if (operand->type == kBinaryOpNode)
-		return "-(" + operand->toString(dot, sum) + ")";
-	return "-" + operand->toString(dot, sum);
+	std::string operandString = operand->toString(dot, sum);
+	if (operand->hasSpaces(dot)) {
+		operandString = "(" + operandString + ")";
+	}
+	return "-" + operandString;
 }
 
 /* NotOpNode */
 
 std::string NotOpNode::toString(bool dot, bool sum) {
-	if (operand->type == kBinaryOpNode)
-		return "not (" + operand->toString(dot, sum) + ")";
-	return "not " + operand->toString(dot, sum);
+	std::string operandString = operand->toString(dot, sum);
+	if (operand->hasSpaces(dot)) {
+		operandString = "(" + operandString + ")";
+	}
+	return "not " + operandString;
 }
 
 /* BinaryOpNode */
