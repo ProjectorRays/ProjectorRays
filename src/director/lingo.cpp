@@ -633,13 +633,29 @@ std::string ChunkDeleteStmtNode::toString(bool dot, bool sum) {
 /* SpriteIntersectsExprNode */
 
 std::string SpriteIntersectsExprNode::toString(bool dot, bool sum) {
-	return "sprite " + firstSprite->toString(dot, sum) + " intersects " + secondSprite->toString(dot, sum);
+	std::string firstSpriteString = firstSprite->toString(dot, sum);
+	if (firstSprite->type == kBinaryOpNode) {
+		firstSpriteString = "(" + firstSpriteString + ")";
+	}
+	std::string secondSpriteString = secondSprite->toString(dot, sum);
+	if (secondSprite->type == kBinaryOpNode) {
+		secondSpriteString = "(" + secondSpriteString + ")";
+	}
+	return "sprite " + firstSpriteString + " intersects " + secondSpriteString;
 }
 
 /* SpriteWithinExprNode */
 
 std::string SpriteWithinExprNode::toString(bool dot, bool sum) {
-	return "sprite " + firstSprite->toString(dot, sum) + " within " + secondSprite->toString(dot, sum);
+	std::string firstSpriteString = firstSprite->toString(dot, sum);
+	if (firstSprite->type == kBinaryOpNode) {
+		firstSpriteString = "(" + firstSpriteString + ")";
+	}
+	std::string secondSpriteString = secondSprite->toString(dot, sum);
+	if (secondSprite->type == kBinaryOpNode) {
+		secondSpriteString = "(" + secondSpriteString + ")";
+	}
+	return "sprite " + firstSpriteString + " within " + secondSpriteString;
 }
 
 /* MemberExprNode */
