@@ -1031,8 +1031,8 @@ std::string ObjPropExprNode::toString(bool dot, bool sum) {
 	return "the " + prop + " of " + obj->toString(dot, sum);
 }
 
-bool ObjPropExprNode::hasSpaces(bool) {
-	return false;
+bool ObjPropExprNode::hasSpaces(bool dot) {
+	return !dot;
 }
 
 /* ObjBracketExprNode */
