@@ -850,12 +850,12 @@ struct TheExprNode : ExprNode {
 
 struct LastStringChunkExprNode : ExprNode {
 	ChunkExprType type;
-	std::shared_ptr<Node> string;
+	std::shared_ptr<Node> obj;
 
-	LastStringChunkExprNode(ChunkExprType t, std::shared_ptr<Node> s)
+	LastStringChunkExprNode(ChunkExprType t, std::shared_ptr<Node> o)
 		: ExprNode(kLastStringChunkExprNode), type(t) {
-		string = std::move(s);
-		string->parent = this;
+		obj = std::move(o);
+		obj->parent = this;
 	}
 	virtual ~LastStringChunkExprNode() = default;
 	virtual std::string toString(bool dot, bool sum);
@@ -865,12 +865,12 @@ struct LastStringChunkExprNode : ExprNode {
 
 struct StringChunkCountExprNode : ExprNode {
 	ChunkExprType type;
-	std::shared_ptr<Node> string;
+	std::shared_ptr<Node> obj;
 
-	StringChunkCountExprNode(ChunkExprType t, std::shared_ptr<Node> s)
+	StringChunkCountExprNode(ChunkExprType t, std::shared_ptr<Node> o)
 		: ExprNode(kStringChunkCountExprNode), type(t) {
-		string = std::move(s);
-		string->parent = this;
+		obj = std::move(o);
+		obj->parent = this;
 	}
 	virtual ~StringChunkCountExprNode() = default;
 	virtual std::string toString(bool dot, bool sum);

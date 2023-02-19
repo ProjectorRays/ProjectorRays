@@ -971,51 +971,83 @@ std::string TheExprNode::toString(bool, bool) {
 
 std::string LastStringChunkExprNode::toString(bool, bool sum) {
 	auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-	// we want the string to always be verbose
-	return "the last " + typeString + " in " + string->toString(false, sum);
+	// we want the object to always be verbose
+	std::string objString = obj->toString(false, sum);
+	if (obj->type == kBinaryOpNode) {
+		objString = "(" + objString + ")";
+	}
+	return "the last " + typeString + " in " + objString;
 }
 
 /* StringChunkCountExprNode */
 
 std::string StringChunkCountExprNode::toString(bool, bool sum) {
 	auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-	// we want the string to always be verbose
-	return "the number of " + typeString + "s in " + string->toString(false, sum);
+	// we want the object to always be verbose
+	std::string objString = obj->toString(false, sum);
+	if (obj->type == kBinaryOpNode) {
+		objString = "(" + objString + ")";
+	}
+	return "the number of " + typeString + "s in " + objString;
 }
 
 /* MenuPropExprNode */
 
 std::string MenuPropExprNode::toString(bool dot, bool sum) {
-	auto propString = Lingo::getName(Lingo::menuPropertyNames, prop);
-	return "the " + propString + " of menu " + menuID->toString(dot, sum);
+	std::string propString = Lingo::getName(Lingo::menuPropertyNames, prop);
+	std::string menuIDString = menuID->toString(dot, sum);
+	if (menuID->type == kBinaryOpNode) {
+		menuIDString = "(" + menuIDString + ")";
+	}
+	return "the " + propString + " of menu " + menuIDString;
 }
 
 /* MenuItemPropExprNode */
 
 std::string MenuItemPropExprNode::toString(bool dot, bool sum) {
-	auto propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
-	return "the " + propString + " of menuItem " + itemID->toString(dot, sum) + " of menu " + menuID->toString(dot, sum);
+	std::string propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
+	std::string itemIDString = itemID->toString(dot, sum);
+	if (itemID->type == kBinaryOpNode) {
+		itemIDString = "(" + itemIDString + ")";
+	}
+	std::string menuIDString = menuID->toString(dot, sum);
+	if (menuID->type == kBinaryOpNode) {
+		menuIDString = "(" + menuIDString + ")";
+	}
+	return "the " + propString + " of menuItem " + itemIDString + " of menu " + menuIDString;
 }
 
 /* SoundPropExprNode */
 
 std::string SoundPropExprNode::toString(bool dot, bool sum) {
-	auto propString = Lingo::getName(Lingo::soundPropertyNames, prop);
-	return "the " + propString + " of sound " + soundID->toString(dot, sum);
+	std::string propString = Lingo::getName(Lingo::soundPropertyNames, prop);
+	std::string soundIDString = soundID->toString(dot, sum);
+	if (soundID->type == kBinaryOpNode) {
+		soundIDString = "(" + soundIDString + ")";
+	}
+	return "the " + propString + " of sound " + soundIDString;
 }
 
 /* SpritePropExprNode */
 
 std::string SpritePropExprNode::toString(bool dot, bool sum) {
-	auto propString = Lingo::getName(Lingo::spritePropertyNames, prop);
-	return "the " + propString + " of sprite " + spriteID->toString(dot, sum);
+	std::string propString = Lingo::getName(Lingo::spritePropertyNames, prop);
+	std::string spriteIDString = spriteID->toString(dot, sum);
+	if (spriteID->type == kBinaryOpNode) {
+		spriteIDString = "(" + spriteIDString + ")";
+	}
+	return "the " + propString + " of sprite " + spriteIDString;
 }
 
 /* ThePropExprNode */
 
 std::string ThePropExprNode::toString(bool, bool sum) {
 	// we want the object to always be verbose
-	return "the " + prop + " of " + obj->toString(false, sum);
+	std::string objString = obj->toString(false, sum);
+	if (obj->type == kBinaryOpNode) {
+		objString = "(" + objString + ")";
+	}
+	return "the " + prop + " of " + objString;
 }
 
 /* ObjPropExprNode */
@@ -1027,8 +1059,13 @@ std::string ObjPropExprNode::toString(bool dot, bool sum) {
 			objString = "(" + objString + ")";
 		}
 		return objString + "." + prop;
+	} else {
+		std::string objString = obj->toString(dot, sum);
+		if (obj->type == kBinaryOpNode) {
+			objString = "(" + objString + ")";
+		}
+		return "the " + prop + " of " + objString;
 	}
-	return "the " + prop + " of " + obj->toString(dot, sum);
 }
 
 bool ObjPropExprNode::hasSpaces(bool dot) {
