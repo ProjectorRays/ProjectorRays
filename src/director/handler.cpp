@@ -716,9 +716,10 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		{
 			auto argCount = bytecode.obj;
 			std::vector<std::shared_ptr<Node>> args;
+			args.resize(argCount);
 			while (argCount) {
-				args.insert(args.begin(), pop());
 				argCount--;
+				args[argCount] = pop();
 			}
 			auto argList = std::make_shared<Datum>(kDatumArgListNoRet, args);
 			translation = std::make_shared<LiteralNode>(std::move(argList));
@@ -728,9 +729,10 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		{
 			auto argCount = bytecode.obj;
 			std::vector<std::shared_ptr<Node>> args;
+			args.resize(argCount);
 			while (argCount) {
-				args.insert(args.begin(), pop());
 				argCount--;
+				args[argCount] = pop();
 			}
 			auto argList = std::make_shared<Datum>(kDatumArgList, args);
 			translation = std::make_shared<LiteralNode>(std::move(argList));
