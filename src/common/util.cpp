@@ -12,6 +12,8 @@
 
 #include "common/util.h"
 
+namespace Common {
+
 std::string fourCCToString(uint32_t fourcc) {
 	char str[4];
 	str[0] = (char)(fourcc >> 24);
@@ -107,3 +109,5 @@ std::string escapeString(const char *str, size_t size) {
 std::string escapeString(std::string str) {
 	return escapeString(str.c_str(), str.size());
 }
+
+} // namespace Common

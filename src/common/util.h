@@ -12,11 +12,15 @@
 
 #define FOURCC(a0,a1,a2,a3) ((uint32_t)((a3) | ((a2) << 8) | ((a1) << 16) | ((a0) << 24)))
 
+namespace Common {
+
 std::string fourCCToString(uint32_t fourcc);
 std::string cleanFileName(const std::string &fileName);
 std::string floatToString(double f);
 std::string byteToString(uint8_t byte);
 std::string escapeString(const char *str, size_t size);
 std::string escapeString(std::string str);
+
+} // namespace Common
 
 #endif // COMMON_UTIL_H

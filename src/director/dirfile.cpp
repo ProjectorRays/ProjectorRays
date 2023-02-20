@@ -61,7 +61,7 @@ bool DirectorFile::read(Common::ReadStream *s) {
 		if (!readAfterburnerMap())
 			return false;
 	} else {
-		Common::warning("Codec unsupported: " + fourCCToString(codec));
+		Common::warning("Codec unsupported: " + Common::fourCCToString(codec));
 		return false;
 	}
 
@@ -92,7 +92,7 @@ void DirectorFile::readMemoryMap() {
 			continue;
 
 		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes @ pos 0x%08x (%d)")
-						% i % fourCCToString(mapEntry.fourCC) % mapEntry.len % mapEntry.offset % mapEntry.offset);
+						% i % Common::fourCCToString(mapEntry.fourCC) % mapEntry.len % mapEntry.offset % mapEntry.offset);
 
 		ChunkInfo info;
 		info.id = i;
@@ -213,7 +213,7 @@ bool DirectorFile::readAfterburnerMap() {
 		uint32_t tag = abmpStream.readUint32();
 
 		Common::debug(boost::format("Found RIFX resource index %d: '%s', %u bytes (%u uncompressed) @ pos 0x%08x (%d), compressionType: %u")
-						% resId % fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType);
+						% resId % Common::fourCCToString(tag) % compSize % uncompSize % offset % offset % compressionType);
 
 		ChunkInfo info;
 		info.id = resId;
@@ -258,7 +258,7 @@ bool DirectorFile::readAfterburnerMap() {
 		ChunkInfo &info = chunkInfo[resId];
 
 		Common::debug(boost::format("Loading ILS resource %d: '%s', %u bytes")
-						% resId % fourCCToString(info.fourCC) % info.len);
+						% resId % Common::fourCCToString(info.fourCC) % info.len);
 
 		_cachedChunkViews[resId] = ilsStream.readByteView(info.len);
 	}
@@ -278,7 +278,7 @@ bool DirectorFile::readKeyTable() {
 				ownerTag = chunkInfo[entry.castID].fourCC;
 			}
 			Common::debug(boost::format("KEY* entry %u: '%s' @ %d owned by '%s' @ %d")
-				% i % fourCCToString(entry.fourCC) % entry.sectionID % fourCCToString(ownerTag) % entry.castID);
+				% i % Common::fourCCToString(entry.fourCC) % entry.sectionID % Common::fourCCToString(ownerTag) % entry.castID);
 		}
 
 		return true;
@@ -385,8 +385,8 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 	auto &info = chunkInfo[id];
 	if (fourCC != info.fourCC) {
 		throw std::runtime_error(
-			"Expected chunk " + std::to_string(id) + " to be '" + fourCCToString(fourCC)
-			+ "', but is actually '" + fourCCToString(info.fourCC) + "'"
+			"Expected chunk " + std::to_string(id) + " to be '" + Common::fourCCToString(fourCC)
+			+ "', but is actually '" + Common::fourCCToString(info.fourCC) + "'"
 		);
 	}
 
@@ -458,11 +458,11 @@ Common::BufferView DirectorFile::readChunkData(uint32_t fourCC, uint32_t len) {
 	if (fourCC != validFourCC || len != validLen) {
 		throw std::runtime_error(
 			"At offset " + std::to_string(offset)
-			+ " expected '" + fourCCToString(fourCC) + "' chunk with length " + std::to_string(len)
-			+ ", but got '" + fourCCToString(validFourCC) + "' chunk with length " + std::to_string(validLen)
+			+ " expected '" + Common::fourCCToString(fourCC) + "' chunk with length " + std::to_string(len)
+			+ ", but got '" + Common::fourCCToString(validFourCC) + "' chunk with length " + std::to_string(validLen)
 		);
 	} else {
-		Common::debug("At offset " + std::to_string(offset) + " reading chunk '" + fourCCToString(fourCC) + "' with length " + std::to_string(len));
+		Common::debug("At offset " + std::to_string(offset) + " reading chunk '" + Common::fourCCToString(fourCC) + "' with length " + std::to_string(len));
 	}
 
 	return stream->readByteView(len);
@@ -507,7 +507,7 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::Bu
 		break;
 	default:
 		throw std::runtime_error(boost::str(
-			boost::format("Could not deserialize '%s' chunk") % fourCCToString(fourCC)
+			boost::format("Could not deserialize '%s' chunk") % Common::fourCCToString(fourCC)
 		));
 		break;
 	}
@@ -720,7 +720,7 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	if ((unsigned)mapEntry.len != len) {
 		Common::warning(
 			boost::format("Size estimate for '%s' was incorrect! (Expected %u bytes, wrote %zu)")
-				% fourCCToString(mapEntry.fourCC) % mapEntry.len % len
+				% Common::fourCCToString(mapEntry.fourCC) % mapEntry.len % len
 		);
 	}
 }
@@ -780,7 +780,7 @@ void DirectorFile::dumpScripts() {
 				scriptType = "UnknownScript";
 				id = std::to_string(it->first);
 			}
-			std::string fileName = cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
+			std::string fileName = Common::cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
 			Common::writeFile(fileName + ".ls", it->second->scriptText());
 			Common::writeFile(fileName + ".lasm", it->second->bytecodeText());
 		}
@@ -793,7 +793,7 @@ void DirectorFile::dumpChunks() {
 		if (info.id == 0) // RIFX
 			continue;
 
-		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
+		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
 		Common::writeFile(fileName + ".bin", getChunkData(info.fourCC, info.id));
 	}
 }
@@ -804,7 +804,7 @@ void DirectorFile::dumpJSON() {
 		if (info.id == 0) // RIFX
 			continue;
 
-		std::string fileName = cleanFileName(fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
+		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
 			Common::JSONWriter json;
 			deserializedChunks[info.id]->writeJSON(json);

@@ -1245,7 +1245,7 @@ std::string Handler::bytecodeText() {
 			line += " " + posToString(bytecode.pos - bytecode.obj);
 			break;
 		case kOpPushFloat32:
-			line += " " + floatToString(*(float *)(&bytecode.obj));
+			line += " " + Common::floatToString(*(float *)(&bytecode.obj));
 			break;
 		default:
 			if (bytecode.opID > 0x40)

@@ -290,7 +290,7 @@ std::string Lingo::getOpcodeName(uint8_t id) {
 		id = 0x40 + id % 0x40;
 	auto it = opcodeNames.find(id);
 	if (it == opcodeNames.end()){
-		return "unk" + byteToString(id);
+		return "unk" + Common::byteToString(id);
 	}
 	return it->second;
 }
@@ -347,7 +347,7 @@ std::string Datum::toString(bool dot, bool sum) {
 	case kDatumInt:
 		return std::to_string(i);
 	case kDatumFloat:
-		return floatToString(f);
+		return Common::floatToString(f);
 	case kDatumList:
 	case kDatumArgList:
 	case kDatumArgListNoRet:
