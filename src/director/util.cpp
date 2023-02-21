@@ -21,9 +21,9 @@ std::string indent(std::string str) {
 }
 
 unsigned int humanVersion(unsigned int ver) {
+	// This is based on Lingo's `the fileVersion` with a correction to the
+	// version number for Director 12.
 	if (ver >= 0x79F)
-		return 1201;
-	if (ver >= 0x783)
 		return 1200;
 	if (ver >= 0x782)
 		return 1150;
