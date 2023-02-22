@@ -310,6 +310,8 @@ struct Handler {
 	std::vector<std::shared_ptr<Node>> stack;
 	std::unique_ptr<AST> ast;
 
+	bool isGenericEvent = false;
+
 	Handler(ScriptChunk *s) {
 		script = s;
 	}

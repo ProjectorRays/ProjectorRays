@@ -509,28 +509,33 @@ void BlockNode::addChild(std::shared_ptr<Node> child) {
 /* HandlerNode */
 
 std::string HandlerNode::toString(bool dot, bool sum) {
-	std::string res = "on " + handler->name;
-	if (handler->argumentNames.size() > 0) {
-		res += " ";
-		for (size_t i = 0; i < handler->argumentNames.size(); i++) {
-			if (i > 0)
-				res += ", ";
-			res += handler->argumentNames[i];
-		}
-	}
-	res += kLingoLineEnding;
-	if (handler->globalNames.size() > 0) {
-		res += "  global ";
-		for (size_t i = 0; i < handler->globalNames.size(); i++) {
-			if (i > 0)
-				res += ", ";
-			res += handler->globalNames[i];
+	std::string res;
+	if (handler->isGenericEvent) {
+		res += block->toString(dot, sum);
+	} else {
+		res += "on " + handler->name;
+		if (handler->argumentNames.size() > 0) {
+			res += " ";
+			for (size_t i = 0; i < handler->argumentNames.size(); i++) {
+				if (i > 0)
+					res += ", ";
+				res += handler->argumentNames[i];
+			}
 		}
 		res += kLingoLineEnding;
+		if (handler->globalNames.size() > 0) {
+			res += "  global ";
+			for (size_t i = 0; i < handler->globalNames.size(); i++) {
+				if (i > 0)
+					res += ", ";
+				res += handler->globalNames[i];
+			}
+			res += kLingoLineEnding;
+		}
+		res += indent(block->toString(dot, sum));
+		res += "end";
+		res += kLingoLineEnding;
 	}
-	res += indent(block->toString(dot, sum));
-	res += "end";
-	res += kLingoLineEnding;
 	return res;
 }
 

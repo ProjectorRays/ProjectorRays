@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "common/codewriter.h"
 #include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
@@ -113,7 +114,9 @@ std::vector<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, uint
 }
 
 void Handler::readNames() {
-	name = getName(nameID);
+	if (!isGenericEvent) {
+		name = getName(nameID);
+	}
 	for (auto nameID : argumentNameIDs) {
 		argumentNames.push_back(getName(nameID));
 	}
@@ -1225,17 +1228,19 @@ std::string Handler::bytecodeText() {
 	bool dotSyntax = script->dir->dotSyntax;
 
 	Common::CodeWriter code;
-	code.write("on " + name);
-	if (argumentNames.size() > 0) {
-		code.write(" ");
-		for (size_t i = 0; i < argumentNames.size(); i++) {
-			if (i > 0)
-				code.write(", ");
-			code.write(argumentNames[i]);
+	if (!isGenericEvent) {
+		code.write("on " + name);
+		if (argumentNames.size() > 0) {
+			code.write(" ");
+			for (size_t i = 0; i < argumentNames.size(); i++) {
+				if (i > 0)
+					code.write(", ");
+				code.write(argumentNames[i]);
+			}
 		}
+		code.writeLine();
+		code.indent();
 	}
-	code.writeLine();
-	code.indent();
 	for (auto &bytecode : bytecodeArray) {
 		auto line = posToString(bytecode.pos) + " " + Lingo::getOpcodeName(bytecode.opID);
 		switch (bytecode.opcode) {
@@ -1267,8 +1272,10 @@ std::string Handler::bytecodeText() {
 		}
 		code.writeLine(line);
 	}
-	code.unindent();
-	code.writeLine("end");
+	if (!isGenericEvent) {
+		code.unindent();
+		code.writeLine("end");
+	}
 	return code.str();
 }
 
