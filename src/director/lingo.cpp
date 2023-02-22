@@ -343,6 +343,9 @@ std::string Datum::toString(bool dot, bool sum) {
 				break;
 			}
 		}
+		if (sum) {
+			return "\"" + Common::escapeString(s) + "\"";
+		}
 		return "\"" + s + "\"";
 	case kDatumInt:
 		return std::to_string(i);
