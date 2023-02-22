@@ -289,9 +289,9 @@ bool DirectorFile::readKeyTable() {
 }
 
 bool DirectorFile::readConfig() {
-	auto info = getFirstChunkInfo(FOURCC('V', 'W', 'C', 'F'));
+	auto info = getFirstChunkInfo(FOURCC('D', 'R', 'C', 'F'));
 	if (!info)
-		info = getFirstChunkInfo(FOURCC('D', 'R', 'C', 'F'));
+		info = getFirstChunkInfo(FOURCC('V', 'W', 'C', 'F'));
 
 	if (info) {
 		config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
