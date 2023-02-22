@@ -163,6 +163,7 @@ enum NodeType {
 	kCasesStmtNode,
 	kCaseNode,
 	kTellStmtNode,
+	kSoundCmdStmtNode,
 	kCallNode,
 	kObjCallNode,
 	kObjCallV4Node,
@@ -792,6 +793,20 @@ struct TellStmtNode : StmtNode {
 		block->parent = this;
 	}
 	virtual ~TellStmtNode() = default;
+	virtual std::string toString(bool dot, bool sum);
+};
+
+/* SoundCmdStmtNode */
+struct SoundCmdStmtNode : StmtNode {
+	std::string cmd;
+	std::shared_ptr<Node> argList;
+
+	SoundCmdStmtNode(std::string c, std::shared_ptr<Node> a) : StmtNode(kSoundCmdStmtNode) {
+		cmd = c;
+		argList = std::move(a);
+		argList->parent = this;
+	}
+	virtual ~SoundCmdStmtNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 };
 

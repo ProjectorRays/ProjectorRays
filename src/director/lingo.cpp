@@ -853,6 +853,16 @@ std::string TellStmtNode::toString(bool dot, bool sum) {
 	return res;
 }
 
+/* SoundCmdStmtNode */
+
+std::string SoundCmdStmtNode::toString(bool dot, bool sum) {
+	std::string res = "sound " + cmd;
+	if (argList->getValue()->l.size() > 0) {
+		res += " " + argList->toString(dot, sum);
+	}
+	return res;
+}
+
 /* CallNode */
 
 bool CallNode::noParens() {

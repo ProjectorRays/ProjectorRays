@@ -906,8 +906,18 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpExtCall:
 	case kOpTellCall:
 		{
+			std::string name = getName(bytecode.obj);
 			auto argList = pop();
-			translation = std::make_shared<CallNode>(getName(bytecode.obj), std::move(argList));
+			bool isStatement = (argList->getValue()->type == kDatumArgListNoRet);
+			auto &rawArgList = argList->getValue()->l;
+			size_t nargs = rawArgList.size();
+			if (isStatement && name == "sound" && nargs > 0 && rawArgList[0]->type == kLiteralNode && rawArgList[0]->getValue()->type == kDatumSymbol) {
+				std::string cmd = rawArgList[0]->getValue()->s;
+				rawArgList.erase(rawArgList.begin());
+				translation = std::make_shared<SoundCmdStmtNode>(cmd, std::move(argList));
+			} else {
+				translation = std::make_shared<CallNode>(name, std::move(argList));
+			}
 		}
 		break;
 	case kOpObjCallV4:
