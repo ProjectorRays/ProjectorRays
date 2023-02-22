@@ -1224,18 +1224,20 @@ std::string posToString(int32_t pos) {
 std::string Handler::bytecodeText() {
 	bool dotSyntax = script->dir->dotSyntax;
 
-	std::string res = "on " + name;
+	Common::CodeWriter code;
+	code.write("on " + name);
 	if (argumentNames.size() > 0) {
-		res += " ";
+		code.write(" ");
 		for (size_t i = 0; i < argumentNames.size(); i++) {
 			if (i > 0)
-				res += ", ";
-			res += argumentNames[i];
+				code.write(", ");
+			code.write(argumentNames[i]);
 		}
 	}
-	res += kLingoLineEnding;
+	code.writeLine();
+	code.indent();
 	for (auto &bytecode : bytecodeArray) {
-		auto line = "  " + posToString(bytecode.pos) + " " + Lingo::getOpcodeName(bytecode.opID);
+		auto line = posToString(bytecode.pos) + " " + Lingo::getOpcodeName(bytecode.opID);
 		switch (bytecode.opcode) {
 		case kOpJmp:
 		case kOpJmpIfZ:
@@ -1263,12 +1265,11 @@ std::string Handler::bytecodeText() {
 			else
 				line += bytecode.translation->toString(dotSyntax, true);
 		}
-		line += kLingoLineEnding;
-		res += line;
+		code.writeLine(line);
 	}
-	res += "end";
-	res += kLingoLineEnding;
-	return res;
+	code.unindent();
+	code.writeLine("end");
+	return code.str();
 }
 
 } // namespace Director
