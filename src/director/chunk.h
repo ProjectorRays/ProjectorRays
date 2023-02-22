@@ -305,7 +305,7 @@ struct ScriptChunk : Chunk {
 	uint32_t totalLength2;
 	uint16_t headerLength;
 	uint16_t scriptNumber;
-	uint16_t scriptBehavior;
+	uint32_t scriptFlags;
 
 	uint16_t handlerVectorsCount;
 	uint32_t handlerVectorsOffset;

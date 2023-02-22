@@ -201,6 +201,25 @@ enum CaseExpect {
 	kCaseExpectOtherwise
 };
 
+enum ScriptFlag {
+	kScriptFlagUnused		= (1 << 0x0),
+	kScriptFlagFuncsGlobal	= (1 << 0x1),
+	kScriptFlagVarsGlobal	= (1 << 0x2),	// Occurs in event scripts (which have no local vars). Correlated with use of alternate global var opcodes.
+	kScriptFlagUnk3			= (1 << 0x3),
+	kScriptFlagFactoryDef	= (1 << 0x4),
+	kScriptFlagUnk5			= (1 << 0x5),
+	kScriptFlagUnk6			= (1 << 0x6),
+	kScriptFlagUnk7			= (1 << 0x7),
+	kScriptFlagHasFactory	= (1 << 0x8),
+	kScriptFlagEventScript	= (1 << 0x9),
+	kScriptFlagEventScript2	= (1 << 0xa),
+	kScriptFlagUnkB			= (1 << 0xb),
+	kScriptFlagUnkC			= (1 << 0xc),
+	kScriptFlagUnkD			= (1 << 0xd),
+	kScriptFlagUnkE			= (1 << 0xe),
+	kScriptFlagUnkF			= (1 << 0xf)
+};
+
 /* Lingo */
 
 struct Lingo {

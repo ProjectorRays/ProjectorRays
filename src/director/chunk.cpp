@@ -931,7 +931,7 @@ void ScriptChunk::read(Common::ReadStream &stream) {
 	headerLength = stream.readUint16();
 	scriptNumber = stream.readUint16();
 	stream.seek(38);
-	scriptBehavior = stream.readUint32();
+	scriptFlags = stream.readUint32();
 	stream.seek(50);
 	handlerVectorsCount = stream.readUint16();
 	handlerVectorsOffset = stream.readUint32();
@@ -949,10 +949,16 @@ void ScriptChunk::read(Common::ReadStream &stream) {
 	propertyNameIDs = readVarnamesTable(stream, propertiesCount, propertiesOffset);
 	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
 
-	stream.seek(handlersOffset);
 	handlers.resize(handlersCount);
 	for (auto &handler : handlers) {
 		handler = std::make_unique<Handler>(this);
+	}
+	if ((scriptFlags & kScriptFlagEventScript) && handlersCount > 0) {
+		handlers[0]->isGenericEvent = true;
+	}
+
+	stream.seek(handlersOffset);
+	for (auto &handler : handlers) {
 		handler->readRecord(stream);
 	}
 	for (const auto &handler : handlers) {
@@ -984,7 +990,7 @@ void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
 		JSON_WRITE_FIELD(totalLength2);
 		JSON_WRITE_FIELD(headerLength);
 		JSON_WRITE_FIELD(scriptNumber);
-		JSON_WRITE_FIELD(scriptBehavior);
+		JSON_WRITE_FIELD(scriptFlags);
 		JSON_WRITE_FIELD(handlerVectorsCount);
 		JSON_WRITE_FIELD(handlerVectorsOffset);
 		JSON_WRITE_FIELD(handlerVectorsSize);
