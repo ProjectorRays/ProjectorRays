@@ -110,4 +110,17 @@ std::string escapeString(std::string str) {
 	return escapeString(str.c_str(), str.size());
 }
 
+int stricmp(const char *a, const char *b) {
+	int la, lb;
+	while (*a && ((la = tolower(*a)) == (lb = tolower(*b)))) {
+		a++;
+		b++;
+	}
+	return la - lb;
+}
+
+int compareIgnoreCase(const std::string &a, const std::string &b) {
+	return stricmp(a.c_str(), b.c_str());
+}
+
 } // namespace Common
