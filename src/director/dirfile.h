@@ -99,6 +99,8 @@ public:
 	void dumpScripts();
 	void dumpChunks();
 	void dumpJSON();
+
+	bool isCast() const;
 };
 
 } // namespace Director

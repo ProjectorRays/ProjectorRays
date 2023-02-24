@@ -688,15 +688,7 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 	switch (id) {
 	case 0: // RIFX
 		{
-			uint32_t newCodec;
-			switch (codec) {
-			case FOURCC('M', 'C', '9', '5'):
-			case FOURCC('F', 'G', 'D', 'C'):
-				newCodec = FOURCC('M', 'C', '9', '5');
-				break;
-			default:
-				newCodec = FOURCC('M', 'V', '9', '3');
-			}
+			uint32_t newCodec = (isCast()) ? FOURCC('M', 'C', '9', '5') : FOURCC('M', 'V', '9', '3');
 			stream.writeUint32(newCodec);
 		}
 		return;
@@ -812,6 +804,10 @@ void DirectorFile::dumpJSON() {
 			Common::writeFile(fileName + ".json", json.str());
 		}
 	}
+}
+
+bool DirectorFile::isCast() const {
+	return codec == FOURCC('M', 'C', '9', '5') || codec == FOURCC('F', 'G', 'D', 'C');
 }
 
 } // namespace Director
