@@ -8,6 +8,7 @@
 #define COMMON_FILEIO_H
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,10 +17,10 @@ namespace Common {
 
 class BufferView;
 
-bool readFile(const std::string &fileName, std::vector<uint8_t> &buf);
-void writeFile(const std::string &fileName, const std::string &contents);
-void writeFile(const std::string &fileName, const uint8_t *contents, size_t size);
-void writeFile(const std::string &fileName, const BufferView &view);
+bool readFile(const std::filesystem::path &path, std::vector<uint8_t> &buf);
+void writeFile(const std::filesystem::path &path, const std::string &contents);
+void writeFile(const std::filesystem::path &path, const uint8_t *contents, size_t size);
+void writeFile(const std::filesystem::path &path, const BufferView &view);
 
 } // namespace Common
 

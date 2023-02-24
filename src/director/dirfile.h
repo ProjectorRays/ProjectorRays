@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <istream>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <string>
@@ -87,7 +88,7 @@ public:
 	size_t size();
 	size_t chunkSize(int32_t id);
 
-	void writeToFile(std::string fileName);
+	void writeToFile(const std::filesystem::path &path);
 	void generateInitialMap();
 	void generateMemoryMap();
 	void write(Common::WriteStream &stream);

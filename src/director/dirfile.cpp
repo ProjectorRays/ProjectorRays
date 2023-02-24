@@ -528,13 +528,13 @@ bool DirectorFile::compressionImplemented(MoaID compressionID) {
 
 // write stuff
 
-void DirectorFile::writeToFile(std::string fileName) {
+void DirectorFile::writeToFile(const std::filesystem::path &path) {
 	generateInitialMap();
 	generateMemoryMap();
 	std::vector<uint8_t> buf(size());
 	Common::WriteStream stream(buf.data(), buf.size(), endianness);
 	write(stream);
-	Common::writeFile(fileName, stream);
+	Common::writeFile(path, stream);
 }
 
 void DirectorFile::generateInitialMap() {
