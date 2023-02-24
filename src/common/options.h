@@ -17,9 +17,9 @@ namespace Common {
 
 enum Command {
 	kCmdNone		= 0,
-	kCmdDecompile	= (1 << 1),
-	kCmdVersion		= (1 << 2),
-	kCmdAll			= (1 << 3) - 1
+	kCmdDecompile	= (1 << 0),
+	kCmdVersion		= (1 << 1),
+	kCmdAll			= (1 << 2) - 1
 };
 
 enum VersionStyle {
