@@ -26,6 +26,7 @@ OBJS = \
 	src/common/fileio.o \
 	src/common/json.o \
 	src/common/log.o \
+	src/common/options.o \
 	src/common/stream.o \
 	src/common/util.o \
 	src/director/castmember.o \

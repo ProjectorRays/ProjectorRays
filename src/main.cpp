@@ -4,82 +4,109 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <vector>
 
+#include "common/options.h"
 #include "common/fileio.h"
 #include "common/log.h"
 #include "common/stream.h"
+#include "common/util.h"
 #include "director/chunk.h"
 #include "director/dirfile.h"
+#include "director/util.h"
 
 using namespace Director;
 
 int main(int argc, char *argv[]) {
-	bool dumpChunks = false;
-	bool dumpJSON = false;
-	bool dumpScripts = false;
-	std::string input;
-	bool foundInput = false;
-	std::string output;
-	bool foundOutput = false;
-
-	int argsUsed;
-	for (argsUsed = 1; argsUsed < argc; argsUsed++) {
-		std::string arg = argv[argsUsed];
-		if (arg == "--dump-chunks") {
-			dumpChunks = true;
-		} else if (arg == "--dump-json") {
-			dumpJSON = true;
-		} else if (arg == "--dump-scripts") {
-			dumpScripts = true;
-		} else if (arg == "-v" || arg == "--verbose") {
-			Common::g_verbose = true;
-		} else if (!foundInput) {
-			input = arg;
-			foundInput = true;
-		} else if (!foundOutput) {
-			output = arg;
-			foundOutput = true;
-		} else {
-			break;
-		}
+	Common::Options options;
+	options.parse(argc, argv);
+	if (!options.valid()) {
+		return EXIT_FAILURE;
+	}
+	if (options.hasOption("verbose")) {
+		Common::g_verbose = true;
 	}
 
-	if (argsUsed != argc || !foundInput || !foundOutput) {
-		Common::log(boost::format("Usage: %s [OPTIONS]... INPUT_FILE OUTPUT_FILE") % argv[0]);
-		Common::log("  --dump-chunks\t\tDump chunk data");
-		Common::log("  --dump-json\t\tDump JSONifed chunk data");
-		Common::log("  --dump-scripts\tDump scripts");
-		Common::log("  -v or --verbose\tVerbose logging");
-		return 1;
-	}
-
+	std::filesystem::path input = options.inputFile();
 	std::vector<uint8_t> buf;
 	if (!Common::readFile(input, buf)) {
 		Common::warning(boost::format("Could not read %s!") % input);
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	Common::ReadStream stream(buf.data(), buf.size());
 	auto dir = std::make_unique<DirectorFile>();
 	if (!dir->read(&stream))
-		return -1;
+		return EXIT_FAILURE;
 
-	if (dumpChunks) {
+	if (options.hasOption("dump-chunks")) {
 		dir->dumpChunks();
 	}
-	if (dumpJSON) {
+	if (options.hasOption("dump-json")) {
 		dir->dumpJSON();
 	}
-	if (dumpScripts) {
+	if (options.hasOption("dump-scripts")) {
 		dir->dumpScripts();
 	}
 
-	dir->config->unprotect();
-	dir->restoreScriptText();
-	dir->writeToFile(output);
+	unsigned int version = humanVersion(dir->config->directorVersion);
+	switch (options.cmd()) {
+	case Common::kCmdDecompile:
+		{
+			std::filesystem::path output;
+			if (options.hasOption("output")) {
+				output = options.stringValue("output");
+			} else {
+				std::string oldExtension = input.extension().string();
+				std::string newExtension = (dir->isCast()) ? ".cst" : ".dir";
+				std::string fileName = input.stem().string();
+				if (Common::compareIgnoreCase(oldExtension, newExtension) == 0) {
+					fileName += "_decompiled";
+				}
+				fileName += newExtension;
+				output = input;
+				output.replace_filename(fileName);
+			}
 
-	return 0;
+			dir->config->unprotect();
+			dir->restoreScriptText();
+			dir->writeToFile(output);
+
+			std::string fileType = (dir->isCast()) ? "cast" : "movie";
+			Common::log(
+				"Decompiled " + versionString(version, dir->fverVersionString) + " " + fileType
+				+ " " + input.string() + " to " + output.string()
+			);
+		}
+		break;
+	case Common::kCmdVersion:
+		{
+			Common::VersionStyle style = Common::kVersionStyleLong;
+			if (options.hasOption("style")) {
+				style = (Common::VersionStyle)options.enumValue("style");
+			}
+			switch (style) {
+			case Common::kVersionStyleLong:
+				Common::log(versionString(version, dir->fverVersionString));
+				break;
+			case Common::kVersionStyleShort:
+				Common::log(versionNumber(version, dir->fverVersionString));
+				break;
+			case Common::kVersionStyleInteger:
+				Common::log(std::to_string(version));
+				break;
+			case Common::kVersionStyleInternal:
+				Common::log(std::to_string(dir->config->directorVersion));
+				break;
+			}
+		}
+		break;
+	default:
+		break;
+	}
+
+	return EXIT_SUCCESS;
 }
