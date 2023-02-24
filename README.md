@@ -20,13 +20,13 @@ ProjectorRays is a work in progress. If you run into any issues, please report t
 
 Development builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
 
-To use it, run `projectorrays.exe INPUT_FILE OUTPUT_FILE`. ProjectorRays will take the input file, unprotect/decompress it, restore its source code, and output it to the specified location. The outputted file can then be opened in Director.
+To use it, run `projectorrays.exe decompile <input file>`. ProjectorRays will create an unprotected/decompressed version of the input file with its source code restored. The outputted file can then be opened in Director.
 
 ### *nix
 
 Install Boost 1.72.0 or later, mpg123, and zlib. Run `make` to build.
 
-To use it, run `./projectorrays INPUT_FILE OUTPUT_FILE`. ProjectorRays will take the input file, unprotect/decompress it, restore its source code, and output it to the specified location. The outputted file can then be opened in Director.
+To use it, run `./projectorrays decompile <input file>`. ProjectorRays will create an unprotected/decompressed version of the input file with its source code restored. The outputted file can then be opened in Director.
 
 ## Credits
 
