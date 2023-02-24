@@ -13,6 +13,7 @@ namespace Director {
 
 std::string indent(std::string str);
 unsigned int humanVersion(unsigned int ver);
+std::string versionNumber(unsigned int ver, const std::string &fverVersionString);
 std::string versionString(unsigned int ver, const std::string &fverVersionString);
 
 } // namespace Director

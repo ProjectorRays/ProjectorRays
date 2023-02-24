@@ -52,7 +52,7 @@ unsigned int humanVersion(unsigned int ver) {
 	return 200;
 }
 
-std::string versionString(unsigned int ver, const std::string &fverVersionString) {
+std::string versionNumber(unsigned int ver, const std::string &fverVersionString) {
 	unsigned int major = ver / 100;
 	unsigned int minor = (ver / 10) % 10;
 	unsigned int patch = ver % 10;
@@ -65,17 +65,23 @@ std::string versionString(unsigned int ver, const std::string &fverVersionString
 	} else {
 		versionNumber = fverVersionString;
 	}
+	return versionNumber;
+}
+
+std::string versionString(unsigned int ver, const std::string &fverVersionString) {
+	unsigned int major = ver / 100;
+	std::string versionNum = versionNumber(ver, fverVersionString);
 
 	if (major >= 11)
-		return "Adobe Director " + versionNumber;
+		return "Adobe Director " + versionNum;
 
 	if (major == 10)
-		return "Macromedia Director MX 2004 (" + versionNumber + ")";
+		return "Macromedia Director MX 2004 (" + versionNum + ")";
 
 	if (major == 9)
-		return "Macromedia Director MX (" + versionNumber + ")";
+		return "Macromedia Director MX (" + versionNum + ")";
 
-	return "Macromedia Director " + versionNumber;
+	return "Macromedia Director " + versionNum;
 }
 
 } // namespace Director
