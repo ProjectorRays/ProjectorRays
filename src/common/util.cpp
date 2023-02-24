@@ -102,7 +102,7 @@ std::string escapeString(const char *str, size_t size) {
 			}
 			break;
 		}
-    }
+	}
 	return res;
 }
 
