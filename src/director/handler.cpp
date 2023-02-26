@@ -151,14 +151,6 @@ std::string Handler::getGlobalName(int id) {
 	return "UNKNOWN_GLOBAL_" + std::to_string(id);
 }
 
-std::shared_ptr<Node> Handler::peek() {
-	if (stack.empty())
-		return std::make_shared<ErrorNode>();
-
-	auto res = stack.back();
-	return res;
-}
-
 std::shared_ptr<Node> Handler::pop() {
 	if (stack.empty())
 		return std::make_shared<ErrorNode>();
@@ -547,17 +539,16 @@ void Handler::translate() {
 				} else if (ancestorStmt->type == kCaseStmtNode) {
 					auto caseStmt = static_cast<CaseStmtNode *>(ancestorStmt);
 					auto caseLabel = ast->currentBlock->currentCaseLabel;
-					if (caseLabel->expect == kCaseExpectOtherwise) {
-						if (exitedBlock == caseLabel->block.get()) {
-							caseLabel->otherwise = std::make_shared<BlockNode>();
-							caseLabel->otherwise->parent = caseLabel;
-							caseLabel->otherwise->endPos = caseStmt->endPos;
-							ast->enterBlock(caseLabel->otherwise.get());
-						} else {
+					if (caseLabel) {
+						if (caseLabel->expect == kCaseExpectOtherwise) {
+							ast->currentBlock->currentCaseLabel = nullptr;
+							caseStmt->addOtherwise();
+							size_t otherwiseIndex = bytecodePosMap[caseStmt->potentialOtherwisePos];
+							bytecodeArray[otherwiseIndex].translation = caseStmt->otherwise;
+							ast->enterBlock(caseStmt->otherwise->block.get());
+						} else if (caseLabel->expect == kCaseExpectEnd) {
 							ast->currentBlock->currentCaseLabel = nullptr;
 						}
-					} else if (caseLabel->expect == kCaseExpectPop) {
-						ast->currentBlock->currentCaseLabel = nullptr;
 					}
 				}
 			}
@@ -812,7 +803,8 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpJmp:
 		{
 			uint32_t targetPos = bytecode.pos + bytecode.obj;
-			uint32_t targetIndex = bytecodePosMap[targetPos];
+			size_t targetIndex = bytecodePosMap[targetPos];
+			auto &targetBytecode = bytecodeArray[targetIndex];
 			auto ancestorLoop = ast->currentBlock->ancestorLoop();
 			if (ancestorLoop) {
 				if (bytecodeArray[targetIndex - 1].opcode == kOpEndRepeat && bytecodeArray[targetIndex - 1].ownerLoop == ancestorLoop->startIndex) {
@@ -835,9 +827,22 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 					}
 				} else if (ancestorStatement->type == kCaseStmtNode) {
 					auto caseStmt = static_cast<CaseStmtNode *>(ancestorStatement);
+					caseStmt->potentialOtherwisePos = bytecode.pos;
 					caseStmt->endPos = targetPos;
+					targetBytecode.tag = kTagEndCase;
 					return 1;
 				}
+			}
+			if (targetBytecode.opcode == kOpPop && targetBytecode.obj == 1) {
+				// This is a case statement starting with 'otherwise'
+				auto value = pop();
+				auto caseStmt = std::make_shared<CaseStmtNode>(std::move(value));
+				caseStmt->endPos = targetPos;
+				targetBytecode.tag = kTagEndCase;
+				caseStmt->addOtherwise();
+				translation = caseStmt;
+				nextBlock = caseStmt->otherwise->block.get();
+				break;
 			}
 			translation = std::make_shared<CommentNode>("ERROR: Could not identify jmp");
 		}
@@ -1027,7 +1032,6 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 
 			// In a 'repeat with ... in list' statement, this peeked value is the list.
 			// In a cases statement, this is the switch expression.
-			auto peekedValue = peek();
 
 			auto prevLabel = ast->currentBlock->currentCaseLabel;
 
@@ -1064,22 +1068,28 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 
 			auto &jmpifz = *currBytecode;
 			auto jmpPos = jmpifz.pos + jmpifz.obj;
-			auto &targetBytecode = bytecodeArray[bytecodePosMap[jmpPos]];
+			size_t targetIndex = bytecodePosMap[jmpPos];
+			auto &targetBytecode = bytecodeArray[targetIndex];
+			auto &prevFromTarget = bytecodeArray[targetIndex - 1];
 			CaseExpect expect;
-			if (notEq)
+			if (notEq) {
 				expect = kCaseExpectOr; // Expect an equivalent case after this one.
-			else if (targetBytecode.opcode == kOpPeek)
+			} else if (targetBytecode.opcode == kOpPeek) {
 				expect = kCaseExpectNext; // Expect a different case after this one.
-			else if (targetBytecode.opcode == kOpPop)
-				expect = kCaseExpectPop; // Expect the end of the switch statement (where the switch expression is popped off the stack).
-			else
+			} else if (targetBytecode.opcode == kOpPop
+					&& targetBytecode.obj == 1
+					&& (prevFromTarget.opcode != kOpJmp || prevFromTarget.pos + prevFromTarget.obj == targetBytecode.pos)) {
+				expect = kCaseExpectEnd; // Expect the end of the switch statement.
+			} else {
 				expect = kCaseExpectOtherwise; // Expect an 'otherwise' block.
+			}
 
 			auto currLabel = std::make_shared<CaseLabelNode>(std::move(caseValue), expect);
 			jmpifz.translation = currLabel;
 			ast->currentBlock->currentCaseLabel = currLabel.get();
 
 			if (!prevLabel) {
+				auto peekedValue = pop();
 				auto caseStmt = std::make_shared<CaseStmtNode>(std::move(peekedValue));
 				caseStmt->firstLabel = currLabel;
 				currLabel->parent = caseStmt.get();
@@ -1106,10 +1116,26 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		}
 		break;
 	case kOpPop:
-		for (int i = 0; i < bytecode.obj; i++) {
-			pop();
+		{
+			// Pop instructions in 'repeat with in' loops are tagged kTagSkip and skipped.
+			if (bytecode.tag == kTagEndCase) {
+				// We've already recognized this as the end of a case statement.
+				// Attach an 'end case' node for the summary only.
+				bytecode.translation = std::make_shared<EndCaseNode>();
+				return 1;
+			}
+			if (bytecode.obj == 1 && stack.size() == 1) {
+				// We have an unused value on the stack, so this must be the end
+				// of a case statement with no labels.
+				auto value = pop();
+				translation = std::make_shared<CaseStmtNode>(std::move(value));
+				break;
+			}
+			// Otherwise, this pop instruction occurs before a 'return' within
+			// a case statement. No translation needed.
+			return 1;
 		}
-		return 1;
+		break;
 	case kOpTheBuiltin:
 		{
 			pop(); // empty arglist

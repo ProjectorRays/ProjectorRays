@@ -820,25 +820,60 @@ std::string CaseLabelNode::toString(bool dot, bool sum) {
 		}
 		if (nextLabel) {
 			res += nextLabel->toString(dot, sum);
-		} else if (otherwise) {
-			res += "otherwise:";
-			res += kLingoLineEnding;
-			res += otherwise->toString(dot, sum);
 		}
 	}
 	return res;
+}
+
+/* OtherwiseNode */
+
+std::string OtherwiseNode::toString(bool dot, bool sum) {
+	std::string res;
+	if (sum) {
+		res += "(case) otherwise:";
+	} else {
+		res += "otherwise:";
+		res += kLingoLineEnding;
+		res += indent(block->toString(dot, sum));
+	}
+	return res;
+}
+
+/* EndCaseNode */
+
+std::string EndCaseNode::toString(bool, bool) {
+	return "end case";
 }
 
 /* CaseStmtNode */
 
 std::string CaseStmtNode::toString(bool dot, bool sum) {
 	std::string res = "case " + value->toString(dot, sum) + " of";
-	if (!sum) {
+	if (sum) {
+		if (!firstLabel) {
+			if (otherwise) {
+				res += " / otherwise:";
+			} else {
+				res += " / end case";
+			}
+		}
+	} else {
 		res += kLingoLineEnding;
-		res += indent(firstLabel->toString(dot, sum));
+		if (firstLabel) {
+			res += indent(firstLabel->toString(dot, sum));
+		}
+		if (otherwise) {
+			res += indent(otherwise->toString(dot, sum));
+		}
 		res += "end case";
 	}
 	return res;
+}
+
+void CaseStmtNode::addOtherwise() {
+	otherwise = std::make_shared<OtherwiseNode>();
+	otherwise->parent = this;
+	otherwise->block->endPos = endPos;
 }
 
 /* TellStmtNode */
