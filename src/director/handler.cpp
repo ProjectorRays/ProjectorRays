@@ -544,20 +544,20 @@ void Handler::translate() {
 					if (ifStatement->hasElse && exitedBlock == ifStatement->block1.get()) {
 						ast->enterBlock(ifStatement->block2.get());
 					}
-				} else if (ancestorStmt->type == kCasesStmtNode) {
-					auto casesStmt = static_cast<CasesStmtNode *>(ancestorStmt);
-					auto caseNode = ast->currentBlock->currentCase;
-					if (caseNode->expect == kCaseExpectOtherwise) {
-						if (exitedBlock == caseNode->block.get()) {
-							caseNode->otherwise = std::make_shared<BlockNode>();
-							caseNode->otherwise->parent = caseNode;
-							caseNode->otherwise->endPos = casesStmt->endPos;
-							ast->enterBlock(caseNode->otherwise.get());
+				} else if (ancestorStmt->type == kCaseStmtNode) {
+					auto caseStmt = static_cast<CaseStmtNode *>(ancestorStmt);
+					auto caseLabel = ast->currentBlock->currentCaseLabel;
+					if (caseLabel->expect == kCaseExpectOtherwise) {
+						if (exitedBlock == caseLabel->block.get()) {
+							caseLabel->otherwise = std::make_shared<BlockNode>();
+							caseLabel->otherwise->parent = caseLabel;
+							caseLabel->otherwise->endPos = caseStmt->endPos;
+							ast->enterBlock(caseLabel->otherwise.get());
 						} else {
-							ast->currentBlock->currentCase = nullptr;
+							ast->currentBlock->currentCaseLabel = nullptr;
 						}
-					} else if (caseNode->expect == kCaseExpectPop) {
-						ast->currentBlock->currentCase = nullptr;
+					} else if (caseLabel->expect == kCaseExpectPop) {
+						ast->currentBlock->currentCaseLabel = nullptr;
 					}
 				}
 			}
@@ -833,9 +833,9 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 						ifStmt->block2->endPos = targetPos;
 						return 1; // if statement amended, nothing to push
 					}
-				} else if (ancestorStatement->type == kCasesStmtNode) {
-					auto casesStmt = static_cast<CasesStmtNode *>(ancestorStatement);
-					casesStmt->endPos = targetPos;
+				} else if (ancestorStatement->type == kCaseStmtNode) {
+					auto caseStmt = static_cast<CaseStmtNode *>(ancestorStatement);
+					caseStmt->endPos = targetPos;
 					return 1;
 				}
 			}
@@ -1029,7 +1029,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			// In a cases statement, this is the switch expression.
 			auto peekedValue = peek();
 
-			auto prevCase = ast->currentBlock->currentCase;
+			auto prevLabel = ast->currentBlock->currentCaseLabel;
 
 			// This must be a case. Find the comparison against the switch expression.
 			auto originalStackSize = stack.size();
@@ -1075,31 +1075,31 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			else
 				expect = kCaseExpectOtherwise; // Expect an 'otherwise' block.
 
-			auto currCase = std::make_shared<CaseNode>(std::move(caseValue), expect);
-			jmpifz.translation = currCase;
-			ast->currentBlock->currentCase = currCase.get();
+			auto currLabel = std::make_shared<CaseLabelNode>(std::move(caseValue), expect);
+			jmpifz.translation = currLabel;
+			ast->currentBlock->currentCaseLabel = currLabel.get();
 
-			if (!prevCase) {
-				auto casesStmt = std::make_shared<CasesStmtNode>(std::move(peekedValue));
-				casesStmt->firstCase = currCase;
-				currCase->parent = casesStmt.get();
-				bytecode.translation = casesStmt;
-				ast->addStatement(casesStmt);
-			} else if (prevCase->expect == kCaseExpectOr) {
-				prevCase->nextOr = currCase;
-				currCase->parent = prevCase;
-			} else if (prevCase->expect == kCaseExpectNext) {
-				prevCase->nextCase = currCase;
-				currCase->parent = prevCase;
+			if (!prevLabel) {
+				auto caseStmt = std::make_shared<CaseStmtNode>(std::move(peekedValue));
+				caseStmt->firstLabel = currLabel;
+				currLabel->parent = caseStmt.get();
+				bytecode.translation = caseStmt;
+				ast->addStatement(caseStmt);
+			} else if (prevLabel->expect == kCaseExpectOr) {
+				prevLabel->nextOr = currLabel;
+				currLabel->parent = prevLabel;
+			} else if (prevLabel->expect == kCaseExpectNext) {
+				prevLabel->nextLabel = currLabel;
+				currLabel->parent = prevLabel;
 			}
 
 			// The block doesn't start until the after last equivalent case,
 			// so don't create a block yet if we're expecting an equivalent case.
-			if (currCase->expect != kCaseExpectOr) {
-				currCase->block = std::make_shared<BlockNode>();
-				currCase->block->parent = currCase.get();
-				currCase->block->endPos = jmpPos;
-				ast->enterBlock(currCase->block.get());
+			if (currLabel->expect != kCaseExpectOr) {
+				currLabel->block = std::make_shared<BlockNode>();
+				currLabel->block->parent = currLabel.get();
+				currLabel->block->endPos = jmpPos;
+				ast->enterBlock(currLabel->block.get());
 			}
 
 			return currIndex - index + 1;

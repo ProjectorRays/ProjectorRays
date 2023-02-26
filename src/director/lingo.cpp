@@ -783,15 +783,15 @@ std::string RepeatWithToStmtNode::toString(bool dot, bool sum) {
 	return res;
 }
 
-/* CaseNode */
+/* CaseLabelNode */
 
-std::string CaseNode::toString(bool dot, bool sum) {
+std::string CaseLabelNode::toString(bool dot, bool sum) {
 	std::string res;
 	if (sum) {
 		res += "(case) ";
-		if (parent->type == kCaseNode) {
-			auto parentCase = static_cast<CaseNode *>(parent);
-			if (parentCase->nextOr.get() == this) {
+		if (parent->type == kCaseLabelNode) {
+			auto parentLabel = static_cast<CaseLabelNode *>(parent);
+			if (parentLabel->nextOr.get() == this) {
 				res += "..., ";
 			}
 		}
@@ -818,8 +818,8 @@ std::string CaseNode::toString(bool dot, bool sum) {
 			res += kLingoLineEnding;
 			res += indent(block->toString(dot, sum));
 		}
-		if (nextCase) {
-			res += nextCase->toString(dot, sum);
+		if (nextLabel) {
+			res += nextLabel->toString(dot, sum);
 		} else if (otherwise) {
 			res += "otherwise:";
 			res += kLingoLineEnding;
@@ -829,13 +829,13 @@ std::string CaseNode::toString(bool dot, bool sum) {
 	return res;
 }
 
-/* CasesStmtNode */
+/* CaseStmtNode */
 
-std::string CasesStmtNode::toString(bool dot, bool sum) {
+std::string CaseStmtNode::toString(bool dot, bool sum) {
 	std::string res = "case " + value->toString(dot, sum) + " of";
 	if (!sum) {
 		res += kLingoLineEnding;
-		res += indent(firstCase->toString(dot, sum));
+		res += indent(firstLabel->toString(dot, sum));
 		res += "end case";
 	}
 	return res;

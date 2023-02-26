@@ -21,7 +21,7 @@ namespace Director {
 
 struct AST;
 struct Bytecode;
-struct CaseNode;
+struct CaseLabelNode;
 struct LoopNode;
 struct Node;
 struct RepeatWithInStmtNode;
@@ -160,8 +160,8 @@ enum NodeType {
 	kRepeatWhileStmtNode,
 	kRepeatWithInStmtNode,
 	kRepeatWithToStmtNode,
-	kCasesStmtNode,
-	kCaseNode,
+	kCaseStmtNode,
+	kCaseLabelNode,
 	kTellStmtNode,
 	kSoundCmdStmtNode,
 	kCallNode,
@@ -455,9 +455,9 @@ struct BlockNode : Node {
 
 	// for use during translation:
 	uint32_t endPos;
-	CaseNode *currentCase;
+	CaseLabelNode *currentCaseLabel;
 
-	BlockNode() : Node(kBlockNode), endPos(-1), currentCase(nullptr) {}
+	BlockNode() : Node(kBlockNode), endPos(-1), currentCaseLabel(nullptr) {}
 	virtual ~BlockNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 	void addChild(std::shared_ptr<Node> child);
@@ -742,41 +742,41 @@ struct RepeatWithToStmtNode : LoopNode {
 	virtual std::string toString(bool dot, bool sum);
 };
 
-/* CaseNode */
+/* CaseLabelNode */
 
-struct CaseNode : LabelNode {
+struct CaseLabelNode : LabelNode {
 	std::shared_ptr<Node> value;
 	CaseExpect expect;
 
-	std::shared_ptr<CaseNode> nextOr;
+	std::shared_ptr<CaseLabelNode> nextOr;
 
-	std::shared_ptr<CaseNode> nextCase;
+	std::shared_ptr<CaseLabelNode> nextLabel;
 	std::shared_ptr<BlockNode> block;
 	std::shared_ptr<BlockNode> otherwise;
 
-	CaseNode(std::shared_ptr<Node> v, CaseExpect e) : LabelNode(kCaseNode), expect(e) {
+	CaseLabelNode(std::shared_ptr<Node> v, CaseExpect e) : LabelNode(kCaseLabelNode), expect(e) {
 		value = std::move(v);
 		value->parent = this;
 	}
-	virtual ~CaseNode() = default;
+	virtual ~CaseLabelNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 };
 
 
-/* CasesStmtNode */
+/* CaseStmtNode */
 
-struct CasesStmtNode : StmtNode {
+struct CaseStmtNode : StmtNode {
 	std::shared_ptr<Node> value;
-	std::shared_ptr<CaseNode> firstCase;
+	std::shared_ptr<CaseLabelNode> firstLabel;
 
 	// for use during translation:
 	int32_t endPos;
 
-	CasesStmtNode(std::shared_ptr<Node> v) : StmtNode(kCasesStmtNode), endPos(-1) {
+	CaseStmtNode(std::shared_ptr<Node> v) : StmtNode(kCaseStmtNode), endPos(-1) {
 		value = std::move(v);
 		value->parent = this;
 	}
-	virtual ~CasesStmtNode() = default;
+	virtual ~CaseStmtNode() = default;
 	virtual std::string toString(bool dot, bool sum);
 };
 
