@@ -301,25 +301,26 @@ struct MemoryMapChunk : Chunk {
 };
 
 struct ScriptChunk : Chunk {
-	uint32_t totalLength;
-	uint32_t totalLength2;
-	uint16_t headerLength;
-	uint16_t scriptNumber;
-	uint32_t scriptFlags;
+	/*  8 */ uint32_t totalLength;
+	/* 12 */ uint32_t totalLength2;
+	/* 16 */ uint16_t headerLength;
+	/* 18 */ uint16_t scriptNumber;
 
-	uint16_t handlerVectorsCount;
-	uint32_t handlerVectorsOffset;
-	uint32_t handlerVectorsSize;
-	uint16_t propertiesCount;
-	uint32_t propertiesOffset;
-	uint16_t globalsCount;
-	uint32_t globalsOffset;
-	uint16_t handlersCount;
-	uint32_t handlersOffset;
-	uint16_t literalsCount;
-	uint32_t literalsOffset;
-	uint32_t literalsDataCount;
-	uint32_t literalsDataOffset;
+	/* 38 */ uint32_t scriptFlags;
+
+	/* 50 */ uint16_t handlerVectorsCount;
+	/* 52 */ uint32_t handlerVectorsOffset;
+	/* 56 */ uint32_t handlerVectorsSize;
+	/* 60 */ uint16_t propertiesCount;
+	/* 62 */ uint32_t propertiesOffset;
+	/* 66 */ uint16_t globalsCount;
+	/* 68 */ uint32_t globalsOffset;
+	/* 72 */ uint16_t handlersCount;
+	/* 74 */ uint32_t handlersOffset;
+	/* 78 */ uint16_t literalsCount;
+	/* 80 */ uint32_t literalsOffset;
+	/* 84 */ uint32_t literalsDataCount;
+	/* 88 */ uint32_t literalsDataOffset;
 
 	std::vector<int16_t> propertyNameIDs;
 	std::vector<int16_t> globalNameIDs;

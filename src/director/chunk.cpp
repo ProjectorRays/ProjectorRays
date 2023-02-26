@@ -923,29 +923,33 @@ ScriptChunk::ScriptChunk(DirectorFile *m) :
 ScriptChunk::~ScriptChunk() = default;
 
 void ScriptChunk::read(Common::ReadStream &stream) {
-	stream.seek(8);
 	// Lingo scripts are always big endian regardless of file endianness
 	stream.endianness = Common::kBigEndian;
-	totalLength = stream.readUint32();
-	totalLength2 = stream.readUint32();
-	headerLength = stream.readUint16();
-	scriptNumber = stream.readUint16();
+
+	stream.seek(8);
+	/*  8 */ totalLength = stream.readUint32();
+	/* 12 */ totalLength2 = stream.readUint32();
+	/* 16 */ headerLength = stream.readUint16();
+	/* 18 */ scriptNumber = stream.readUint16();
+	
 	stream.seek(38);
-	scriptFlags = stream.readUint32();
+	/* 38 */ scriptFlags = stream.readUint32();
+
 	stream.seek(50);
-	handlerVectorsCount = stream.readUint16();
-	handlerVectorsOffset = stream.readUint32();
-	handlerVectorsSize = stream.readUint32();
-	propertiesCount = stream.readUint16();
-	propertiesOffset = stream.readUint32();
-	globalsCount = stream.readUint16();
-	globalsOffset = stream.readUint32();
-	handlersCount = stream.readUint16();
-	handlersOffset = stream.readUint32();
-	literalsCount = stream.readUint16();
-	literalsOffset = stream.readUint32();
-	literalsDataCount = stream.readUint32();
-	literalsDataOffset = stream.readUint32();
+	/* 50 */ handlerVectorsCount = stream.readUint16();
+	/* 52 */ handlerVectorsOffset = stream.readUint32();
+	/* 56 */ handlerVectorsSize = stream.readUint32();
+	/* 60 */ propertiesCount = stream.readUint16();
+	/* 62 */ propertiesOffset = stream.readUint32();
+	/* 66 */ globalsCount = stream.readUint16();
+	/* 68 */ globalsOffset = stream.readUint32();
+	/* 72 */ handlersCount = stream.readUint16();
+	/* 74 */ handlersOffset = stream.readUint32();
+	/* 78 */ literalsCount = stream.readUint16();
+	/* 80 */ literalsOffset = stream.readUint32();
+	/* 84 */ literalsDataCount = stream.readUint32();
+	/* 88 */ literalsDataOffset = stream.readUint32();
+
 	propertyNameIDs = readVarnamesTable(stream, propertiesCount, propertiesOffset);
 	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
 
