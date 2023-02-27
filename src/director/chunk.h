@@ -305,9 +305,13 @@ struct ScriptChunk : Chunk {
 	/* 12 */ uint32_t totalLength2;
 	/* 16 */ uint16_t headerLength;
 	/* 18 */ uint16_t scriptNumber;
+	/* 20 */ int16_t unk20;
+	/* 22 */ int16_t parentNumber;
 
 	/* 38 */ uint32_t scriptFlags;
-
+	/* 42 */ int16_t unk42;
+	/* 44 */ int32_t castID;
+	/* 48 */ int16_t factoryNameID;
 	/* 50 */ uint16_t handlerVectorsCount;
 	/* 52 */ uint32_t handlerVectorsOffset;
 	/* 56 */ uint32_t handlerVectorsSize;
@@ -325,12 +329,14 @@ struct ScriptChunk : Chunk {
 	std::vector<int16_t> propertyNameIDs;
 	std::vector<int16_t> globalNameIDs;
 
+	std::string factoryName;
 	std::vector<std::string> propertyNames;
 	std::vector<std::string> globalNames;
 	std::vector<std::unique_ptr<Handler>> handlers;
 	std::vector<LiteralStore> literals;
-	ScriptContextChunk *context;
+	std::vector<ScriptChunk *> factories;
 
+	ScriptContextChunk *context;
 	CastMemberChunk *member;
 
 	ScriptChunk(DirectorFile *m);
@@ -345,6 +351,8 @@ struct ScriptChunk : Chunk {
 	std::string scriptText();
 	std::string bytecodeText();
 	virtual void writeJSON(Common::JSONWriter &json) const;
+
+	bool isFactory() const;
 };
 
 struct ScriptContextChunk : Chunk {

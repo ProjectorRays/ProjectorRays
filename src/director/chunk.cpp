@@ -931,11 +931,14 @@ void ScriptChunk::read(Common::ReadStream &stream) {
 	/* 12 */ totalLength2 = stream.readUint32();
 	/* 16 */ headerLength = stream.readUint16();
 	/* 18 */ scriptNumber = stream.readUint16();
+	/* 20 */ unk20 = stream.readInt16();
+	/* 22 */ parentNumber = stream.readInt16();
 	
 	stream.seek(38);
 	/* 38 */ scriptFlags = stream.readUint32();
-
-	stream.seek(50);
+	/* 42 */ unk42 = stream.readInt16();
+	/* 44 */ castID = stream.readInt32();
+	/* 48 */ factoryNameID = stream.readInt16();
 	/* 50 */ handlerVectorsCount = stream.readUint16();
 	/* 52 */ handlerVectorsOffset = stream.readUint32();
 	/* 56 */ handlerVectorsSize = stream.readUint32();
@@ -994,7 +997,12 @@ void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
 		JSON_WRITE_FIELD(totalLength2);
 		JSON_WRITE_FIELD(headerLength);
 		JSON_WRITE_FIELD(scriptNumber);
+		JSON_WRITE_FIELD(unk20);
+		JSON_WRITE_FIELD(parentNumber);
 		JSON_WRITE_FIELD(scriptFlags);
+		JSON_WRITE_FIELD(unk42);
+		JSON_WRITE_FIELD(castID);
+		JSON_WRITE_FIELD(factoryNameID);
 		JSON_WRITE_FIELD(handlerVectorsCount);
 		JSON_WRITE_FIELD(handlerVectorsOffset);
 		JSON_WRITE_FIELD(handlerVectorsSize);
@@ -1045,9 +1053,15 @@ std::string ScriptChunk::getName(int id) const {
 
 void ScriptChunk::setContext(ScriptContextChunk *ctx) {
 	this->context = ctx;
+	if (factoryNameID != -1) {
+		factoryName = getName(factoryNameID);
+	}
 	for (auto nameID : propertyNameIDs) {
 		if (validName(nameID)) {
-			propertyNames.push_back(getName(nameID));
+			std::string name = getName(nameID);
+			if (isFactory() && name == "me")
+				continue;
+			propertyNames.push_back(name);
 		}
 	}
 	for (auto nameID : globalNameIDs) {
@@ -1068,14 +1082,16 @@ void ScriptChunk::translate() {
 
 std::string ScriptChunk::varDeclarations() {
 	std::string res = "";
-	if (propertyNames.size() > 0) {
-		res += "property ";
-		for (size_t i = 0; i < propertyNames.size(); i++) {
-			if (i > 0)
-				res += ", ";
-			res += propertyNames[i];
+	if (!isFactory()) {
+		if (propertyNames.size() > 0) {
+			res += "property ";
+			for (size_t i = 0; i < propertyNames.size(); i++) {
+				if (i > 0)
+					res += ", ";
+				res += propertyNames[i];
+			}
+			res += kLingoLineEnding;
 		}
-		res += kLingoLineEnding;
 	}
 	if (globalNames.size() > 0) {
 		res += "global ";
@@ -1091,22 +1107,48 @@ std::string ScriptChunk::varDeclarations() {
 
 std::string ScriptChunk::scriptText() {
 	std::string res = varDeclarations();
-	for (size_t i = 0; i < handlers.size(); i++) {
+	if (isFactory()) {
 		if (res.size() > 0)
 			res += kLingoLineEnding;
+		res += "factory " + factoryName;
+		res += kLingoLineEnding;
+	}
+	for (size_t i = 0; i < handlers.size(); i++) {
+		if ((!isFactory() || i > 0) && res.size() > 0)
+			res += kLingoLineEnding;
 		res += handlers[i]->ast->toString(dir->dotSyntax, false);
+	}
+	for (auto factory : factories) {
+		if (res.size() > 0)
+			res += kLingoLineEnding;
+		res += factory->scriptText();
 	}
 	return res;
 }
 
 std::string ScriptChunk::bytecodeText() {
 	std::string res = varDeclarations();
-	for (size_t i = 0; i < handlers.size(); i++) {
+	if (isFactory()) {
 		if (res.size() > 0)
+			res += kLingoLineEnding;
+		res += "factory " + factoryName;
+		res += kLingoLineEnding;
+	}
+	for (size_t i = 0; i < handlers.size(); i++) {
+		if ((!isFactory() || i > 0) && res.size() > 0)
 			res += kLingoLineEnding;
 		res += handlers[i]->bytecodeText();
 	}
+	for (auto factory : factories) {
+		if (res.size() > 0)
+			res += kLingoLineEnding;
+		res += factory->bytecodeText();
+	}
 	return res;
+}
+
+bool ScriptChunk::isFactory() const {
+	return (scriptFlags & kScriptFlagFactoryDef);
 }
 
 /* ScriptContextChunk */
@@ -1147,6 +1189,14 @@ void ScriptContextChunk::read(Common::ReadStream &stream) {
 
 	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
 		it->second->translate();
+	}
+
+	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
+		ScriptChunk *script = it->second.get();
+		if (script->isFactory()) {
+			ScriptChunk *parent = scripts[script->parentNumber + 1].get();
+			parent->factories.push_back(script);
+		}
 	}
 }
 

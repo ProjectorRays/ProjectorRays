@@ -6,6 +6,7 @@
 
 #include "common/json.h"
 #include "common/util.h"
+#include "director/chunk.h"
 #include "director/lingo.h"
 #include "director/util.h"
 
@@ -516,7 +517,14 @@ std::string HandlerNode::toString(bool dot, bool sum) {
 	if (handler->isGenericEvent) {
 		res += block->toString(dot, sum);
 	} else {
-		res += "on " + handler->name;
+		ScriptChunk *script = handler->script;
+		bool isMethod = script->isFactory();
+		if (isMethod) {
+			res += "method ";
+		} else {
+			res += "on ";
+		}
+		res += handler->name;
 		if (handler->argumentNames.size() > 0) {
 			res += " ";
 			for (size_t i = 0; i < handler->argumentNames.size(); i++) {
@@ -526,6 +534,15 @@ std::string HandlerNode::toString(bool dot, bool sum) {
 			}
 		}
 		res += kLingoLineEnding;
+		if (isMethod && script->propertyNames.size() > 0 && handler == script->handlers[0].get()) {
+			res += "  instance ";
+			for (size_t i = 0; i < script->propertyNames.size(); i++) {
+				if (i > 0)
+					res += ", ";
+				res += script->propertyNames[i];
+			}
+			res += kLingoLineEnding;
+		}
 		if (handler->globalNames.size() > 0) {
 			res += "  global ";
 			for (size_t i = 0; i < handler->globalNames.size(); i++) {
@@ -536,8 +553,10 @@ std::string HandlerNode::toString(bool dot, bool sum) {
 			res += kLingoLineEnding;
 		}
 		res += indent(block->toString(dot, sum));
-		res += "end";
-		res += kLingoLineEnding;
+		if (!isMethod) {
+			res += "end";
+			res += kLingoLineEnding;
+		}
 	}
 	return res;
 }

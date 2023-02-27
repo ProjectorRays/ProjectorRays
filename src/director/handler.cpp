@@ -117,8 +117,10 @@ void Handler::readNames() {
 	if (!isGenericEvent) {
 		name = getName(nameID);
 	}
-	for (auto nameID : argumentNameIDs) {
-		argumentNames.push_back(getName(nameID));
+	for (size_t i = 0; i < argumentNameIDs.size(); i++) {
+		if (i == 0 && script->isFactory())
+			continue;
+		argumentNames.push_back(getName(argumentNameIDs[i]));
 	}
 	for (auto nameID : localNameIDs) {
 		if (validName(nameID)) {
@@ -1263,10 +1265,15 @@ std::string posToString(int32_t pos) {
 
 std::string Handler::bytecodeText() {
 	bool dotSyntax = script->dir->dotSyntax;
+	bool isMethod = script->isFactory();
 
 	Common::CodeWriter code;
 	if (!isGenericEvent) {
-		code.write("on " + name);
+		if (isMethod) {
+			code.write("method " + name);
+		} else {
+			code.write("on " + name);
+		}
 		if (argumentNames.size() > 0) {
 			code.write(" ");
 			for (size_t i = 0; i < argumentNames.size(); i++) {
@@ -1311,7 +1318,9 @@ std::string Handler::bytecodeText() {
 	}
 	if (!isGenericEvent) {
 		code.unindent();
-		code.writeLine("end");
+		if (!isMethod) {
+			code.writeLine("end");
+		}
 	}
 	return code.str();
 }
