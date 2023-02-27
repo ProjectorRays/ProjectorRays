@@ -743,34 +743,33 @@ void DirectorFile::dumpScripts() {
 			std::string scriptType;
 			std::string id;
 			CastMemberChunk *member = it->second->member;
-			if (member) {
-				if (member->type == kScriptMember) {
-					ScriptMember *scriptMember = static_cast<ScriptMember *>(member->member.get());
-					switch (scriptMember->scriptType) {
-					case kScoreScript:
-						scriptType = (version >= 600) ? "BehaviorScript" : "ScoreScript";
-						break;
-					case kMovieScript:
-						scriptType = "MovieScript";
-						break;
-					case kParentScript:
-						scriptType = "ParentScript";
-						break;
-					default:
-						scriptType = "UnknownScript";
-						break;
-					}
-				} else {
-					scriptType = "CastScript";
-				}
-				id = std::to_string(member->id);
-				if (!member->getName().empty()) {
-					id += " - " + member->getName();
+			if (!member)
+				continue;
+
+			if (member->type == kScriptMember) {
+				ScriptMember *scriptMember = static_cast<ScriptMember *>(member->member.get());
+				switch (scriptMember->scriptType) {
+				case kScoreScript:
+					scriptType = (version >= 600) ? "BehaviorScript" : "ScoreScript";
+					break;
+				case kMovieScript:
+					scriptType = "MovieScript";
+					break;
+				case kParentScript:
+					scriptType = "ParentScript";
+					break;
+				default:
+					scriptType = "UnknownScript";
+					break;
 				}
 			} else {
-				scriptType = "UnknownScript";
-				id = std::to_string(it->first);
+				scriptType = "CastScript";
 			}
+			id = std::to_string(member->id);
+			if (!member->getName().empty()) {
+				id += " - " + member->getName();
+			}
+
 			std::string fileName = Common::cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
 			Common::writeFile(fileName + ".ls", it->second->scriptText());
 			Common::writeFile(fileName + ".lasm", it->second->bytecodeText());
