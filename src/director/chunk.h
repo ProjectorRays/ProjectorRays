@@ -337,7 +337,8 @@ struct ScriptChunk : Chunk {
 	virtual ~ScriptChunk();
 	virtual void read(Common::ReadStream &stream);
 	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
-	std::string getName(int id);
+	bool validName(int id) const;
+	std::string getName(int id) const;
 	void setContext(ScriptContextChunk *ctx);
 	void translate();
 	std::string varDeclarations();
@@ -368,7 +369,8 @@ struct ScriptContextChunk : Chunk {
 	ScriptContextChunk(DirectorFile *m) : Chunk(m, kScriptContextChunk) {}
 	virtual ~ScriptContextChunk() = default;
 	virtual void read(Common::ReadStream &stream);
-	std::string getName(int id);
+	bool validName(int id) const;
+	std::string getName(int id) const;
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 
@@ -384,7 +386,8 @@ struct ScriptNamesChunk : Chunk {
 	ScriptNamesChunk(DirectorFile *m) : Chunk(m, kScriptNamesChunk) {}
 	virtual ~ScriptNamesChunk() = default;
 	virtual void read(Common::ReadStream &stream);
-	std::string getName(int id);
+	bool validName(int id) const;
+	std::string getName(int id) const;
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 

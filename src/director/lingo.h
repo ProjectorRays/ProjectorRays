@@ -324,10 +324,10 @@ struct Handler {
 	void readData(Common::ReadStream &stream);
 	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
 	void readNames();
-	std::string getName(int id);
-	std::string getArgumentName(int id);
-	std::string getLocalName(int id);
-	std::string getGlobalName(int id);
+	bool validName(int id) const;
+	std::string getName(int id) const;
+	std::string getArgumentName(int id) const;
+	std::string getLocalName(int id) const;
 	std::shared_ptr<Node> pop();
 	int variableMultiplier();
 	std::shared_ptr<Node> readVar(int varType);

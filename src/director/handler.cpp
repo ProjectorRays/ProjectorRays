@@ -121,34 +121,35 @@ void Handler::readNames() {
 		argumentNames.push_back(getName(nameID));
 	}
 	for (auto nameID : localNameIDs) {
-		localNames.push_back(getName(nameID));
+		if (validName(nameID)) {
+			localNames.push_back(getName(nameID));
+		}
 	}
 	for (auto nameID : globalNameIDs) {
-		if (nameID >= 0) // Some global nameIDs = -1 might exist
+		if (validName(nameID)) {
 			globalNames.push_back(getName(nameID));
+		}
 	}
 }
 
-std::string Handler::getName(int id) {
+bool Handler::validName(int id) const {
+	return script->validName(id);
+}
+
+std::string Handler::getName(int id) const {
 	return script->getName(id);
 }
 
-std::string Handler::getArgumentName(int id) {
-	if (-1 < id && (unsigned)id < argumentNames.size())
-		return argumentNames[id];
+std::string Handler::getArgumentName(int id) const {
+	if (-1 < id && (unsigned)id < argumentNameIDs.size())
+		return getName(argumentNameIDs[id]);
 	return "UNKNOWN_ARG_" + std::to_string(id);
 }
 
-std::string Handler::getLocalName(int id) {
-	if (-1 < id && (unsigned)id < localNames.size())
-		return localNames[id];
+std::string Handler::getLocalName(int id) const {
+	if (-1 < id && (unsigned)id < localNameIDs.size())
+		return getName(localNameIDs[id]);
 	return "UNKNOWN_LOCAL_" + std::to_string(id);
-}
-
-std::string Handler::getGlobalName(int id) {
-	if (-1 < id && (unsigned)id < globalNames.size())
-		return globalNames[id];
-	return "UNKNOWN_GLOBAL_" + std::to_string(id);
 }
 
 std::shared_ptr<Node> Handler::pop() {

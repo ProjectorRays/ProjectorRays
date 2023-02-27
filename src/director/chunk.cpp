@@ -1035,17 +1035,25 @@ void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
 	json.endObject();
 }
 
-std::string ScriptChunk::getName(int id) {
+bool ScriptChunk::validName(int id) const {
+	return context->validName(id);
+}
+
+std::string ScriptChunk::getName(int id) const {
 	return context->getName(id);
 }
 
 void ScriptChunk::setContext(ScriptContextChunk *ctx) {
 	this->context = ctx;
 	for (auto nameID : propertyNameIDs) {
-		propertyNames.push_back(getName(nameID));
+		if (validName(nameID)) {
+			propertyNames.push_back(getName(nameID));
+		}
 	}
 	for (auto nameID : globalNameIDs) {
-		globalNames.push_back(getName(nameID));
+		if (validName(nameID)) {
+			globalNames.push_back(getName(nameID));
+		}
 	}
 	for (const auto &handler : handlers) {
 		handler->readNames();
@@ -1166,7 +1174,11 @@ void ScriptContextChunk::writeJSON(Common::JSONWriter &json) const {
 	json.endObject();
 }
 
-std::string ScriptContextChunk::getName(int id) {
+bool ScriptContextChunk::validName(int id) const {
+	return lnam->validName(id);
+}
+
+std::string ScriptContextChunk::getName(int id) const {
 	return lnam->getName(id);
 }
 
@@ -1208,8 +1220,12 @@ void ScriptNamesChunk::writeJSON(Common::JSONWriter &json) const {
 	json.endObject();
 }
 
-std::string ScriptNamesChunk::getName(int id) {
-	if (-1 < id && (unsigned)id < names.size())
+bool ScriptNamesChunk::validName(int id) const {
+	return -1 < id && (unsigned)id < names.size();
+}
+
+std::string ScriptNamesChunk::getName(int id) const {
+	if (validName(id))
 		return names[id];
 	return "UNKNOWN_NAME_" + std::to_string(id);
 }
