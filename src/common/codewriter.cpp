@@ -23,16 +23,16 @@ void CodeWriter::write(char ch) {
 
 void CodeWriter::writeLine(std::string str) {
 	if (str.empty()) {
-		_stream << '\n';
+		_stream << _lineEnding;
 	} else {
 		writeIndentation();
-		_stream << str << '\n';
+		_stream << str << _lineEnding;
 	}
 	_indentationWritten = false;
 }
 
 void CodeWriter::writeLine() {
-	_stream << '\n';
+	_stream << _lineEnding;
 	_indentationWritten = false;
 }
 
@@ -55,7 +55,7 @@ void CodeWriter::writeIndentation() {
 		return;
 
 	for (int i = 0; i < _indentationLevel; i++) {
-		_stream << "  ";
+		_stream << _indentation;
 	}
 
 	_indentationWritten = true;

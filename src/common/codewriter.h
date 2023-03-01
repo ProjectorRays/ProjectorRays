@@ -15,10 +15,17 @@ namespace Common {
 class CodeWriter {
 protected:
 	std::stringstream _stream;
+
+	std::string _lineEnding;
+	std::string _indentation;
+
 	int _indentationLevel = 0;
 	bool _indentationWritten = false;
 
 public:
+	CodeWriter(std::string lineEnding = "\n", std::string indentation = "  ")
+		: _lineEnding(lineEnding), _indentation(indentation) {}
+
 	void write(std::string str);
 	void write(char ch);
 	void writeLine(std::string str);
