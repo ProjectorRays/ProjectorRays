@@ -1267,7 +1267,7 @@ std::string Handler::bytecodeText() {
 	bool dotSyntax = script->dir->dotSyntax;
 	bool isMethod = script->isFactory();
 
-	Common::CodeWriter code;
+	Common::CodeWriter code(std::string(1, kLingoLineEnding));
 	if (!isGenericEvent) {
 		if (isMethod) {
 			code.write("method " + name);
