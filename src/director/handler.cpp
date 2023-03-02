@@ -990,7 +990,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				// If the script starts with a space, it's probably a when statement.
 				// If the script contains a line break, it's definitely a when statement.
 				std::string script = value->getValue()->s;
-				if (script.size() > 0 && (script[0] == ' ' || script.find(kLingoLineEnding) != std::string::npos)) {
+				if (script.size() > 0 && (script[0] == ' ' || script.find('\r') != std::string::npos)) {
 					translation = std::make_shared<WhenStmtNode>(propertyID, script);
 				}
 			}
@@ -1263,17 +1263,17 @@ std::string posToString(int32_t pos) {
 	return ss.str();
 }
 
-std::string Handler::bytecodeText() {
+void Handler::writeBytecodeText(Common::CodeWriter &code) {
 	bool dotSyntax = script->dir->dotSyntax;
 	bool isMethod = script->isFactory();
 
-	Common::CodeWriter code(std::string(1, kLingoLineEnding));
 	if (!isGenericEvent) {
 		if (isMethod) {
-			code.write("method " + name);
+			code.write("method ");
 		} else {
-			code.write("on " + name);
+			code.write("on ");
 		}
+		code.write(name);
 		if (argumentNames.size() > 0) {
 			code.write(" ");
 			for (size_t i = 0; i < argumentNames.size(); i++) {
@@ -1286,35 +1286,45 @@ std::string Handler::bytecodeText() {
 		code.indent();
 	}
 	for (auto &bytecode : bytecodeArray) {
-		auto line = posToString(bytecode.pos) + " " + Lingo::getOpcodeName(bytecode.opID);
+		code.write(posToString(bytecode.pos));
+		code.write(" ");
+		code.write(Lingo::getOpcodeName(bytecode.opID));
 		switch (bytecode.opcode) {
 		case kOpJmp:
 		case kOpJmpIfZ:
-			line += " " + posToString(bytecode.pos + bytecode.obj);
+			code.write(" ");
+			code.write(posToString(bytecode.pos + bytecode.obj));
 			break;
 		case kOpEndRepeat:
-			line += " " + posToString(bytecode.pos - bytecode.obj);
+			code.write(" ");
+			code.write(posToString(bytecode.pos - bytecode.obj));
 			break;
 		case kOpPushFloat32:
-			line += " " + Common::floatToString(*(float *)(&bytecode.obj));
+			code.write(" ");
+			code.write(Common::floatToString(*(float *)(&bytecode.obj)));
 			break;
 		default:
-			if (bytecode.opID > 0x40)
-				line += " " + std::to_string(bytecode.obj);
+			if (bytecode.opID > 0x40) {
+				code.write(" ");
+				code.write(std::to_string(bytecode.obj));
+			}
 			break;
 		}
 		if (bytecode.translation) {
-			line += " ...";
-			while (line.size() < 49) {
-				line += ".";
+			code.write(" ...");
+			while (code.lineWidth() < 49) {
+				code.write(".");
 			}
-			line += " ";
-			if (bytecode.translation->isExpression)
-				line += "<" + bytecode.translation->toString(dotSyntax, true) + ">";
-			else
-				line += bytecode.translation->toString(dotSyntax, true);
+			code.write(" ");
+			if (bytecode.translation->isExpression) {
+				code.write("<");
+			}
+			bytecode.translation->writeScriptText(code, dotSyntax, true);
+			if (bytecode.translation->isExpression) {
+				code.write(">");
+			}
 		}
-		code.writeLine(line);
+		code.writeLine();
 	}
 	if (!isGenericEvent) {
 		code.unindent();
@@ -1322,7 +1332,6 @@ std::string Handler::bytecodeText() {
 			code.writeLine("end");
 		}
 	}
-	return code.str();
 }
 
 } // namespace Director

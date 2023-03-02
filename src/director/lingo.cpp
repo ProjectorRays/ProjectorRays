@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include "common/codewriter.h"
 #include "common/json.h"
 #include "common/util.h"
 #include "director/chunk.h"
@@ -317,75 +318,88 @@ int Datum::toInt() {
 	return 0;
 }
 
-std::string Datum::toString(bool dot, bool sum) {
+void Datum::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	switch (type) {
 	case kDatumVoid:
-		return "VOID";
+		code.write("VOID");
+		return;
 	case kDatumSymbol:
-		return "#" + s;
+		code.write("#" + s);
+		return;
 	case kDatumVarRef:
-		return s;
+		code.write(s);
+		return;
 	case kDatumString:
-		if (s.size() == 0)
-			return "EMPTY";
+		if (s.size() == 0) {
+			code.write("EMPTY");
+			return;
+		}
 		if (s.size() == 1) {
 			switch (s[0]) {
 			case '\x03':
-				return "ENTER";
+				code.write("ENTER");
+				return;
 			case '\x08':
-				return "BACKSPACE";
+				code.write("BACKSPACE");
+				return;
 			case '\t':
-				return "TAB";
+				code.write("TAB");
+				return;
 			case '\r':
-				return "RETURN";
+				code.write("RETURN");
+				return;
 			case '"':
-				return "QUOTE";
+				code.write("QUOTE");
+				return;
 			default:
 				break;
 			}
 		}
 		if (sum) {
-			return "\"" + Common::escapeString(s) + "\"";
+			code.write("\"" + Common::escapeString(s) + "\"");
+			return;
 		}
-		return "\"" + s + "\"";
+		code.write("\"" + s + "\"");
+		return;
 	case kDatumInt:
-		return std::to_string(i);
+		code.write(std::to_string(i));
+		return;
 	case kDatumFloat:
-		return Common::floatToString(f);
+		code.write(Common::floatToString(f));
+		return;
 	case kDatumList:
 	case kDatumArgList:
 	case kDatumArgListNoRet:
 		{
-			std::string res = "";
 			if (type == kDatumList)
-				res += "[";
+				code.write("[");
 			for (size_t i = 0; i < l.size(); i++) {
 				if (i > 0)
-					res += ", ";
-				res += l[i]->toString(dot, sum);
+					code.write(", ");
+				l[i]->writeScriptText(code, dot, sum);
 			}
 			if (type == kDatumList)
-				res += "]";
-			return res;
+				code.write("]");
 		}
+		return;
 	case kDatumPropList:
 		{
-			std::string res = "[";
+			code.write("[");
 			if (l.size() == 0) {
-				res += ":";
+				code.write(":");
 			} else {
 				for (size_t i = 0; i < l.size(); i += 2) {
 					if (i > 0)
-						res += ", ";
-					res += l[i]->toString(dot, sum) + ": " + l[i + 1]->toString(dot, sum);
+						code.write(", ");
+					l[i]->writeScriptText(code, dot, sum);
+					code.write(": ");
+					l[i + 1]->writeScriptText(code, dot, sum);
 				}
 			}
-			res += "]";
-			return res;
+			code.write("]");
 		}
+		return;
 	}
-
-	return "ERROR";
 }
 
 void Datum::writeJSON(Common::JSONWriter &json) const {
@@ -407,8 +421,8 @@ void Datum::writeJSON(Common::JSONWriter &json) const {
 
 /* AST */
 
-std::string AST::toString(bool dot, bool sum) {
-	return root->toString(dot, sum);
+void AST::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	root->writeScriptText(code, dot, sum);
 }
 
 void AST::addStatement(std::shared_ptr<Node> statement) {
@@ -437,10 +451,6 @@ void AST::exitBlock() {
 
 /* Node */
 
-std::string Node::toString(bool, bool) {
-	return "";
-}
-
 std::shared_ptr<Datum> Node::getValue() {
 	return std::make_shared<Datum>();
 }
@@ -467,8 +477,8 @@ bool Node::hasSpaces(bool) {
 
 /* ErrorNode */
 
-std::string ErrorNode::toString(bool, bool) {
-	return "ERROR";
+void ErrorNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("ERROR");
 }
 
 bool ErrorNode::hasSpaces(bool) {
@@ -477,14 +487,15 @@ bool ErrorNode::hasSpaces(bool) {
 
 /* CommentNode */
 
-std::string CommentNode::toString(bool, bool) {
-	return "-- " + text;
+void CommentNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("-- ");
+	code.write(text);
 }
 
 /* LiteralNode */
 
-std::string LiteralNode::toString(bool dot, bool sum) {
-	return value->toString(dot, sum);
+void LiteralNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	value->writeScriptText(code, dot, sum);
 }
 
 std::shared_ptr<Datum> LiteralNode::getValue() {
@@ -497,12 +508,11 @@ bool LiteralNode::hasSpaces(bool) {
 
 /* BlockNode */
 
-std::string BlockNode::toString(bool dot, bool sum) {
-	std::string res = "";
+void BlockNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	for (const auto &child : children) {
-		res += child->toString(dot, sum) + kLingoLineEnding;
+		child->writeScriptText(code, dot, sum);
+		code.writeLine();
 	}
-	return res;
 }
 
 void BlockNode::addChild(std::shared_ptr<Node> child) {
@@ -512,102 +522,126 @@ void BlockNode::addChild(std::shared_ptr<Node> child) {
 
 /* HandlerNode */
 
-std::string HandlerNode::toString(bool dot, bool sum) {
-	std::string res;
+void HandlerNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	if (handler->isGenericEvent) {
-		res += block->toString(dot, sum);
+		block->writeScriptText(code, dot, sum);
 	} else {
 		ScriptChunk *script = handler->script;
 		bool isMethod = script->isFactory();
 		if (isMethod) {
-			res += "method ";
+			code.write("method ");
 		} else {
-			res += "on ";
+			code.write("on ");
 		}
-		res += handler->name;
+		code.write(handler->name);
 		if (handler->argumentNames.size() > 0) {
-			res += " ";
+			code.write(" ");
 			for (size_t i = 0; i < handler->argumentNames.size(); i++) {
 				if (i > 0)
-					res += ", ";
-				res += handler->argumentNames[i];
+					code.write(", ");
+				code.write(handler->argumentNames[i]);
 			}
 		}
-		res += kLingoLineEnding;
+		code.writeLine();
+		code.indent();
 		if (isMethod && script->propertyNames.size() > 0 && handler == script->handlers[0].get()) {
-			res += "  instance ";
+			code.write("instance ");
 			for (size_t i = 0; i < script->propertyNames.size(); i++) {
 				if (i > 0)
-					res += ", ";
-				res += script->propertyNames[i];
+					code.write(", ");
+				code.write(script->propertyNames[i]);
 			}
-			res += kLingoLineEnding;
+			code.writeLine();
 		}
 		if (handler->globalNames.size() > 0) {
-			res += "  global ";
+			code.write("global ");
 			for (size_t i = 0; i < handler->globalNames.size(); i++) {
 				if (i > 0)
-					res += ", ";
-				res += handler->globalNames[i];
+					code.write(", ");
+				code.write(handler->globalNames[i]);
 			}
-			res += kLingoLineEnding;
+			code.writeLine();
 		}
-		res += indent(block->toString(dot, sum));
+		block->writeScriptText(code, dot, sum);
+		code.unindent();
 		if (!isMethod) {
-			res += "end";
-			res += kLingoLineEnding;
+			code.writeLine("end");
 		}
 	}
-	return res;
 }
 
 /* ExitStmtNode */
 
-std::string ExitStmtNode::toString(bool, bool) {
-	return "exit";
+void ExitStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("exit");
 }
 
 /* InverseOpNode */
 
-std::string InverseOpNode::toString(bool dot, bool sum) {
-	std::string operandString = operand->toString(dot, sum);
-	if (operand->hasSpaces(dot)) {
-		operandString = "(" + operandString + ")";
+void InverseOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("-");
+
+	bool parenOperand = operand->hasSpaces(dot);
+	if (parenOperand) {
+		code.write("(");
 	}
-	return "-" + operandString;
+	operand->writeScriptText(code, dot, sum);
+	if (parenOperand) {
+		code.write(")");
+	}
 }
 
 /* NotOpNode */
 
-std::string NotOpNode::toString(bool dot, bool sum) {
-	std::string operandString = operand->toString(dot, sum);
-	if (operand->hasSpaces(dot)) {
-		operandString = "(" + operandString + ")";
+void NotOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("not ");
+
+	bool parenOperand = operand->hasSpaces(dot);
+	if (parenOperand) {
+		code.write("(");
 	}
-	return "not " + operandString;
+	operand->writeScriptText(code, dot, sum);
+	if (parenOperand) {
+		code.write(")");
+	}
 }
 
 /* BinaryOpNode */
 
-std::string BinaryOpNode::toString(bool dot, bool sum) {
-	auto opString = Lingo::getName(Lingo::binaryOpNames, opcode);
-	std::string leftString = left->toString(dot, sum);
-	std::string rightString = right->toString(dot, sum);
+void BinaryOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	unsigned int precedence = getPrecedence();
+	bool parenLeft = false;
+	bool parenRight = false;
 	if (precedence) {
 		if (left->type == kBinaryOpNode) {
 			auto leftBinaryOpNode = static_cast<BinaryOpNode *>(left.get());
-			if (leftBinaryOpNode->getPrecedence() != precedence)
-				leftString = "(" + leftString + ")";
+			parenLeft = (leftBinaryOpNode->getPrecedence() != precedence);
 		}
-		if (right->type == kBinaryOpNode) {
-			rightString = "(" + rightString + ")";
-		}
+		parenRight = (right->type == kBinaryOpNode);
 	}
-	return leftString + " " +  opString + " " + rightString;
+
+	if (parenLeft) {
+		code.write("(");
+	}
+	left->writeScriptText(code, dot, sum);
+	if (parenLeft) {
+		code.write(")");
+	}
+
+	code.write(" ");
+	code.write(Lingo::getName(Lingo::binaryOpNames, opcode));
+	code.write(" ");
+
+	if (parenRight) {
+		code.write("(");
+	}
+	right->writeScriptText(code, dot, sum);
+	if (parenRight) {
+		code.write(")");
+	}
 }
 
-unsigned int BinaryOpNode::getPrecedence() {
+unsigned int BinaryOpNode::getPrecedence() const {
 	switch (opcode) {
 	case kOpMul:
 	case kOpDiv:
@@ -635,83 +669,122 @@ unsigned int BinaryOpNode::getPrecedence() {
 
 /* ChunkExprNode */
 
-std::string ChunkExprNode::toString(bool dot, bool sum) {
-	auto res = Lingo::getName(Lingo::chunkTypeNames, type) + " " + first->toString(dot, sum);
+void ChunkExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write(Lingo::getName(Lingo::chunkTypeNames, type));
+	code.write(" ");
+	first->writeScriptText(code, dot, sum);
 	if (!(last->type == kLiteralNode && last->getValue()->type == kDatumInt && last->getValue()->i == 0)) {
-		res += " to " + last->toString(dot, sum);
+		code.write(" to ");
+		last->writeScriptText(code, dot, sum);
 	}
-	// we want the string to always be verbose
-	res += " of " + string->toString(false, sum);
-	return res;
+	code.write(" of ");
+	string->writeScriptText(code, false, sum); // we want the string to always be verbose
 }
 
 /* ChunkHiliteStmtNode */
 
-std::string ChunkHiliteStmtNode::toString(bool dot, bool sum) {
-	return "hilite " + chunk->toString(dot, sum);
+void ChunkHiliteStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("hilite ");
+	chunk->writeScriptText(code, dot, sum);
 }
 
 /* ChunkDeleteStmtNode */
 
-std::string ChunkDeleteStmtNode::toString(bool dot, bool sum) {
-	return "delete " + chunk->toString(dot, sum);
+void ChunkDeleteStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("delete ");
+	chunk->writeScriptText(code, dot, sum);
 }
 
 /* SpriteIntersectsExprNode */
 
-std::string SpriteIntersectsExprNode::toString(bool dot, bool sum) {
-	std::string firstSpriteString = firstSprite->toString(dot, sum);
-	if (firstSprite->type == kBinaryOpNode) {
-		firstSpriteString = "(" + firstSpriteString + ")";
+void SpriteIntersectsExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("sprite ");
+
+	bool parenFirstSprite = (firstSprite->type == kBinaryOpNode);
+	if (parenFirstSprite) {
+		code.write("(");
 	}
-	std::string secondSpriteString = secondSprite->toString(dot, sum);
-	if (secondSprite->type == kBinaryOpNode) {
-		secondSpriteString = "(" + secondSpriteString + ")";
+	firstSprite->writeScriptText(code, dot, sum);
+	if (parenFirstSprite) {
+		code.write(")");
 	}
-	return "sprite " + firstSpriteString + " intersects " + secondSpriteString;
+
+	code.write(" intersects ");
+
+	bool parenSecondSprite = (secondSprite->type == kBinaryOpNode);
+	if (parenSecondSprite) {
+		code.write("(");
+	}
+	secondSprite->writeScriptText(code, dot, sum);
+	if (parenSecondSprite) {
+		code.write(")");
+	}
 }
 
 /* SpriteWithinExprNode */
 
-std::string SpriteWithinExprNode::toString(bool dot, bool sum) {
-	std::string firstSpriteString = firstSprite->toString(dot, sum);
-	if (firstSprite->type == kBinaryOpNode) {
-		firstSpriteString = "(" + firstSpriteString + ")";
+void SpriteWithinExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("sprite ");
+
+	bool parenFirstSprite = (firstSprite->type == kBinaryOpNode);
+	if (parenFirstSprite) {
+		code.write("(");
 	}
-	std::string secondSpriteString = secondSprite->toString(dot, sum);
-	if (secondSprite->type == kBinaryOpNode) {
-		secondSpriteString = "(" + secondSpriteString + ")";
+	firstSprite->writeScriptText(code, dot, sum);
+	if (parenFirstSprite) {
+		code.write(")");
 	}
-	return "sprite " + firstSpriteString + " within " + secondSpriteString;
+
+	code.write(" within ");
+
+	bool parenSecondSprite = (secondSprite->type == kBinaryOpNode);
+	if (parenSecondSprite) {
+		code.write("(");
+	}
+	secondSprite->writeScriptText(code, dot, sum);
+	if (parenSecondSprite) {
+		code.write(")");
+	}
 }
 
 /* MemberExprNode */
 
-std::string MemberExprNode::toString(bool dot, bool sum) {
+void MemberExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	bool hasCastID = castID && !(castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0);
-	std::string res = type;
+	code.write(type);
 	if (dot) {
-		res += "(" + memberID->toString(dot, sum);
+		code.write("(");
+		memberID->writeScriptText(code, dot, sum);
 		if (hasCastID) {
-			res += ", " + castID->toString(dot, sum) + ")";
-		} else {
-			res += ")";
+			code.write(", ");
+			castID->writeScriptText(code, dot, sum);
 		}
+		code.write(")");
 	} else {
-		std::string memberIDString = memberID->toString(dot, sum);
-		if (memberID->type == kBinaryOpNode) {
-			memberIDString = "(" + memberIDString + ")";
+		code.write(" ");
+
+		bool parenMemberID = (memberID->type == kBinaryOpNode);
+		if (parenMemberID) {
+			code.write("(");
 		}
-		res += " " + memberIDString;
+		memberID->writeScriptText(code, dot, sum);
+		if (parenMemberID) {
+			code.write(")");
+		}
+
 		if (hasCastID) {
-			std::string castIDString = castID->toString(dot, sum);
-			if (castID->type == kBinaryOpNode) {
-				castIDString = "(" + castIDString + ")";
+			code.write(" of castLib ");
+
+			bool parenCastID = (castID->type == kBinaryOpNode);
+			if (parenCastID) {
+				code.write("(");
 			}
-			res += " of castLib " + castIDString;
+			castID->writeScriptText(code, dot, sum);
+			if (parenCastID) {
+				code.write(")");
+			}
 		}
 	}
-	return res;
 }
 
 bool MemberExprNode::hasSpaces(bool dot) {
@@ -720,8 +793,8 @@ bool MemberExprNode::hasSpaces(bool dot) {
 
 /* VarNode */
 
-std::string VarNode::toString(bool, bool) {
-	return varName;
+void VarNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write(varName);
 }
 
 bool VarNode::hasSpaces(bool) {
@@ -730,163 +803,192 @@ bool VarNode::hasSpaces(bool) {
 
 /* AssignmentStmtNode */
 
-std::string AssignmentStmtNode::toString(bool dot, bool sum) {
+void AssignmentStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	if (!dot || forceVerbose) {
-		// we want the variable to always be verbose
-		return "set " + variable->toString(false, sum) + " to " + value->toString(dot, sum);
+		code.write("set ");
+		variable->writeScriptText(code, false, sum); // we want the variable to always be verbose
+		code.write(" to ");
+		value->writeScriptText(code, dot, sum);
+	} else {
+		variable->writeScriptText(code, dot, sum);
+		code.write(" = ");
+		value->writeScriptText(code, dot, sum);
 	}
-
-	return variable->toString(dot, sum) + " = " + value->toString(dot, sum);
 }
 
 /* IfStmtNode */
 
-std::string IfStmtNode::toString(bool dot, bool sum) {
-	std::string res = "if " + condition->toString(dot, sum) + " then";
+void IfStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("if ");
+	condition->writeScriptText(code, dot, sum);
+	code.write(" then");
 	if (sum) {
 		if (hasElse) {
-			res += " / else";
+			code.write(" / else");
 		}
 	} else {
-		res += kLingoLineEnding;
-		res += indent(block1->toString(dot, sum));
+		code.writeLine();
+		code.indent();
+		block1->writeScriptText(code, dot, sum);
+		code.unindent();
 		if (hasElse) {
-			res += "else";
-			res += kLingoLineEnding;
-			res += indent(block2->toString(dot, sum));
+			code.writeLine("else");
+			code.indent();
+			block2->writeScriptText(code, dot, sum);
+			code.unindent();
 		}
-		res += "end if";
+		code.write("end if");
 	}
-	return res;
 }
 
 /* RepeatWhileStmtNode */
 
-std::string RepeatWhileStmtNode::toString(bool dot, bool sum) {
-	std::string res = "repeat while " + condition->toString(dot, sum);
+void RepeatWhileStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("repeat while ");
+	condition->writeScriptText(code, dot, sum);
 	if (!sum) {
-		res += kLingoLineEnding;
-		res += indent(block->toString(dot, sum));
-		res += "end repeat";
+		code.writeLine();
+		code.indent();
+		block->writeScriptText(code, dot, sum);
+		code.unindent();
+		code.write("end repeat");
 	}
-	return res;
 }
 
 /* RepeatWithInStmtNode */
 
-std::string RepeatWithInStmtNode::toString(bool dot, bool sum) {
-	std::string res = "repeat with " + varName + " in " + list->toString(dot, sum);
+void RepeatWithInStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("repeat with ");
+	code.write(varName);
+	code.write(" in ");
+	list->writeScriptText(code, dot, sum);
 	if (!sum) {
-		res += kLingoLineEnding;
-		res += indent(block->toString(dot, sum));
-		res += "end repeat";
+		code.writeLine();
+		code.indent();
+		block->writeScriptText(code, dot, sum);
+		code.unindent();
+		code.write("end repeat");
 	}
-	return res;
 }
 
 /* RepeatWithToStmtNode */
 
-std::string RepeatWithToStmtNode::toString(bool dot, bool sum) {
-	std::string res = "repeat with " + varName + " = " + start->toString(dot, sum);
+void RepeatWithToStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("repeat with ");
+	code.write(varName);
+	code.write(" = ");
+	start->writeScriptText(code, dot, sum);
 	if (up) {
-		res += " to ";
+		code.write(" to ");
 	} else {
-		res += " down to ";
+		code.write(" down to ");
 	}
-	res += end->toString(dot, sum);
+	end->writeScriptText(code, dot, sum);
 	if (!sum) {
-		res += kLingoLineEnding;
-		res += indent(block->toString(dot, sum));
-		res += "end repeat";
+		code.writeLine();
+		code.indent();
+		block->writeScriptText(code, dot, sum);
+		code.unindent();
+		code.write("end repeat");
 	}
-	return res;
 }
 
 /* CaseLabelNode */
 
-std::string CaseLabelNode::toString(bool dot, bool sum) {
-	std::string res;
+void CaseLabelNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	if (sum) {
-		res += "(case) ";
+		code.write("(case) ");
 		if (parent->type == kCaseLabelNode) {
 			auto parentLabel = static_cast<CaseLabelNode *>(parent);
 			if (parentLabel->nextOr.get() == this) {
-				res += "..., ";
+				code.write("..., ");
 			}
 		}
-		std::string valueString = value->toString(dot, sum);
-		if (value->hasSpaces(dot)) {
-			valueString = "(" + valueString + ")";
+
+		bool parenValue = value->hasSpaces(dot);
+		if (parenValue) {
+			code.write("(");
 		}
-		res += valueString;
+		value->writeScriptText(code, dot, sum);
+		if (parenValue) {
+			code.write(")");
+		}
+
 		if (nextOr) {
-			res += ", ...";
+			code.write(", ...");
 		} else {
-			res += ":";
+			code.write(":");
 		}
 	} else {
-		std::string valueString = value->toString(dot, sum);
-		if (value->hasSpaces(dot)) {
-			valueString = "(" + valueString + ")";
+		bool parenValue = value->hasSpaces(dot);
+		if (parenValue) {
+			code.write("(");
 		}
-		res += valueString;
+		value->writeScriptText(code, dot, sum);
+		if (parenValue) {
+			code.write(")");
+		}
+
 		if (nextOr) {
-			res += ", " + nextOr->toString(dot, sum);
+			code.write(", ");
+			nextOr->writeScriptText(code, dot, sum);
 		} else {
-			res += ":";
-			res += kLingoLineEnding;
-			res += indent(block->toString(dot, sum));
+			code.writeLine(":");
+			code.indent();
+			block->writeScriptText(code, dot, sum);
+			code.unindent();
 		}
 		if (nextLabel) {
-			res += nextLabel->toString(dot, sum);
+			nextLabel->writeScriptText(code, dot, sum);
 		}
 	}
-	return res;
 }
 
 /* OtherwiseNode */
 
-std::string OtherwiseNode::toString(bool dot, bool sum) {
-	std::string res;
+void OtherwiseNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	if (sum) {
-		res += "(case) otherwise:";
+		code.write("(case) otherwise:");
 	} else {
-		res += "otherwise:";
-		res += kLingoLineEnding;
-		res += indent(block->toString(dot, sum));
+		code.writeLine("otherwise:");
+		code.indent();
+		block->writeScriptText(code, dot, sum);
+		code.unindent();
 	}
-	return res;
 }
 
 /* EndCaseNode */
 
-std::string EndCaseNode::toString(bool, bool) {
-	return "end case";
+void EndCaseNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("end case");
 }
 
 /* CaseStmtNode */
 
-std::string CaseStmtNode::toString(bool dot, bool sum) {
-	std::string res = "case " + value->toString(dot, sum) + " of";
+void CaseStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("case ");
+	value->writeScriptText(code, dot, sum);
+	code.write(" of");
 	if (sum) {
 		if (!firstLabel) {
 			if (otherwise) {
-				res += " / otherwise:";
+				code.write(" / otherwise:");
 			} else {
-				res += " / end case";
+				code.write(" / end case");
 			}
 		}
 	} else {
-		res += kLingoLineEnding;
+		code.writeLine();
+		code.indent();
 		if (firstLabel) {
-			res += indent(firstLabel->toString(dot, sum));
+			firstLabel->writeScriptText(code, dot, sum);
 		}
 		if (otherwise) {
-			res += indent(otherwise->toString(dot, sum));
+			otherwise->writeScriptText(code, dot, sum);
 		}
-		res += "end case";
+		code.unindent();
+		code.write("end case");
 	}
-	return res;
 }
 
 void CaseStmtNode::addOtherwise() {
@@ -897,29 +999,32 @@ void CaseStmtNode::addOtherwise() {
 
 /* TellStmtNode */
 
-std::string TellStmtNode::toString(bool dot, bool sum) {
-	std::string res = "tell " + window->toString(dot, sum);
+void TellStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("tell ");
+	window->writeScriptText(code, dot, sum);
 	if (!sum) {
-		res += kLingoLineEnding;
-		res += indent(block->toString(dot, sum));
-		res += "end tell";
+		code.writeLine();
+		code.indent();
+		block->writeScriptText(code, dot, sum);
+		code.unindent();
+		code.write("end tell");
 	}
-	return res;
 }
 
 /* SoundCmdStmtNode */
 
-std::string SoundCmdStmtNode::toString(bool dot, bool sum) {
-	std::string res = "sound " + cmd;
+void SoundCmdStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("sound ");
+	code.write(cmd);
 	if (argList->getValue()->l.size() > 0) {
-		res += " " + argList->toString(dot, sum);
+		code.write(" ");
+		argList->writeScriptText(code, dot, sum);
 	}
-	return res;
 }
 
 /* CallNode */
 
-bool CallNode::noParens() {
+bool CallNode::noParens() const {
 	if (isStatement) {
 		// TODO: Make a complete list of commonly paren-less commands
 		if (name == "put")
@@ -931,7 +1036,7 @@ bool CallNode::noParens() {
 	return false;
 }
 
-bool CallNode::isMemberExpr() {
+bool CallNode::isMemberExpr() const {
 	if (isExpression) {
 		size_t nargs = argList->getValue()->l.size();
 		if (name == "cast" && (nargs == 1 || nargs == 2))
@@ -949,14 +1054,20 @@ bool CallNode::isMemberExpr() {
 	return false;
 }
 
-std::string CallNode::toString(bool dot, bool sum) {
+void CallNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	if (isExpression && argList->getValue()->l.size() == 0) {
-		if (name == "pi")
-			return "PI";
-		if (name == "space")
-			return "SPACE";
-		if (name == "void")
-			return "VOID";
+		if (name == "pi") {
+			code.write("PI");
+			return;
+		}
+		if (name == "space") {
+			code.write("SPACE");
+			return;
+		}
+		if (name == "void") {
+			code.write("VOID");
+			return;
+		}
 	}
 
 	if (!dot && isMemberExpr()) {
@@ -967,27 +1078,44 @@ std::string CallNode::toString(bool dot, bool sum) {
 		 * compile. Therefore, we rewrite these expressions to the verbose syntax when
 		 * in verbose mode.
 		 */
+		code.write(name);
+		code.write(" ");
+
 		auto memberID = argList->getValue()->l[0];
-		std::string memberIDString = memberID->toString(dot, sum);
-		if (memberID->type == kBinaryOpNode) {
-			memberIDString = "(" + memberIDString + ")";
+		bool parenMemberID = (memberID->type == kBinaryOpNode);
+		if (parenMemberID) {
+			code.write("(");
 		}
-		std::string res = name + " " + memberIDString;
+		memberID->writeScriptText(code, dot, sum);
+		if (parenMemberID) {
+			code.write(")");
+		}
+
 		if (argList->getValue()->l.size() == 2) {
+			code.write(" of castLib ");
+
 			auto castID = argList->getValue()->l[1];
-			std::string castIDString = castID->toString(dot, sum);
-			if (castID->type == kBinaryOpNode) {
-				castIDString = "(" + castIDString + ")";
+			bool parenCastID = (castID->type == kBinaryOpNode);
+			if (parenCastID) {
+				code.write("(");
 			}
-			res += " of castLib " + castIDString;
+			castID->writeScriptText(code, dot, sum);
+			if (parenCastID) {
+				code.write(")");
+			}
 		}
-		return res;
+		return;
 	}
 
-	if (noParens())
-		return name + " " + argList->toString(dot, sum);
-
-	return name + "(" + argList->toString(dot, sum) + ")";
+	code.write(name);
+	if (noParens()) {
+		code.write(" ");
+		argList->writeScriptText(code, dot, sum);
+	} else {
+		code.write("(");
+		argList->writeScriptText(code, dot, sum);
+		code.write(")");
+	}
 }
 
 bool CallNode::hasSpaces(bool dot) {
@@ -1002,21 +1130,28 @@ bool CallNode::hasSpaces(bool dot) {
 
 /* ObjCallNode */
 
-std::string ObjCallNode::toString(bool dot, bool sum) {
+void ObjCallNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	auto rawArgs = argList->getValue()->l;
+
 	auto obj = rawArgs[0];
-	std::string objString = obj->toString(dot, sum);
-	if (obj->hasSpaces(dot)) {
-		objString = "(" + objString + ")";
+	bool parenObj = obj->hasSpaces(dot);
+	if (parenObj) {
+		code.write("(");
 	}
-	std::string res = objString + "." + name + "(";
+	obj->writeScriptText(code, dot, sum);
+	if (parenObj) {
+		code.write(")");
+	}
+
+	code.write(".");
+	code.write(name);
+	code.write("(");
 	for (size_t i = 1; i < rawArgs.size(); i++) {
 		if (i > 1)
-			res += ", ";
-		res += rawArgs[i]->toString(dot, sum);
+			code.write(", ");
+		rawArgs[i]->writeScriptText(code, dot, sum);
 	}
-	res += ")";
-	return res;
+	code.write(")");
 }
 
 bool ObjCallNode::hasSpaces(bool) {
@@ -1025,8 +1160,11 @@ bool ObjCallNode::hasSpaces(bool) {
 
 /* ObjCallV4Node */
 
-std::string ObjCallV4Node::toString(bool dot, bool sum) {
-	return obj->toString(dot, sum) + "(" + argList->toString(dot, sum) + ")";
+void ObjCallV4Node::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	obj->writeScriptText(code, dot, sum);
+	code.write("(");
+	argList->writeScriptText(code, dot, sum);
+	code.write(")");
 }
 
 bool ObjCallV4Node::hasSpaces(bool) {
@@ -1035,108 +1173,169 @@ bool ObjCallV4Node::hasSpaces(bool) {
 
 /* TheExprNode */
 
-std::string TheExprNode::toString(bool, bool) {
-	return "the " + prop;
+void TheExprNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("the ");
+	code.write(prop);
 }
 
 /* LastStringChunkExprNode */
 
-std::string LastStringChunkExprNode::toString(bool, bool sum) {
-	auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-	// we want the object to always be verbose
-	std::string objString = obj->toString(false, sum);
-	if (obj->type == kBinaryOpNode) {
-		objString = "(" + objString + ")";
+void LastStringChunkExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) const {
+	code.write("the last ");
+	code.write(Lingo::getName(Lingo::chunkTypeNames, type));
+	code.write(" in ");
+
+	bool parenObj = (obj->type == kBinaryOpNode);
+	if (parenObj) {
+		code.write("(");
 	}
-	return "the last " + typeString + " in " + objString;
+	obj->writeScriptText(code, false, sum); // we want the object to always be verbose
+	if (parenObj) {
+		code.write(")");
+	}
 }
 
 /* StringChunkCountExprNode */
 
-std::string StringChunkCountExprNode::toString(bool, bool sum) {
-	auto typeString = Lingo::getName(Lingo::chunkTypeNames, type);
-	// we want the object to always be verbose
-	std::string objString = obj->toString(false, sum);
-	if (obj->type == kBinaryOpNode) {
-		objString = "(" + objString + ")";
+void StringChunkCountExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) const {
+	code.write("the number of ");
+	code.write(Lingo::getName(Lingo::chunkTypeNames, type)); // we want the object to always be verbose
+	code.write("s in ");
+
+	bool parenObj = (obj->type == kBinaryOpNode);
+	if (parenObj) {
+		code.write("(");
 	}
-	return "the number of " + typeString + "s in " + objString;
+	obj->writeScriptText(code, false, sum);
+	if (parenObj) {
+		code.write(")");
+	}
 }
 
 /* MenuPropExprNode */
 
-std::string MenuPropExprNode::toString(bool dot, bool sum) {
-	std::string propString = Lingo::getName(Lingo::menuPropertyNames, prop);
-	std::string menuIDString = menuID->toString(dot, sum);
-	if (menuID->type == kBinaryOpNode) {
-		menuIDString = "(" + menuIDString + ")";
+void MenuPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("the ");
+	code.write(Lingo::getName(Lingo::menuPropertyNames, prop));
+	code.write(" of menu ");
+
+	bool parenMenuID = (menuID->type == kBinaryOpNode);
+	if (parenMenuID) {
+		code.write("(");
 	}
-	return "the " + propString + " of menu " + menuIDString;
+	menuID->writeScriptText(code, dot, sum);
+	if (parenMenuID) {
+		code.write(")");
+	}
 }
 
 /* MenuItemPropExprNode */
 
-std::string MenuItemPropExprNode::toString(bool dot, bool sum) {
-	std::string propString = Lingo::getName(Lingo::menuItemPropertyNames, prop);
-	std::string itemIDString = itemID->toString(dot, sum);
-	if (itemID->type == kBinaryOpNode) {
-		itemIDString = "(" + itemIDString + ")";
+void MenuItemPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("the ");
+	code.write(Lingo::getName(Lingo::menuItemPropertyNames, prop));
+	code.write(" of menuItem ");
+
+	bool parenItemID = (itemID->type == kBinaryOpNode);
+	if (parenItemID) {
+		code.write("(");
 	}
-	std::string menuIDString = menuID->toString(dot, sum);
-	if (menuID->type == kBinaryOpNode) {
-		menuIDString = "(" + menuIDString + ")";
+	itemID->writeScriptText(code, dot, sum);
+	if (parenItemID) {
+		code.write(")");
 	}
-	return "the " + propString + " of menuItem " + itemIDString + " of menu " + menuIDString;
+
+	code.write(" of menu ");
+
+	bool parenMenuID = (menuID->type == kBinaryOpNode);
+	if (parenMenuID) {
+		code.write("(");
+	}
+	menuID->writeScriptText(code, dot, sum);
+	if (parenMenuID) {
+		code.write(")");
+	}
 }
 
 /* SoundPropExprNode */
 
-std::string SoundPropExprNode::toString(bool dot, bool sum) {
-	std::string propString = Lingo::getName(Lingo::soundPropertyNames, prop);
-	std::string soundIDString = soundID->toString(dot, sum);
-	if (soundID->type == kBinaryOpNode) {
-		soundIDString = "(" + soundIDString + ")";
+void SoundPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("the ");
+	code.write(Lingo::getName(Lingo::soundPropertyNames, prop));
+	code.write(" of sound ");
+
+	bool parenSoundID = (soundID->type == kBinaryOpNode);
+	if (parenSoundID) {
+		code.write("(");
 	}
-	return "the " + propString + " of sound " + soundIDString;
+	soundID->writeScriptText(code, dot, sum);
+	if (parenSoundID) {
+		code.write(")");
+	}
 }
 
 /* SpritePropExprNode */
 
-std::string SpritePropExprNode::toString(bool dot, bool sum) {
-	std::string propString = Lingo::getName(Lingo::spritePropertyNames, prop);
-	std::string spriteIDString = spriteID->toString(dot, sum);
-	if (spriteID->type == kBinaryOpNode) {
-		spriteIDString = "(" + spriteIDString + ")";
+void SpritePropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("the ");
+	code.write(Lingo::getName(Lingo::spritePropertyNames, prop));
+	code.write(" of sprite ");
+
+	bool parenSpriteID = (spriteID->type == kBinaryOpNode);
+	if (parenSpriteID) {
+		code.write("(");
 	}
-	return "the " + propString + " of sprite " + spriteIDString;
+	spriteID->writeScriptText(code, dot, sum);
+	if (parenSpriteID) {
+		code.write(")");
+	}
 }
 
 /* ThePropExprNode */
 
-std::string ThePropExprNode::toString(bool, bool sum) {
-	// we want the object to always be verbose
-	std::string objString = obj->toString(false, sum);
-	if (obj->type == kBinaryOpNode) {
-		objString = "(" + objString + ")";
+void ThePropExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) const {
+	code.write("the ");
+	code.write(prop);
+	code.write(" of ");
+
+	bool parenObj = (obj->type == kBinaryOpNode);
+	if (parenObj) {
+		code.write("(");
 	}
-	return "the " + prop + " of " + objString;
+	obj->writeScriptText(code, false, sum); // we want the object to always be verbose
+	if (parenObj) {
+		code.write(")");
+	}
 }
 
 /* ObjPropExprNode */
 
-std::string ObjPropExprNode::toString(bool dot, bool sum) {
+void ObjPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	if (dot) {
-		std::string objString = obj->toString(dot, sum);
-		if (obj->hasSpaces(dot)) {
-			objString = "(" + objString + ")";
+		bool parenObj = obj->hasSpaces(dot);
+		if (parenObj) {
+			code.write("(");
 		}
-		return objString + "." + prop;
+		obj->writeScriptText(code, dot, sum);
+		if (parenObj) {
+			code.write(")");
+		}
+
+		code.write(".");
+		code.write(prop);
 	} else {
-		std::string objString = obj->toString(dot, sum);
-		if (obj->type == kBinaryOpNode) {
-			objString = "(" + objString + ")";
+		code.write("the ");
+		code.write(prop);
+		code.write(" of ");
+
+		bool parenObj = (obj->type == kBinaryOpNode);
+		if (parenObj) {
+			code.write("(");
 		}
-		return "the " + prop + " of " + objString;
+		obj->writeScriptText(code, dot, sum);
+		if (parenObj) {
+			code.write(")");
+		}
 	}
 }
 
@@ -1146,12 +1345,19 @@ bool ObjPropExprNode::hasSpaces(bool dot) {
 
 /* ObjBracketExprNode */
 
-std::string ObjBracketExprNode::toString(bool dot, bool sum) {
-	std::string objString = obj->toString(dot, sum);
-	if (obj->hasSpaces(dot)) {
-		objString = "(" + objString + ")";
+void ObjBracketExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	bool parenObj = obj->hasSpaces(dot);
+	if (parenObj) {
+		code.write("(");
 	}
-	return objString + "[" + prop->toString(dot, sum) + "]";
+	obj->writeScriptText(code, dot, sum);
+	if (parenObj) {
+		code.write(")");
+	}
+
+	code.write("[");
+	prop->writeScriptText(code, dot, sum);
+	code.write("]");
 }
 
 bool ObjBracketExprNode::hasSpaces(bool) {
@@ -1160,16 +1366,25 @@ bool ObjBracketExprNode::hasSpaces(bool) {
 
 /* ObjPropIndexExprNode */
 
-std::string ObjPropIndexExprNode::toString(bool dot, bool sum) {
-	std::string objString = obj->toString(dot, sum);
-	if (obj->hasSpaces(dot)) {
-		objString = "(" + objString + ")";
+void ObjPropIndexExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	bool parenObj = obj->hasSpaces(dot);
+	if (parenObj) {
+		code.write("(");
 	}
-	std::string res = objString + "." + prop + "[" + index->toString(dot, sum);
-	if (index2)
-		res += ".." + index2->toString(dot, sum);
-	res += "]";
-	return res;
+	obj->writeScriptText(code, dot, sum);
+	if (parenObj) {
+		code.write(")");
+	}
+
+	code.write(".");
+	code.write(prop);
+	code.write("[");
+	index->writeScriptText(code, dot, sum);
+	if (index2) {
+		code.write("..");
+		index2->writeScriptText(code, dot, sum);
+	}
+	code.write("]");
 }
 
 bool ObjPropIndexExprNode::hasSpaces(bool) {
@@ -1178,66 +1393,56 @@ bool ObjPropIndexExprNode::hasSpaces(bool) {
 
 /* ExitRepeatStmtNode */
 
-std::string ExitRepeatStmtNode::toString(bool, bool) {
-	return "exit repeat";
+void ExitRepeatStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("exit repeat");
 }
 
 /* NextRepeatStmtNode */
 
-std::string NextRepeatStmtNode::toString(bool, bool) {
-	return "next repeat";
+void NextRepeatStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("next repeat");
 }
 
 /* PutStmtNode */
 
-std::string PutStmtNode::toString(bool dot, bool sum) {
-	auto typeString = Lingo::getName(Lingo::putTypeNames, type);
-	// we want the variable to always be verbose
-	return "put " + value->toString(dot, sum) + " " + typeString + " " + variable->toString(false, sum);
+void PutStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("put ");
+	value->writeScriptText(code, dot, sum);
+	code.write(" ");
+	code.write(Lingo::getName(Lingo::putTypeNames, type));
+	code.write(" ");
+	variable->writeScriptText(code, false, sum); // we want the variable to always be verbose
 }
 
 /* WhenStmtNode */
 
-std::string WhenStmtNode::toString(bool, bool) {
-	std::string eventName = Lingo::getName(Lingo::whenEventNames, event);
-	std::string res = "when " + eventName + " then ";
+void WhenStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+	code.write("when ");
+	code.write(Lingo::getName(Lingo::whenEventNames, event));
+	code.write(" then");
 
-	// Reformat the script to conform to our auto-indentation...
-
-	size_t i = 0;
-	while (true) {
-		// Skip spaces.
-		while (i < script.size() && isspace(script[i]) && script[i] != kLingoLineEnding) {
-			i++;
+	code.doIndentation = false;
+	for (size_t i = 0; i < script.size(); i++) {
+		char ch = script[i];
+		if (ch == '\r') {
+			if (i != script.size() - 1) {
+				code.writeLine();
+			}
+		} else {
+			code.write(ch);
 		}
-		if (i == script.size())
-			break;
-
-		// Copy script until the end of the line.
-		while (i < script.size() && script[i] != kLingoLineEnding) {
-			res += script[i];
-			i++;
-		}
-		if (i == script.size())
-			break;
-
-		// If there's more script, add a line break and indent.
-		if (i < script.size() - 1) {
-			res += kLingoLineEnding;
-			res += "  ";
-		}
-		i++;
-		if (i == script.size())
-			break;
 	}
-
-	return res;
+	code.doIndentation = true;
 }
 
 /* NewObjNode */
 
-std::string NewObjNode::toString(bool dot, bool sum) {
-	return "new " + objType + "(" + objArgs->toString(dot, sum) + ")";
+void NewObjNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	code.write("new ");
+	code.write(objType);
+	code.write("(");
+	objArgs->writeScriptText(code, dot, sum);
+	code.write(")");
 }
 
 } // namespace Director

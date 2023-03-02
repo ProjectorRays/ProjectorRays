@@ -21,6 +21,11 @@ protected:
 
 	int _indentationLevel = 0;
 	bool _indentationWritten = false;
+	size_t _lineWidth = 0;
+	size_t _size = 0;
+
+public:
+	bool doIndentation = true;
 
 public:
 	CodeWriter(std::string lineEnding = "\n", std::string indentation = "  ")
@@ -35,6 +40,8 @@ public:
 	void unindent();
 
 	std::string str() const;
+	size_t lineWidth() const { return _lineWidth; }
+	size_t size() const { return _size; }
 
 protected:
 	void writeIndentation();

@@ -9,17 +9,6 @@
 
 namespace Director {
 
-std::string indent(std::string str) {
-	std::string res;
-	size_t pos = str.find(kLingoLineEnding);
-	while (pos != std::string::npos) {
-		res += "  " + str.substr(0, pos + 1);
-		str = str.substr(pos + 1);
-		pos = str.find(kLingoLineEnding);
-	}
-	return res;
-}
-
 unsigned int humanVersion(unsigned int ver) {
 	// This is based on Lingo's `the fileVersion` with a correction to the
 	// version number for Director 12.

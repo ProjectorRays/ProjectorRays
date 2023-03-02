@@ -18,6 +18,7 @@
 #include "director/subchunk.h"
 
 namespace Common {
+class CodeWriter;
 class JSONWriter;
 }
 
@@ -347,9 +348,11 @@ struct ScriptChunk : Chunk {
 	std::string getName(int id) const;
 	void setContext(ScriptContextChunk *ctx);
 	void translate();
-	std::string varDeclarations();
-	std::string scriptText();
-	std::string bytecodeText();
+	void writeVarDeclarations(Common::CodeWriter &code) const;
+	void writeScriptText(Common::CodeWriter &code) const;
+	std::string scriptText() const;
+	void writeBytecodeText(Common::CodeWriter &code) const;
+	std::string bytecodeText() const;
 	virtual void writeJSON(Common::JSONWriter &json) const;
 
 	bool isFactory() const;

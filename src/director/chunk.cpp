@@ -1080,71 +1080,87 @@ void ScriptChunk::translate() {
 	}
 }
 
-std::string ScriptChunk::varDeclarations() {
-	std::string res = "";
+void ScriptChunk::writeVarDeclarations(Common::CodeWriter &code) const {
 	if (!isFactory()) {
 		if (propertyNames.size() > 0) {
-			res += "property ";
+			code.write("property ");
 			for (size_t i = 0; i < propertyNames.size(); i++) {
 				if (i > 0)
-					res += ", ";
-				res += propertyNames[i];
+					code.write(", ");
+				code.write(propertyNames[i]);
 			}
-			res += kLingoLineEnding;
+			code.writeLine();
 		}
 	}
 	if (globalNames.size() > 0) {
-		res += "global ";
+		code.write("global ");
 		for (size_t i = 0; i < globalNames.size(); i++) {
 			if (i > 0)
-				res += ", ";
-			res += globalNames[i];
+				code.write(", ");
+			code.write(globalNames[i]);
 		}
-		res += kLingoLineEnding;
+		code.writeLine();
 	}
-	return res;
 }
 
-std::string ScriptChunk::scriptText() {
-	std::string res = varDeclarations();
+void ScriptChunk::writeScriptText(Common::CodeWriter &code) const {
+	size_t origSize = code.size();
+	writeVarDeclarations(code);
 	if (isFactory()) {
-		if (res.size() > 0)
-			res += kLingoLineEnding;
-		res += "factory " + factoryName;
-		res += kLingoLineEnding;
+		if (code.size() != origSize) {
+			code.writeLine();
+		}
+		code.write("factory ");
+		code.writeLine(factoryName);
 	}
 	for (size_t i = 0; i < handlers.size(); i++) {
-		if ((!isFactory() || i > 0) && res.size() > 0)
-			res += kLingoLineEnding;
-		res += handlers[i]->ast->toString(dir->dotSyntax, false);
+		if ((!isFactory() || i > 0) && code.size() != origSize) {
+			code.writeLine();
+		}
+		handlers[i]->ast->writeScriptText(code, dir->dotSyntax, false);
 	}
 	for (auto factory : factories) {
-		if (res.size() > 0)
-			res += kLingoLineEnding;
-		res += factory->scriptText();
+		if (code.size() != origSize) {
+			code.writeLine();
+		}
+		factory->writeScriptText(code);
 	}
-	return res;
 }
 
-std::string ScriptChunk::bytecodeText() {
-	std::string res = varDeclarations();
+std::string ScriptChunk::scriptText() const {
+	Common::CodeWriter code("\r");
+	writeScriptText(code);
+	return code.str();
+}
+
+void ScriptChunk::writeBytecodeText(Common::CodeWriter &code) const {
+	size_t origSize = code.size();
+	writeVarDeclarations(code);
 	if (isFactory()) {
-		if (res.size() > 0)
-			res += kLingoLineEnding;
-		res += "factory " + factoryName;
-		res += kLingoLineEnding;
+		if (code.size() != origSize) {
+			code.writeLine();
+		}
+		code.write("factory ");
+		code.writeLine(factoryName);
 	}
 	for (size_t i = 0; i < handlers.size(); i++) {
-		if ((!isFactory() || i > 0) && res.size() > 0)
-			res += kLingoLineEnding;
-		res += handlers[i]->bytecodeText();
+		if ((!isFactory() || i > 0) && code.size() != origSize) {
+			code.writeLine();
+		}
+		handlers[i]->writeBytecodeText(code);
 	}
 	for (auto factory : factories) {
-		if (res.size() > 0)
-			res += kLingoLineEnding;
-		res += factory->bytecodeText();
+		if (code.size() != origSize) {
+			code.writeLine();
+		}
+		factory->writeBytecodeText(code);
 	}
-	return res;
+}
+
+std::string ScriptChunk::bytecodeText() const {
+	Common::CodeWriter code("\r");
+	writeBytecodeText(code);
+	return code.str();
 }
 
 bool ScriptChunk::isFactory() const {
