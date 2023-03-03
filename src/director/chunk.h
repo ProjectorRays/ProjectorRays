@@ -238,6 +238,7 @@ struct ConfigChunk : Chunk {
 	/* 60 */ int32_t field29;
 	/* 64 */ uint32_t checksum;
 	/* 68 */ Common::BufferView remnants;
+
 	ConfigChunk(DirectorFile *m) : Chunk(m, kConfigChunk) {
 		writable = true;
 	}
