@@ -7,6 +7,7 @@
 #ifndef COMMON_OPTIONS_H
 #define COMMON_OPTIONS_H
 
+#include <cstdio>
 #include <map>
 #include <set>
 #include <string>
@@ -78,7 +79,7 @@ private:
 	const OptionInfo *getOptionInfo(std::string longName);
 	const OptionInfo *getOptionInfo(char shortName);
 
-	void printUsage();
+	void printUsage(FILE *fh = stderr);
 	std::vector<std::pair<std::string, std::string>> getOptionText(Command cmd, bool debug);
 
 public:

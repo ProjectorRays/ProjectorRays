@@ -1,3 +1,7 @@
+VERSION_NUMBER=0.1.0
+GIT_SHA=$(shell git rev-parse --short HEAD)
+
+CPPFLAGS=-DVERSION_NUMBER=$(VERSION_NUMBER) -DGIT_SHA=$(GIT_SHA)
 CXXFLAGS=-std=c++17 -Wall -Wextra -Isrc
 LDLIBS=-lz -lmpg123
 LDFLAGS=
@@ -43,11 +47,14 @@ OBJS = \
 src/director/fontmap.o: $(FONTMAP_HEADERS)
 
 $(BINARY): $(OBJS)
-	$(CXX) -o $(BINARY) $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LDFLAGS_RELEASE) $(LDLIBS)
+	$(CXX) -o $(BINARY) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LDFLAGS_RELEASE) $(LDLIBS)
 
 debug: CXXFLAGS+=-g -fsanitize=address
 debug: LDFLAGS_RELEASE=
 debug: $(BINARY)
+
+release: CPPFLAGS+=-DRELEASE_BUILD
+release: $(BINARY)
 
 .PHONY: clean
 clean:

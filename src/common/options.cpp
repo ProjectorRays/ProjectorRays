@@ -9,6 +9,7 @@
 
 #include "common/options.h"
 #include "common/log.h"
+#include "common/util.h"
 
 namespace Common {
 
@@ -135,8 +136,12 @@ void Options::parse(int argc, char *argv[]) {
 			return;
 		}
 	} else {
-		Common::warning("Command not specified\n");
-		printUsage();
+#ifdef RELEASE_BUILD
+		Common::log("ProjectorRays " STR(VERSION_NUMBER) "\n");
+#else
+		Common::log("ProjectorRays " STR(VERSION_NUMBER) "-pre-" STR(GIT_SHA) "\n");
+#endif
+		printUsage(stdout);
 		return;
 	}
 
@@ -251,13 +256,13 @@ void Options::parse(int argc, char *argv[]) {
 	_valid = true;
 };
 
-void Options::printUsage() {
-	Common::warning("Usage: " + _programName + " <command> <input path> [<option>...]");
+void Options::printUsage(FILE *fh) {
+	fprintf(fh, "Usage: %s <command> <input path> [<option>...]\n\n", _programName.c_str());
 
 	if (_cmd == kCmdNone || _cmd == kCmdAll) {
-		Common::warning("\nThe following commands are available:");
+		fputs("The following commands are available:\n", fh);
 	} else {
-		Common::warning("\nCommand info:");
+		fputs("Command info:\n", fh);
 	}
 
 	std::vector<std::vector<std::pair<std::string, std::string>>> optionTexts;
@@ -286,7 +291,7 @@ void Options::printUsage() {
 	leftColWidth += 4;
 
 	for (const auto &optionText : optionTexts) {
-		Common::warning("");
+		fputs("\n", fh);
 		for (const auto &[leftCol, rightCol] : optionText) {
 			std::string line = leftCol;
 			if (!rightCol.empty()) {
@@ -295,7 +300,8 @@ void Options::printUsage() {
 				}
 				line += rightCol;
 			}
-			Common::warning(line);
+			fputs(line.c_str(), fh);
+			fputs("\n", fh);
 		}
 	}
 }
