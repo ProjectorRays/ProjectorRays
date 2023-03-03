@@ -520,7 +520,7 @@ BytecodeTag Handler::identifyLoop(uint32_t startIndex, uint32_t endIndex) {
 	return up ? kTagRepeatWithTo : kTagRepeatWithDownTo;
 }
 
-void Handler::translate() {
+void Handler::parse() {
 	tagLoops();
 	stack.clear();
 	ast = std::make_unique<AST>(this);

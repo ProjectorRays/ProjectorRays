@@ -336,7 +336,7 @@ struct Handler {
 	void tagLoops();
 	bool isRepeatWithIn(uint32_t startIndex, uint32_t endIndex);
 	BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
-	void translate();
+	void parse();
 	uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
 	void writeBytecodeText(Common::CodeWriter &code);
 	void writeJSON(Common::JSONWriter &json) const;

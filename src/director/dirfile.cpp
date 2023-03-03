@@ -718,6 +718,15 @@ void DirectorFile::writeChunk(Common::WriteStream &stream, int32_t id) {
 
 // restoration
 
+void DirectorFile::parseScripts() {
+	for (const auto &cast : casts) {
+		if (!cast->lctx)
+			continue;
+
+		cast->lctx->parseScripts();
+	}
+}
+
 void DirectorFile::restoreScriptText() {
 	for (const auto &cast : casts) {
 		if (!cast->lctx)

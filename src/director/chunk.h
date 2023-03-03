@@ -348,7 +348,7 @@ struct ScriptChunk : Chunk {
 	bool validName(int id) const;
 	std::string getName(int id) const;
 	void setContext(ScriptContextChunk *ctx);
-	void translate();
+	void parse();
 	void writeVarDeclarations(Common::CodeWriter &code) const;
 	void writeScriptText(Common::CodeWriter &code) const;
 	std::string scriptText(const char *lineEnding) const;
@@ -383,6 +383,7 @@ struct ScriptContextChunk : Chunk {
 	virtual void read(Common::ReadStream &stream);
 	bool validName(int id) const;
 	std::string getName(int id) const;
+	void parseScripts();
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 

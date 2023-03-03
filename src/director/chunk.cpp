@@ -1074,9 +1074,9 @@ void ScriptChunk::setContext(ScriptContextChunk *ctx) {
 	}
 }
 
-void ScriptChunk::translate() {
+void ScriptChunk::parse() {
 	for (const auto &handler : handlers) {
-		handler->translate();
+		handler->parse();
 	}
 }
 
@@ -1204,10 +1204,6 @@ void ScriptContextChunk::read(Common::ReadStream &stream) {
 	}
 
 	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
-		it->second->translate();
-	}
-
-	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
 		ScriptChunk *script = it->second.get();
 		if (script->isFactory()) {
 			ScriptChunk *parent = scripts[script->parentNumber + 1].get();
@@ -1246,6 +1242,12 @@ bool ScriptContextChunk::validName(int id) const {
 
 std::string ScriptContextChunk::getName(int id) const {
 	return lnam->getName(id);
+}
+
+void ScriptContextChunk::parseScripts() {
+	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
+		it->second->parse();
+	}
 }
 
 /* ScriptNamesChunk */

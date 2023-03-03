@@ -48,9 +48,6 @@ int main(int argc, char *argv[]) {
 	if (options.hasOption("dump-json")) {
 		dir->dumpJSON();
 	}
-	if (options.hasOption("dump-scripts")) {
-		dir->dumpScripts();
-	}
 
 	unsigned int version = humanVersion(dir->config->directorVersion);
 	switch (options.cmd()) {
@@ -72,6 +69,10 @@ int main(int argc, char *argv[]) {
 			}
 
 			dir->config->unprotect();
+			dir->parseScripts();
+			if (options.hasOption("dump-scripts")) {
+				dir->dumpScripts();
+			}
 			dir->restoreScriptText();
 			dir->writeToFile(output);
 

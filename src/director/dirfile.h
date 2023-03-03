@@ -94,6 +94,7 @@ public:
 	void write(Common::WriteStream &stream);
 	void writeChunk(Common::WriteStream &stream, int32_t id);
 
+	void parseScripts();
 	void restoreScriptText();
 
 	void dumpScripts();
