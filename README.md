@@ -18,7 +18,7 @@ ProjectorRays is a work in progress. If you run into any issues, please report t
 
 ### Windows
 
-Development builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
+Windows builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
 
 To use it, run `projectorrays.exe decompile <input file>`. ProjectorRays will create an unprotected/decompressed version of the input file with its source code restored. The outputted file can then be opened in Director.
 
