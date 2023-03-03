@@ -15,7 +15,7 @@ namespace Common {
 Options::Options() {
 	addCommand(kCmdDecompile, "decompile", "Unprotect a movie, cast, or directory thereof, and decompile its scripts.");
 	addStringOption(false, kCmdDecompile, "output", "Output path. Default is chosen based on the input path.", "path", 'o');
-	addOption(false, kCmdAll, "dump-scripts", "Dump scripts");
+	addOption(false, kCmdAll, "dump-scripts", "Dump scripts.");
 
 	addCommand(kCmdVersion, "version", "Print the Director version with which the file was created.");
 	std::vector<EnumOptionInfo> versionStyles = {
@@ -27,8 +27,8 @@ Options::Options() {
 	addEnumOption(false, kCmdVersion, "style", "Style in which to print the version. Options are:", "name", versionStyles, '\0', "long");
 
 	addOption(true, kCmdAll, "verbose", "Verbose logging", 'v');
-	addOption(true, kCmdAll, "dump-chunks", "Dump chunk data");
-	addOption(true, kCmdAll, "dump-json", "Dump JSONified chunk data");
+	addOption(true, kCmdAll, "dump-chunks", "Dump chunk data.");
+	addOption(true, kCmdAll, "dump-json", "Dump JSONified chunk data.");
 };
 
 void Options::addCommand(Command cmd, const char *name, const char *desc) {
