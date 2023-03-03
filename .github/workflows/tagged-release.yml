@@ -1,15 +1,13 @@
-name: pre-release
+name: tagged-release
 
 on:
   push:
-    branches:
-      - master
-    tags-ignore:
-      - "*"
+    tags:
+      - "v*"
 
 jobs:
   win:
-    name: Windows pre-release
+    name: Windows release
     runs-on: windows-latest
     defaults:
       run:
@@ -28,18 +26,16 @@ jobs:
             vim
       - name: Checkout ProjectorRays
         uses: actions/checkout@v2
-      - id: sha-short
-        name: Get short SHA
-        run: echo "::set-output name=sha-short::$(git rev-parse --short HEAD)"
+      - id: tag
+        name: Get tag
+        run: echo "::set-output name=tag::$(git describe --tags)"
       - name: Build
         run: |
-          mingw32-make
-          cp projectorrays.exe projectorrays-${{ steps.sha-short.outputs.sha-short }}.exe
-      - name: Upload pre-release
+          mingw32-make release
+          cp projectorrays.exe projectorrays-${{ steps.tag.outputs.tag }}.exe
+      - name: Upload release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: latest
-          prerelease: true
-          title: Development Build ${{ steps.sha-short.outputs.sha-short }}
-          files: projectorrays-${{ steps.sha-short.outputs.sha-short }}.exe
+          prerelease: false
+          files: projectorrays-${{ steps.tag.outputs.tag }}.exe
