@@ -1127,8 +1127,8 @@ void ScriptChunk::writeScriptText(Common::CodeWriter &code) const {
 	}
 }
 
-std::string ScriptChunk::scriptText() const {
-	Common::CodeWriter code("\r");
+std::string ScriptChunk::scriptText(const char *lineEnding) const {
+	Common::CodeWriter code(lineEnding);
 	writeScriptText(code);
 	return code.str();
 }
@@ -1157,8 +1157,8 @@ void ScriptChunk::writeBytecodeText(Common::CodeWriter &code) const {
 	}
 }
 
-std::string ScriptChunk::bytecodeText() const {
-	Common::CodeWriter code("\r");
+std::string ScriptChunk::bytecodeText(const char *lineEnding) const {
+	Common::CodeWriter code(lineEnding);
 	writeBytecodeText(code);
 	return code.str();
 }

@@ -350,9 +350,9 @@ struct ScriptChunk : Chunk {
 	void translate();
 	void writeVarDeclarations(Common::CodeWriter &code) const;
 	void writeScriptText(Common::CodeWriter &code) const;
-	std::string scriptText() const;
+	std::string scriptText(const char *lineEnding) const;
 	void writeBytecodeText(Common::CodeWriter &code) const;
-	std::string bytecodeText() const;
+	std::string bytecodeText(const char *lineEnding) const;
 	virtual void writeJSON(Common::JSONWriter &json) const;
 
 	bool isFactory() const;

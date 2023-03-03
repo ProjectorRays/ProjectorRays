@@ -726,7 +726,7 @@ void DirectorFile::restoreScriptText() {
 		for (auto [scriptId, script] : cast->lctx->scripts) {
 			CastMemberChunk *member = script->member;
 			if (member) {
-				member->setScriptText(script->scriptText());
+				member->setScriptText(script->scriptText("\r"));
 			}
 		}
 	}
@@ -771,8 +771,8 @@ void DirectorFile::dumpScripts() {
 			}
 
 			std::string fileName = Common::cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
-			Common::writeFile(fileName + ".ls", it->second->scriptText());
-			Common::writeFile(fileName + ".lasm", it->second->bytecodeText());
+			Common::writeFile(fileName + ".ls", it->second->scriptText(Common::kPlatformLineEnding));
+			Common::writeFile(fileName + ".lasm", it->second->bytecodeText(Common::kPlatformLineEnding));
 		}
 	}
 }

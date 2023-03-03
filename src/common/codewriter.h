@@ -12,6 +12,12 @@
 
 namespace Common {
 
+#ifdef _WIN32
+static const char *kPlatformLineEnding = "\r\n";
+#else
+static const char *kPlatformLineEnding = "\n";
+#endif
+
 class CodeWriter {
 protected:
 	std::stringstream _stream;
@@ -28,7 +34,7 @@ public:
 	bool doIndentation = true;
 
 public:
-	CodeWriter(std::string lineEnding = "\n", std::string indentation = "  ")
+	CodeWriter(std::string lineEnding = kPlatformLineEnding, std::string indentation = "  ")
 		: _lineEnding(lineEnding), _indentation(indentation) {}
 
 	void write(std::string str);
