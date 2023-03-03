@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 
+namespace fs = std::filesystem;
+
 #include "common/options.h"
 #include "common/fileio.h"
 #include "common/log.h"
@@ -20,27 +22,17 @@
 
 using namespace Director;
 
-int main(int argc, char *argv[]) {
-	Common::Options options;
-	options.parse(argc, argv);
-	if (!options.valid()) {
-		return EXIT_FAILURE;
-	}
-	if (options.hasOption("verbose")) {
-		Common::g_verbose = true;
-	}
-
-	std::filesystem::path input = options.inputFile();
+bool processFile(fs::path input, Common::Options &options, bool outputIsDirectory) {
 	std::vector<uint8_t> buf;
 	if (!Common::readFile(input, buf)) {
 		Common::warning(boost::format("Could not read %s!") % input);
-		return EXIT_FAILURE;
+		return false;
 	}
 
 	Common::ReadStream stream(buf.data(), buf.size());
 	auto dir = std::make_unique<DirectorFile>();
 	if (!dir->read(&stream))
-		return EXIT_FAILURE;
+		return false;
 
 	if (options.hasOption("dump-chunks")) {
 		dir->dumpChunks();
@@ -53,8 +45,8 @@ int main(int argc, char *argv[]) {
 	switch (options.cmd()) {
 	case Common::kCmdDecompile:
 		{
-			std::filesystem::path output;
-			if (options.hasOption("output")) {
+			fs::path output;
+			if (options.hasOption("output") && !outputIsDirectory) {
 				output = options.stringValue("output");
 			} else {
 				std::string oldExtension = input.extension().string();
@@ -64,8 +56,13 @@ int main(int argc, char *argv[]) {
 					fileName += "_decompiled";
 				}
 				fileName += newExtension;
-				output = input;
-				output.replace_filename(fileName);
+				if (options.hasOption("output") && outputIsDirectory) {
+					output = options.stringValue("output");
+					output /= fileName;
+				} else {
+					output = input;
+					output.replace_filename(fileName);
+				}
 			}
 
 			dir->config->unprotect();
@@ -107,6 +104,59 @@ int main(int argc, char *argv[]) {
 		break;
 	default:
 		break;
+	}
+
+	return true;
+}
+
+int main(int argc, char *argv[]) {
+	Common::Options options;
+	options.parse(argc, argv);
+	if (!options.valid()) {
+		return EXIT_FAILURE;
+	}
+	if (options.hasOption("verbose")) {
+		Common::g_verbose = true;
+	}
+
+	fs::path input = options.inputFile();
+	if (fs::is_directory(input)) {
+		if (options.hasOption("output")) {
+			fs::path output = options.stringValue("output");
+			if (fs::exists(output)) {
+				if (!fs::is_directory(output)) {
+					Common::warning(boost::format("Output must be a directory when input is a directory!"));
+					return EXIT_FAILURE;
+				}
+			} else {
+				fs::create_directory(output);
+			}
+		}
+		for (const fs::directory_entry &dirEntry : fs::directory_iterator(input)) {
+			if (!dirEntry.is_regular_file())
+				continue;
+
+			fs::path path = dirEntry.path();
+			std::string extension = path.extension().string();
+			if (!(Common::compareIgnoreCase(extension, ".dcr") == 0
+					|| Common::compareIgnoreCase(extension, ".dxr") == 0
+					|| Common::compareIgnoreCase(extension, ".cct") == 0
+					|| Common::compareIgnoreCase(extension, ".cxt") == 0))
+				continue;
+
+			if (!processFile(path, options, true))
+				return EXIT_FAILURE;
+		}
+	} else {
+		bool outputIsDirectory = false;
+		if (options.hasOption("output")) {
+			fs::path output = options.stringValue("output");
+			if (fs::is_directory(output)) {
+				outputIsDirectory = true;
+			}
+		}
+		if (!processFile(input, options, outputIsDirectory))
+			return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

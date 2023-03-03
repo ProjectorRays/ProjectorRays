@@ -13,8 +13,8 @@
 namespace Common {
 
 Options::Options() {
-	addCommand(kCmdDecompile, "decompile", "Unprotect a file and decompile its scripts.");
-	addStringOption(false, kCmdDecompile, "output", "Output file. Default is chosen based on the input file's name.", "file", 'o');
+	addCommand(kCmdDecompile, "decompile", "Unprotect a movie, cast, or directory thereof, and decompile its scripts.");
+	addStringOption(false, kCmdDecompile, "output", "Output path. Default is chosen based on the input path.", "path", 'o');
 	addOption(false, kCmdAll, "dump-scripts", "Dump scripts");
 
 	addCommand(kCmdVersion, "version", "Print the Director version with which the file was created.");
@@ -252,7 +252,7 @@ void Options::parse(int argc, char *argv[]) {
 };
 
 void Options::printUsage() {
-	Common::warning("Usage: " + _programName + " <command> <input file> [<option>...]");
+	Common::warning("Usage: " + _programName + " <command> <input path> [<option>...]");
 
 	if (_cmd == kCmdNone || _cmd == kCmdAll) {
 		Common::warning("\nThe following commands are available:");
@@ -303,7 +303,7 @@ void Options::printUsage() {
 std::vector<std::pair<std::string, std::string>> Options::getOptionText(Command cmd, bool debug) {
 	std::vector<std::pair<std::string, std::string>> res;
 	if (cmd != kCmdNone && cmd != kCmdAll) {
-		res.push_back(std::make_pair(getCommandName(cmd) + " <input file>", getCommandDesc(cmd)));
+		res.push_back(std::make_pair(getCommandName(cmd) + " <input path>", getCommandDesc(cmd)));
 	} else if (debug) {
 		res.push_back(std::make_pair("Debug options:", ""));
 	}
