@@ -61,6 +61,13 @@ bool decodeMP3(
 	int err;
 	mpg123_handle *mh;
 
+	// initialize mpg123 (required for compatibility with older mpg123 versions)
+	err = mpg123_init();
+	if (err != MPG123_OK) {
+		Common::warning(boost::format("mpg123_init: %s") % mpg123_plain_strerror(err));
+		return false;
+	}
+
 	// initialize an mpg123 handle
 	if ((mh = mpg123_new(NULL, &err)) == NULL) {
 		Common::warning(boost::format("mpg123_new: %s") % mpg123_plain_strerror(err));
