@@ -1131,9 +1131,9 @@ bool CallNode::hasSpaces(bool dot) {
 /* ObjCallNode */
 
 void ObjCallNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
-	auto rawArgs = argList->getValue()->l;
+	auto &rawArgs = argList->getValue()->l;
 
-	auto obj = rawArgs[0];
+	auto &obj = rawArgs[0];
 	bool parenObj = obj->hasSpaces(dot);
 	if (parenObj) {
 		code.write("(");
