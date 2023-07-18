@@ -1022,6 +1022,35 @@ void SoundCmdStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool 
 	}
 }
 
+/* PlayCmdStmtNode */
+
+void PlayCmdStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+	auto &rawArgs = argList->getValue()->l;
+
+	code.write("play");
+
+	if (rawArgs.size() == 0) {
+		code.write(" done");
+		return;
+	}
+
+	auto &frame = rawArgs[0];
+	if (rawArgs.size() == 1) {
+		code.write(" frame ");
+		frame->writeScriptText(code, dot, sum);
+		return;
+	}
+
+	auto &movie = rawArgs[1];
+	if (!(frame->type == kLiteralNode && frame->getValue()->type == kDatumInt && frame->getValue()->i == 1)) {
+		code.write(" frame ");
+		frame->writeScriptText(code, dot, sum);
+		code.write(" of");
+	}
+	code.write(" movie ");
+	movie->writeScriptText(code, dot, sum);
+}
+
 /* CallNode */
 
 bool CallNode::noParens() const {

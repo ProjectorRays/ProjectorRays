@@ -923,6 +923,8 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				std::string cmd = rawArgList[0]->getValue()->s;
 				rawArgList.erase(rawArgList.begin());
 				translation = std::make_shared<SoundCmdStmtNode>(cmd, std::move(argList));
+			} else if (isStatement && name == "play" && nargs <= 2) {
+				translation = std::make_shared<PlayCmdStmtNode>(std::move(argList));
 			} else {
 				translation = std::make_shared<CallNode>(name, std::move(argList));
 			}
