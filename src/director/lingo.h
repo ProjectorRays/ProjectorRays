@@ -820,6 +820,7 @@ struct TellStmtNode : StmtNode {
 };
 
 /* SoundCmdStmtNode */
+
 struct SoundCmdStmtNode : StmtNode {
 	std::string cmd;
 	std::shared_ptr<Node> argList;
