@@ -5,7 +5,10 @@
  */
 
 #include <cstring>
+#include <filesystem>
 #include <string>
+
+namespace fs = std::filesystem;
 
 #include "common/options.h"
 #include "common/log.h"
@@ -125,7 +128,7 @@ void Options::parse(int argc, char *argv[]) {
 	_enumOptions.clear();
 
 	if (argc > 0) {
-		_programName = argv[0];
+		_programName = fs::path(argv[0]).filename().string();
 	}
 	if (argc > 1) {
 		std::string cmdString = argv[1];
