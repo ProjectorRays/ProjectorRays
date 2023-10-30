@@ -20,7 +20,9 @@ ProjectorRays is a work in progress. If you run into any issues, please report t
 
 Windows builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
 
-To use it, run `projectorrays.exe decompile <input file>`. ProjectorRays will create an unprotected/decompressed version of the input file with its source code restored. The outputted file can then be opened in Director.
+To use it, drag and drop a movie/cast file onto projectorrays-0.2.0.exe. ProjectorRays will create an unprotected/decompressed version of the input file with its source code restored. The outputted file can then be opened in Director.
+
+To use ProjectorRays on the command line, run `projectorrays-0.2.0.exe decompile <input file>`.
 
 ### *nix
 
