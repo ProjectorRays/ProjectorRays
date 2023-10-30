@@ -339,12 +339,9 @@ bool DirectorFile::readCasts() {
 		auto cast = std::static_pointer_cast<CastChunk>(getChunk(info->fourCC, info->id));
 		cast->populate(internal ? "Internal" : "External", 1024, config->minMember);
 		casts.push_back(std::move(cast));
-
-		return true;
 	}
 
-	Common::warning("No cast!");
-	return false;
+	return true;
 }
 
 const ChunkInfo *DirectorFile::getFirstChunkInfo(uint32_t fourCC) {
