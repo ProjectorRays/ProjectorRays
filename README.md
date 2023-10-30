@@ -20,7 +20,7 @@ ProjectorRays is a work in progress. If you run into any issues, please report t
 
 Windows builds are available on the [releases page](https://github.com/ProjectorRays/ProjectorRays/releases).
 
-To use it, drag and drop a movie/cast file (or a folder containing multiple of them) onto projectorrays-0.2.0.exe. ProjectorRays will create an unprotected/decompressed version of the input file(s) with the source code restored. The outputted file can then be opened in Director.
+To use it, drag and drop a movie/cast file (or a folder containing multiple of them) onto projectorrays-0.2.0.exe. ProjectorRays will create an unprotected/decompressed version of the input file(s) with the source code restored. The outputted file(s) can then be opened in Director.
 
 To use ProjectorRays on the command line, run `projectorrays-0.2.0.exe decompile <input path>`.
 
@@ -28,7 +28,7 @@ To use ProjectorRays on the command line, run `projectorrays-0.2.0.exe decompile
 
 Install Boost 1.72.0 or later, mpg123, and zlib. Run `make` to build.
 
-To use it, run `./projectorrays decompile <input path>`. The input can be either a movie/cast file or a directory containing multiple of them. ProjectorRays will create an unprotected/decompressed version of the input file(s) with the source code restored. The outputted file can then be opened in Director.
+To use it, run `./projectorrays decompile <input path>`. The input can be either a movie/cast file or a directory containing multiple of them. ProjectorRays will create an unprotected/decompressed version of the input file(s) with the source code restored. The outputted file(s) can then be opened in Director.
 
 ## Credits
 
