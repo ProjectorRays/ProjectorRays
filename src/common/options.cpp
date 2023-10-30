@@ -127,6 +127,8 @@ void Options::parse(int argc, char *argv[]) {
 	_stringOptions.clear();
 	_enumOptions.clear();
 
+	int argsStart = 2;
+
 	if (argc > 0) {
 		_programName = fs::path(argv[0]).filename().string();
 	}
@@ -134,9 +136,9 @@ void Options::parse(int argc, char *argv[]) {
 		std::string cmdString = argv[1];
 		_cmd = getCommand(cmdString);
 		if (_cmd == kCmdNone) {
-			Common::warning("Unknown command: " + cmdString + "\n");
-			printUsage();
-			return;
+			Common::warning("WARNING: Expect `" + _programName + " <input path>` to break in a future release. Use `" + _programName + " decompile <input path>` instead!");
+			_cmd = kCmdDecompile;
+			argsStart = 1;
 		}
 	} else {
 #ifdef RELEASE_BUILD
@@ -148,7 +150,7 @@ void Options::parse(int argc, char *argv[]) {
 		return;
 	}
 
-	for (int i = 2; i < argc; i++) {
+	for (int i = argsStart; i < argc; i++) {
 		std::string arg = argv[i];
 		if (arg.size() > 0 && arg[0] == '-') {
 			if (arg.size() == 1) {
