@@ -4,8 +4,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <filesystem>
 #include <sstream>
 #include <stdexcept>
+
+namespace fs = std::filesystem;
 
 #include "common/fileio.h"
 #include "common/json.h"
@@ -740,10 +743,13 @@ void DirectorFile::restoreScriptText() {
 
 // dumping
 
-void DirectorFile::dumpScripts() {
+void DirectorFile::dumpScripts(fs::path castsDir) {
 	for (const auto &cast : casts) {
 		if (!cast->lctx)
 			continue;
+
+		fs::path castDir = castsDir / Common::cleanFileName(cast->name);
+		fs::create_directory(castDir);
 
 		for (auto it = cast->lctx->scripts.begin(); it != cast->lctx->scripts.end(); ++it) {
 			std::string scriptType;
@@ -776,35 +782,35 @@ void DirectorFile::dumpScripts() {
 				id += " - " + member->getName();
 			}
 
-			std::string fileName = Common::cleanFileName("Cast " + cast->name + " " + scriptType + " " + id);
-			Common::writeFile(fileName + ".ls", it->second->scriptText(Common::kPlatformLineEnding));
-			Common::writeFile(fileName + ".lasm", it->second->bytecodeText(Common::kPlatformLineEnding));
+			std::string fileName = Common::cleanFileName(scriptType + " " + id);
+			Common::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(Common::kPlatformLineEnding));
+			Common::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(Common::kPlatformLineEnding));
 		}
 	}
 }
 
-void DirectorFile::dumpChunks() {
+void DirectorFile::dumpChunks(fs::path chunksDir) {
 	for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
 		const auto &info = it->second;
 		if (info.id == 0) // RIFX
 			continue;
 
-		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
-		Common::writeFile(fileName + ".bin", getChunkData(info.fourCC, info.id));
+		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id)) + ".bin";
+		Common::writeFile(chunksDir / fileName, getChunkData(info.fourCC, info.id));
 	}
 }
 
-void DirectorFile::dumpJSON() {
+void DirectorFile::dumpJSON(fs::path chunksDir) {
 	for (auto it = chunkInfo.begin(); it != chunkInfo.end(); it++) {
 		const auto &info = it->second;
 		if (info.id == 0) // RIFX
 			continue;
 
-		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id));
+		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id)) + ".json";
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
 			Common::JSONWriter json;
 			deserializedChunks[info.id]->writeJSON(json);
-			Common::writeFile(fileName + ".json", json.str());
+			Common::writeFile(chunksDir / fileName, json.str());
 		}
 	}
 }

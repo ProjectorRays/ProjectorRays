@@ -355,4 +355,16 @@ std::vector<std::pair<std::string, std::string>> Options::getOptionText(Command 
 	return res;
 }
 
+bool Options::hasDumpOptions() const {
+	return hasCastDumpOptions() || hasChunkDumpOptions();
+}
+
+bool Options::hasCastDumpOptions() const {
+	return hasOption("dump-scripts");
+}
+
+bool Options::hasChunkDumpOptions() const {
+	return hasOption("dump-chunks") || hasOption("dump-json");
+}
+
 } // namespace Common

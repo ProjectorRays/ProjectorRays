@@ -97,9 +97,9 @@ public:
 	void parseScripts();
 	void restoreScriptText();
 
-	void dumpScripts();
-	void dumpChunks();
-	void dumpJSON();
+	void dumpScripts(std::filesystem::path castsDir);
+	void dumpChunks(std::filesystem::path chunksDir);
+	void dumpJSON(std::filesystem::path chunksDir);
 
 	bool isCast() const;
 };

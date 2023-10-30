@@ -91,6 +91,9 @@ public:
 	Command cmd() const { return _cmd; }
 	std::string inputFile() const { return _inputFile; }
 	bool hasOption(std::string option) const { return _optionsNoArg.count(option) || _stringOptions.count(option) || _enumOptions.count(option); }
+	bool hasDumpOptions() const;
+	bool hasCastDumpOptions() const;
+	bool hasChunkDumpOptions() const;
 	std::string stringValue(std::string option) const { return _stringOptions.at(option); }
 	unsigned int enumValue(std::string option) const { return _enumOptions.at(option); }
 };

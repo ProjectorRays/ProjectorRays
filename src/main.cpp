@@ -34,49 +34,65 @@ bool processFile(fs::path input, Common::Options &options, bool outputIsDirector
 	if (!dir->read(&stream))
 		return false;
 
+	fs::path decompileOutput;
+	fs::path dumpOutput;
+	if (options.hasOption("output") && !outputIsDirectory) {
+		decompileOutput = options.stringValue("output");
+	} else {
+		std::string oldExtension = input.extension().string();
+		std::string newExtension = (dir->isCast()) ? ".cst" : ".dir";
+		std::string fileName = input.stem().string();
+		std::string decompileFileName = (Common::compareIgnoreCase(oldExtension, newExtension) == 0)
+											? fileName + "_decompiled" + newExtension
+											: fileName + newExtension;
+		std::string dumpDirName = (oldExtension.size() == 0)
+										? fileName + "_dump"
+										: fileName;
+		if (options.hasOption("output") && outputIsDirectory) {
+			decompileOutput = dumpOutput = fs::path(options.stringValue("output"));
+			decompileOutput /= decompileFileName;
+			dumpOutput /= dumpDirName;
+		} else {
+			decompileOutput = dumpOutput = input;
+			decompileOutput.replace_filename(decompileFileName);
+			dumpOutput.replace_filename(dumpDirName);
+		}
+	}
+	if (options.hasDumpOptions()) {
+		fs::create_directory(dumpOutput);
+	}
+	fs::path castsOutput = dumpOutput / std::string("casts");
+	if (options.hasCastDumpOptions()) {
+		fs::create_directory(castsOutput);
+	}
+	fs::path chunksOutput = dumpOutput / std::string("chunks");
+	if (options.hasChunkDumpOptions()) {
+		fs::create_directory(chunksOutput);
+	}
+
 	if (options.hasOption("dump-chunks")) {
-		dir->dumpChunks();
+		dir->dumpChunks(chunksOutput);
 	}
 	if (options.hasOption("dump-json")) {
-		dir->dumpJSON();
+		dir->dumpJSON(chunksOutput);
 	}
 
 	unsigned int version = humanVersion(dir->config->directorVersion);
 	switch (options.cmd()) {
 	case Common::kCmdDecompile:
 		{
-			fs::path output;
-			if (options.hasOption("output") && !outputIsDirectory) {
-				output = options.stringValue("output");
-			} else {
-				std::string oldExtension = input.extension().string();
-				std::string newExtension = (dir->isCast()) ? ".cst" : ".dir";
-				std::string fileName = input.stem().string();
-				if (Common::compareIgnoreCase(oldExtension, newExtension) == 0) {
-					fileName += "_decompiled";
-				}
-				fileName += newExtension;
-				if (options.hasOption("output") && outputIsDirectory) {
-					output = options.stringValue("output");
-					output /= fileName;
-				} else {
-					output = input;
-					output.replace_filename(fileName);
-				}
-			}
-
 			dir->config->unprotect();
 			dir->parseScripts();
 			if (options.hasOption("dump-scripts")) {
-				dir->dumpScripts();
+				dir->dumpScripts(castsOutput);
 			}
 			dir->restoreScriptText();
-			dir->writeToFile(output);
+			dir->writeToFile(decompileOutput);
 
 			std::string fileType = (dir->isCast()) ? "cast" : "movie";
 			Common::log(
 				"Decompiled " + versionString(version, dir->fverVersionString) + " " + fileType
-				+ " " + input.string() + " to " + output.string()
+				+ " " + input.string() + " to " + decompileOutput.string()
 			);
 		}
 		break;
@@ -153,6 +169,9 @@ int main(int argc, char *argv[]) {
 			fs::path output = options.stringValue("output");
 			if (fs::is_directory(output)) {
 				outputIsDirectory = true;
+			} else if (options.hasDumpOptions()) {
+				Common::warning(boost::format("Output must be a directory when a --dump- option is used!"));
+				return EXIT_FAILURE;
 			}
 		}
 		if (!processFile(input, options, outputIsDirectory))
