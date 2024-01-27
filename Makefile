@@ -1,11 +1,11 @@
 VERSION_NUMBER=0.2.1
 GIT_SHA=$(shell git rev-parse --short HEAD)
 
-CPPFLAGS=-DVERSION_NUMBER=$(VERSION_NUMBER) -DGIT_SHA=$(GIT_SHA)
-CXXFLAGS=-std=c++17 -Wall -Wextra -Isrc
-LDLIBS=-lz -lmpg123
-LDFLAGS=
-LDFLAGS_RELEASE=-s -Os
+CPPFLAGS+=-DVERSION_NUMBER=$(VERSION_NUMBER) -DGIT_SHA=$(GIT_SHA)
+CXXFLAGS+=-std=c++17 -Wall -Wextra -Isrc
+LDLIBS+=-lz -lmpg123
+LDFLAGS_RELEASE+=-s -Os
+
 BINARY=projectorrays
 
 ifeq ($(OS),Windows_NT)
