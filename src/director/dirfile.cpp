@@ -15,7 +15,6 @@ namespace fs = std::filesystem;
 #include "common/stream.h"
 #include "common/util.h"
 #include "director/chunk.h"
-#include "director/lingo.h"
 #include "director/dirfile.h"
 #include "director/fontmap.h"
 #include "director/guid.h"

@@ -36,13 +36,14 @@ OBJS = \
 	src/director/dirfile.o \
 	src/director/fontmap.o \
 	src/director/guid.o \
-	src/director/handler.o \
-	src/director/lingo.o \
 	src/director/sound.o \
 	src/director/subchunk.o \
 	src/director/util.o \
 	src/io/fileio.o \
-	src/io/options.o
+	src/io/options.o \
+	src/lingodec/ast.o \
+	src/lingodec/handler.o \
+	src/lingodec/names.o
 
 src/director/fontmap.o: $(FONTMAP_HEADERS)
 

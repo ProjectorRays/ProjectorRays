@@ -12,10 +12,11 @@
 #include "common/util.h"
 #include "director/castmember.h"
 #include "director/chunk.h"
-#include "director/lingo.h"
 #include "director/dirfile.h"
 #include "director/subchunk.h"
 #include "director/util.h"
+#include "lingodec/ast.h"
+#include "lingodec/handler.h"
 
 namespace Director {
 
@@ -958,9 +959,9 @@ void ScriptChunk::read(Common::ReadStream &stream) {
 
 	handlers.resize(handlersCount);
 	for (auto &handler : handlers) {
-		handler = std::make_unique<Handler>(this);
+		handler = std::make_unique<LingoDec::Handler>(this);
 	}
-	if ((scriptFlags & kScriptFlagEventScript) && handlersCount > 0) {
+	if ((scriptFlags & LingoDec::kScriptFlagEventScript) && handlersCount > 0) {
 		handlers[0]->isGenericEvent = true;
 	}
 
@@ -1164,7 +1165,7 @@ std::string ScriptChunk::bytecodeText(const char *lineEnding) const {
 }
 
 bool ScriptChunk::isFactory() const {
-	return (scriptFlags & kScriptFlagFactoryDef);
+	return (scriptFlags & LingoDec::kScriptFlagFactoryDef);
 }
 
 /* ScriptContextChunk */

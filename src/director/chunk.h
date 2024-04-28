@@ -22,10 +22,13 @@ class CodeWriter;
 class JSONWriter;
 }
 
+namespace LingoDec {
+struct Handler;
+}
+
 namespace Director {
 
 struct CastMember;
-struct Handler;
 struct LiteralStore;
 class DirectorFile;
 
@@ -334,7 +337,7 @@ struct ScriptChunk : Chunk {
 	std::string factoryName;
 	std::vector<std::string> propertyNames;
 	std::vector<std::string> globalNames;
-	std::vector<std::unique_ptr<Handler>> handlers;
+	std::vector<std::unique_ptr<LingoDec::Handler>> handlers;
 	std::vector<LiteralStore> literals;
 	std::vector<ScriptChunk *> factories;
 

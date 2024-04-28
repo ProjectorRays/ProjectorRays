@@ -15,10 +15,12 @@
 #include "common/stream.h"
 #include "common/util.h"
 #include "director/chunk.h"
-#include "director/lingo.h"
 #include "director/dirfile.h"
+#include "lingodec/ast.h"
+#include "lingodec/handler.h"
+#include "lingodec/names.h"
 
-namespace Director {
+namespace LingoDec {
 
 /* Handler */
 
@@ -233,7 +235,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	case 0x00:
 		{
 			if (propertyID <= 0x0b) { // movie property
-				auto propName = Lingo::getName(Lingo::moviePropertyNames, propertyID);
+				auto propName = StandardNames::getName(StandardNames::moviePropertyNames, propertyID);
 				return std::make_shared<TheExprNode>(propName);
 			} else { // last chunk
 				auto string = pop();
@@ -276,16 +278,16 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 		}
 		break;
 	case 0x07: // animation property
-		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::animationPropertyNames, propertyID));
+		return std::make_shared<TheExprNode>(StandardNames::getName(StandardNames::animationPropertyNames, propertyID));
 	case 0x08: // animation 2 property
 		if (propertyID == 0x02 && script->dir->version >= 500) { // the number of castMembers supports castLib selection from Director 5.0
 			auto castLib = pop();
 			if (!(castLib->type == kLiteralNode && castLib->getValue()->type == kDatumInt && castLib->getValue()->toInt() == 0)) {
 				auto castLibNode = std::make_shared<MemberExprNode>("castLib", castLib, nullptr);
-				return std::make_shared<ThePropExprNode>(castLibNode, Lingo::getName(Lingo::animation2PropertyNames, propertyID));
+				return std::make_shared<ThePropExprNode>(castLibNode, StandardNames::getName(StandardNames::animation2PropertyNames, propertyID));
 			}
 		}
-		return std::make_shared<TheExprNode>(Lingo::getName(Lingo::animation2PropertyNames, propertyID));
+		return std::make_shared<TheExprNode>(StandardNames::getName(StandardNames::animation2PropertyNames, propertyID));
 	case 0x09: // generic cast member
 	case 0x0a: // chunk of cast member
 	case 0x0b: // field
@@ -300,7 +302,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	case 0x14: // scriptText
 	case 0x15: // chunk of scriptText
 		{
-			auto propName = Lingo::getName(Lingo::memberPropertyNames, propertyID);
+			auto propName = StandardNames::getName(StandardNames::memberPropertyNames, propertyID);
 			std::shared_ptr<Node> castID;
 			if (script->dir->version >= 500) {
 				castID = pop();
@@ -1235,7 +1237,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		break;
 	default:
 		{
-			auto commentText = Lingo::getOpcodeName(bytecode.opID);
+			auto commentText = StandardNames::getOpcodeName(bytecode.opID);
 			if (bytecode.opcode >= 0x40)
 				commentText += " " + std::to_string(bytecode.obj);
 			translation = std::make_shared<CommentNode>(commentText);
@@ -1290,7 +1292,7 @@ void Handler::writeBytecodeText(Common::CodeWriter &code) {
 	for (auto &bytecode : bytecodeArray) {
 		code.write(posToString(bytecode.pos));
 		code.write(" ");
-		code.write(Lingo::getOpcodeName(bytecode.opID));
+		code.write(StandardNames::getOpcodeName(bytecode.opID));
 		switch (bytecode.opcode) {
 		case kOpJmp:
 		case kOpJmpIfZ:
@@ -1336,4 +1338,4 @@ void Handler::writeBytecodeText(Common::CodeWriter &code) {
 	}
 }
 
-} // namespace Director
+} // namespace LingoDec

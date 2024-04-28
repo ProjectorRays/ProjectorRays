@@ -18,9 +18,11 @@ class ReadStream;
 class WriteStream;
 }
 
-namespace Director {
-
+namespace LingoDec {
 struct Datum;
+}
+
+namespace Director {
 
 struct CastListEntry {
 	std::string name;
@@ -74,7 +76,7 @@ struct KeyTableEntry {
 struct LiteralStore {
 	LiteralType type;
 	uint32_t offset;
-	std::shared_ptr<Datum> value;
+	std::shared_ptr<LingoDec::Datum> value;
 
 	void readRecord(Common::ReadStream &stream, int version);
 	void readData(Common::ReadStream &stream, uint32_t startOffset);
