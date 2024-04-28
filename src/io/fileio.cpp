@@ -7,10 +7,10 @@
 #include <iostream>
 #include <fstream>
 
-#include "common/fileio.h"
+#include "io/fileio.h"
 #include "common/stream.h"
 
-namespace Common {
+namespace IO {
 
 bool readFile(const std::filesystem::path &path, std::vector<uint8_t> &buf) {
 	std::ifstream f;
@@ -43,8 +43,34 @@ void writeFile(const std::filesystem::path &path, const uint8_t *contents, size_
 	f.close();
 }
 
-void writeFile(const std::filesystem::path &path, const BufferView &view) {
+void writeFile(const std::filesystem::path &path, const Common::BufferView &view) {
 	writeFile(path, view.data(), view.size());
 }
 
-} // namespace Common
+std::string cleanFileName(const std::string &fileName) {
+	// Replace any characters that are forbidden in a Windows file name
+	// https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+
+	std::string res;
+	for (char ch : fileName) {
+		switch (ch) {
+		case '<':
+		case '>':
+		case ':':
+		case '"':
+		case '/':
+		case '\\':
+		case '|':
+		case '?':
+		case '*':
+			res += '_';
+			break;
+		default:
+			res += ch;
+			break;
+		}
+	}
+	return res;
+}
+
+} // namespace IO

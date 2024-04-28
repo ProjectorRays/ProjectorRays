@@ -11,20 +11,20 @@
 
 namespace fs = std::filesystem;
 
-#include "common/options.h"
-#include "common/fileio.h"
 #include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
 #include "director/chunk.h"
 #include "director/dirfile.h"
 #include "director/util.h"
+#include "io/options.h"
+#include "io/fileio.h"
 
 using namespace Director;
 
-bool processFile(fs::path input, Common::Options &options, bool outputIsDirectory) {
+bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
 	std::vector<uint8_t> buf;
-	if (!Common::readFile(input, buf)) {
+	if (!IO::readFile(input, buf)) {
 		Common::warning(boost::format("Could not read %s!") % input);
 		return false;
 	}
@@ -79,7 +79,7 @@ bool processFile(fs::path input, Common::Options &options, bool outputIsDirector
 
 	unsigned int version = humanVersion(dir->config->directorVersion);
 	switch (options.cmd()) {
-	case Common::kCmdDecompile:
+	case IO::kCmdDecompile:
 		{
 			dir->config->unprotect();
 			dir->parseScripts();
@@ -96,23 +96,23 @@ bool processFile(fs::path input, Common::Options &options, bool outputIsDirector
 			);
 		}
 		break;
-	case Common::kCmdVersion:
+	case IO::kCmdVersion:
 		{
-			Common::VersionStyle style = Common::kVersionStyleLong;
+			IO::VersionStyle style = IO::kVersionStyleLong;
 			if (options.hasOption("style")) {
-				style = (Common::VersionStyle)options.enumValue("style");
+				style = (IO::VersionStyle)options.enumValue("style");
 			}
 			switch (style) {
-			case Common::kVersionStyleLong:
+			case IO::kVersionStyleLong:
 				Common::log(versionString(version, dir->fverVersionString));
 				break;
-			case Common::kVersionStyleShort:
+			case IO::kVersionStyleShort:
 				Common::log(versionNumber(version, dir->fverVersionString));
 				break;
-			case Common::kVersionStyleInteger:
+			case IO::kVersionStyleInteger:
 				Common::log(std::to_string(version));
 				break;
-			case Common::kVersionStyleInternal:
+			case IO::kVersionStyleInternal:
 				Common::log(std::to_string(dir->config->directorVersion));
 				break;
 			}
@@ -126,7 +126,7 @@ bool processFile(fs::path input, Common::Options &options, bool outputIsDirector
 }
 
 int main(int argc, char *argv[]) {
-	Common::Options options;
+	IO::Options options;
 	options.parse(argc, argv);
 	if (!options.valid()) {
 		return EXIT_FAILURE;

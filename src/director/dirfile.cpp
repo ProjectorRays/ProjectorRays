@@ -10,7 +10,6 @@
 
 namespace fs = std::filesystem;
 
-#include "common/fileio.h"
 #include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
@@ -23,6 +22,7 @@ namespace fs = std::filesystem;
 #include "director/sound.h"
 #include "director/subchunk.h"
 #include "director/util.h"
+#include "io/fileio.h"
 
 namespace Director {
 
@@ -532,7 +532,7 @@ void DirectorFile::writeToFile(const std::filesystem::path &path) {
 	std::vector<uint8_t> buf(size());
 	Common::WriteStream stream(buf.data(), buf.size(), endianness);
 	write(stream);
-	Common::writeFile(path, stream);
+	IO::writeFile(path, stream);
 }
 
 void DirectorFile::generateInitialMap() {
@@ -748,7 +748,7 @@ void DirectorFile::dumpScripts(fs::path castsDir) {
 		if (!cast->lctx)
 			continue;
 
-		fs::path castDir = castsDir / Common::cleanFileName(cast->name);
+		fs::path castDir = castsDir / IO::cleanFileName(cast->name);
 		fs::create_directory(castDir);
 
 		for (auto it = cast->lctx->scripts.begin(); it != cast->lctx->scripts.end(); ++it) {
@@ -782,9 +782,9 @@ void DirectorFile::dumpScripts(fs::path castsDir) {
 				id += " - " + member->getName();
 			}
 
-			std::string fileName = Common::cleanFileName(scriptType + " " + id);
-			Common::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(Common::kPlatformLineEnding));
-			Common::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(Common::kPlatformLineEnding));
+			std::string fileName = IO::cleanFileName(scriptType + " " + id);
+			IO::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(IO::kPlatformLineEnding));
+			IO::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(IO::kPlatformLineEnding));
 		}
 	}
 }
@@ -795,8 +795,8 @@ void DirectorFile::dumpChunks(fs::path chunksDir) {
 		if (info.id == 0) // RIFX
 			continue;
 
-		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id)) + ".bin";
-		Common::writeFile(chunksDir / fileName, getChunkData(info.fourCC, info.id));
+		std::string fileName = IO::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id)) + ".bin";
+		IO::writeFile(chunksDir / fileName, getChunkData(info.fourCC, info.id));
 	}
 }
 
@@ -806,11 +806,11 @@ void DirectorFile::dumpJSON(fs::path chunksDir) {
 		if (info.id == 0) // RIFX
 			continue;
 
-		std::string fileName = Common::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id)) + ".json";
+		std::string fileName = IO::cleanFileName(Common::fourCCToString(info.fourCC) + "-" + std::to_string(info.id)) + ".json";
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
-			Common::JSONWriter json;
+			Common::JSONWriter json(IO::kPlatformLineEnding);
 			deserializedChunks[info.id]->writeJSON(json);
-			Common::writeFile(chunksDir / fileName, json.str());
+			IO::writeFile(chunksDir / fileName, json.str());
 		}
 	}
 }

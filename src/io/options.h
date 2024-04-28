@@ -4,8 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef COMMON_OPTIONS_H
-#define COMMON_OPTIONS_H
+#ifndef IO_OPTIONS_H
+#define IO_OPTIONS_H
 
 #include <cstdio>
 #include <map>
@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace Common {
+namespace IO {
 
 enum Command {
 	kCmdNone		= 0,
@@ -98,6 +98,6 @@ public:
 	unsigned int enumValue(std::string option) const { return _enumOptions.at(option); }
 };
 
-} // namespace Common
+} // namespace IO
 
-#endif // COMMON_OPTIONS_H
+#endif // IO_OPTIONS_H

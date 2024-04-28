@@ -23,32 +23,6 @@ std::string fourCCToString(uint32_t fourcc) {
 	return escapeString(str, sizeof(str));
 }
 
-std::string cleanFileName(const std::string &fileName) {
-	// Replace any characters that are forbidden in a Windows file name
-	// https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file
-
-	std::string res;
-	for (char ch : fileName) {
-		switch (ch) {
-		case '<':
-		case '>':
-		case ':':
-		case '"':
-		case '/':
-		case '\\':
-		case '|':
-		case '?':
-		case '*':
-			res += '_';
-			break;
-		default:
-			res += ch;
-			break;
-		}
-	}
-	return res;
-}
-
 std::string floatToString(double f) {
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(std::numeric_limits<double>::max_digits10) << f;

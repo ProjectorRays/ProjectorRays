@@ -4,8 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef COMMON_FILEIO_H
-#define COMMON_FILEIO_H
+#ifndef IO_FILEIO_H
+#define IO_FILEIO_H
 
 #include <cstdint>
 #include <filesystem>
@@ -14,14 +14,25 @@
 #include <vector>
 
 namespace Common {
-
 class BufferView;
+}
+
+namespace IO {
+
+#ifdef _WIN32
+static const char *kPlatformLineEnding = "\r\n";
+#else
+static const char *kPlatformLineEnding = "\n";
+#endif
 
 bool readFile(const std::filesystem::path &path, std::vector<uint8_t> &buf);
+
 void writeFile(const std::filesystem::path &path, const std::string &contents);
 void writeFile(const std::filesystem::path &path, const uint8_t *contents, size_t size);
-void writeFile(const std::filesystem::path &path, const BufferView &view);
+void writeFile(const std::filesystem::path &path, const Common::BufferView &view);
 
-} // namespace Common
+std::string cleanFileName(const std::string &fileName);
 
-#endif // COMMON_FILEIO_H
+} // namespace IO
+
+#endif // IO_FILEIO_H

@@ -36,6 +36,9 @@ protected:
 	Context _context = kContextStart;
 
 public:
+	JSONWriter(std::string lineEnding, std::string indentation = "  ")
+		: CodeWriter(lineEnding, indentation) {}
+
 	void startObject();
 	void writeKey(std::string key);
 	void endObject();

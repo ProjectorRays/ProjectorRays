@@ -27,10 +27,8 @@ fontmaps/%.h: $(patsubst %.h,%.txt,$@)
 OBJS = \
 	src/main.o \
 	src/common/codewriter.o \
-	src/common/fileio.o \
 	src/common/json.o \
 	src/common/log.o \
-	src/common/options.o \
 	src/common/stream.o \
 	src/common/util.o \
 	src/director/castmember.o \
@@ -42,7 +40,9 @@ OBJS = \
 	src/director/lingo.o \
 	src/director/sound.o \
 	src/director/subchunk.o \
-	src/director/util.o
+	src/director/util.o \
+	src/io/fileio.o \
+	src/io/options.o
 
 src/director/fontmap.o: $(FONTMAP_HEADERS)
 

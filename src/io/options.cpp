@@ -10,11 +10,11 @@
 
 namespace fs = std::filesystem;
 
-#include "common/options.h"
+#include "io/options.h"
 #include "common/log.h"
 #include "common/util.h"
 
-namespace Common {
+namespace IO {
 
 Options::Options() {
 	addCommand(kCmdDecompile, "decompile", "Unprotect a movie, cast, or directory thereof, and decompile its scripts.");
@@ -369,4 +369,4 @@ bool Options::hasChunkDumpOptions() const {
 	return hasOption("dump-chunks") || hasOption("dump-json");
 }
 
-} // namespace Common
+} // namespace IO
