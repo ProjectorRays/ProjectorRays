@@ -54,7 +54,7 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 		if (entry.castID == id
 				&& (entry.fourCC == FOURCC('L', 'c', 't', 'x') || entry.fourCC == FOURCC('L', 'c', 't', 'X'))
 				&& dir->chunkExists(entry.fourCC, entry.sectionID)) {
-			lctx = std::static_pointer_cast<ScriptContextChunk>(dir->getChunk(entry.fourCC, entry.sectionID));
+			lctx = static_cast<ScriptContextChunk *>(dir->getChunk(entry.fourCC, entry.sectionID));
 			break;
 		}
 	}
@@ -62,7 +62,7 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 	for (size_t i = 0; i < memberIDs.size(); i++) {
 		int32_t sectionID = memberIDs[i];
 		if (sectionID > 0) {
-			auto member = std::static_pointer_cast<CastMemberChunk>(dir->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
+			CastMemberChunk *member = static_cast<CastMemberChunk *>(dir->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
 			member->id = i + minMember;
 			Common::debug(boost::format("Member %u: name: \"%s\" chunk: %d")
 							% member->id % member->getName() % sectionID);
@@ -70,10 +70,10 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 				Common::debug(boost::format("Member %u: No info!") % member->id);
 			}
 			if (lctx && (lctx->scripts.find(member->getScriptID()) != lctx->scripts.end())) {
-				member->script = lctx->scripts[member->getScriptID()].get();
-				member->script->member = member.get();
+				member->script = lctx->scripts[member->getScriptID()];
+				member->script->member = member;
 			}
-			members[member->id] = std::move(member);
+			members[member->id] = member;
 		}
 	}
 }
@@ -1193,20 +1193,20 @@ void ScriptContextChunk::read(Common::ReadStream &stream) {
 		entry.read(stream);
 	}
 
-	lnam = std::static_pointer_cast<ScriptNamesChunk>(dir->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
+	lnam = static_cast<ScriptNamesChunk *>(dir->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
 	for (uint32_t i = 1; i <= entryCount; i++) {
 		auto section = sectionMap[i - 1];
 		if (section.sectionID > -1) {
-			auto script = std::static_pointer_cast<ScriptChunk>(dir->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
+			ScriptChunk *script = static_cast<ScriptChunk *>(dir->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
 			script->setContext(this);
 			scripts[i] = script;
 		}
 	}
 
 	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
-		ScriptChunk *script = it->second.get();
+		ScriptChunk *script = it->second;
 		if (script->isFactory()) {
-			ScriptChunk *parent = scripts[script->parentNumber + 1].get();
+			ScriptChunk *parent = scripts[script->parentNumber + 1];
 			parent->factories.push_back(script);
 		}
 	}

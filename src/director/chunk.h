@@ -99,8 +99,8 @@ struct ListChunk : Chunk {
 struct CastChunk : Chunk {
 	std::vector<int32_t> memberIDs;
 	std::string name;
-	std::map<uint16_t, std::shared_ptr<CastMemberChunk>> members;
-	std::shared_ptr<ScriptContextChunk> lctx;
+	std::map<uint16_t, CastMemberChunk *> members;
+	ScriptContextChunk *lctx;
 
 	CastChunk(DirectorFile *m) : Chunk(m, kCastChunk) {}
 	virtual ~CastChunk() = default;
@@ -374,9 +374,9 @@ struct ScriptContextChunk : Chunk {
 	uint16_t flags;
 	int16_t freePointer;
 
-	std::shared_ptr<ScriptNamesChunk> lnam;
+	ScriptNamesChunk *lnam;
 	std::vector<ScriptContextMapEntry> sectionMap;
-	std::map<uint32_t, std::shared_ptr<ScriptChunk>> scripts;
+	std::map<uint32_t, ScriptChunk *> scripts;
 
 	ScriptContextChunk(DirectorFile *m) : Chunk(m, kScriptContextChunk) {}
 	virtual ~ScriptContextChunk() = default;

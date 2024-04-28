@@ -272,7 +272,7 @@ bool DirectorFile::readAfterburnerMap() {
 bool DirectorFile::readKeyTable() {
 	auto info = getFirstChunkInfo(FOURCC('K', 'E', 'Y', '*'));
 	if (info) {
-		keyTable = std::static_pointer_cast<KeyTableChunk>(getChunk(info->fourCC, info->id));
+		keyTable = static_cast<KeyTableChunk *>(getChunk(info->fourCC, info->id));
 
 		for (size_t i = 0; i < keyTable->usedCount; i++) {
 			const KeyTableEntry &entry = keyTable->entries[i];
@@ -297,7 +297,7 @@ bool DirectorFile::readConfig() {
 		info = getFirstChunkInfo(FOURCC('V', 'W', 'C', 'F'));
 
 	if (info) {
-		config = std::static_pointer_cast<ConfigChunk>(getChunk(info->fourCC, info->id));
+		config = static_cast<ConfigChunk *>(getChunk(info->fourCC, info->id));
 		version = humanVersion(config->directorVersion);
 		dotSyntax = (version >= 700); // TODO: Check for verbose/dot syntax opcodes, allow users to toggle this
 
@@ -314,7 +314,7 @@ bool DirectorFile::readCasts() {
 	if (version >= 500) {
 		auto info = getFirstChunkInfo(FOURCC('M', 'C', 's', 'L'));
 		if (info) {
-			auto castList = std::static_pointer_cast<CastListChunk>(getChunk(info->fourCC, info->id));
+			CastListChunk *castList = static_cast<CastListChunk *>(getChunk(info->fourCC, info->id));
 			for (const auto &castEntry : castList->entries) {
 				Common::debug("Cast: " + castEntry.name);
 				int32_t sectionID = -1;
@@ -325,9 +325,9 @@ bool DirectorFile::readCasts() {
 					}
 				}
 				if (sectionID > 0) {
-					auto cast = std::static_pointer_cast<CastChunk>(getChunk(FOURCC('C', 'A', 'S', '*'), sectionID));
+					CastChunk *cast = static_cast<CastChunk *>(getChunk(FOURCC('C', 'A', 'S', '*'), sectionID));
 					cast->populate(castEntry.name, castEntry.id, castEntry.minMember);
-					casts.push_back(std::move(cast));
+					casts.push_back(cast);
 				}
 			}
 
@@ -339,9 +339,9 @@ bool DirectorFile::readCasts() {
 
 	auto info = getFirstChunkInfo(FOURCC('C', 'A', 'S', '*'));
 	if (info) {
-		auto cast = std::static_pointer_cast<CastChunk>(getChunk(info->fourCC, info->id));
+		CastChunk *cast = static_cast<CastChunk *>(getChunk(info->fourCC, info->id));
 		cast->populate(internal ? "Internal" : "External", 1024, config->minMember);
-		casts.push_back(std::move(cast));
+		casts.push_back(cast);
 	}
 
 	return true;
@@ -365,16 +365,13 @@ bool DirectorFile::chunkExists(uint32_t fourCC, int32_t id) {
 	return true;
 }
 
-std::shared_ptr<Chunk> DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
+Chunk *DirectorFile::getChunk(uint32_t fourCC, int32_t id) {
 	if (deserializedChunks.find(id) != deserializedChunks.end())
-		return deserializedChunks[id];
+		return deserializedChunks[id].get();
 
 	Common::BufferView chunkView = getChunkData(fourCC, id);
-	std::shared_ptr<Chunk> chunk = makeChunk(fourCC, chunkView);
-
-	deserializedChunks[id] = chunk;
-
-	return chunk;
+	deserializedChunks[id] = makeChunk(fourCC, chunkView);
+	return deserializedChunks[id].get();
 }
 
 Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {

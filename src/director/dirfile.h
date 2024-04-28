@@ -46,8 +46,8 @@ private:
 
 public:
 	Common::ReadStream *stream;
-	std::shared_ptr<KeyTableChunk> keyTable;
-	std::shared_ptr<ConfigChunk> config;
+	KeyTableChunk *keyTable;
+	ConfigChunk *config;
 
 	Common::Endianness endianness;
 	std::string fverVersionString;
@@ -61,7 +61,7 @@ public:
 	std::map<int32_t, ChunkInfo> chunkInfo;
 	std::map<int32_t, std::shared_ptr<Chunk>> deserializedChunks;
 
-	std::vector<std::shared_ptr<CastChunk>> casts;
+	std::vector<CastChunk *> casts;
 
 	std::unique_ptr<InitialMapChunk> initialMap;
 	std::unique_ptr<MemoryMapChunk> memoryMap;
@@ -77,7 +77,7 @@ public:
 	bool readCasts();
 	const ChunkInfo *getFirstChunkInfo(uint32_t fourCC);
 	bool chunkExists(uint32_t fourCC, int32_t id);
-	std::shared_ptr<Chunk> getChunk(uint32_t fourCC, int32_t id);
+	Chunk *getChunk(uint32_t fourCC, int32_t id);
 	Common::BufferView getChunkData(uint32_t fourCC, int32_t id);
 	std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
 	Common::BufferView readChunkData(uint32_t fourCC, uint32_t len);
