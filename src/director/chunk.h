@@ -105,7 +105,7 @@ struct CastChunk : Chunk {
 	std::map<uint16_t, CastMemberChunk *> members;
 	ScriptContextChunk *lctx;
 
-	CastChunk(DirectorFile *m) : Chunk(m, kCastChunk) {}
+	CastChunk(DirectorFile *m) : Chunk(m, kCastChunk), lctx(nullptr) {}
 	virtual ~CastChunk() = default;
 	virtual void read(Common::ReadStream &stream);
 	void populate(const std::string &castName, int32_t id, uint16_t minMember);
@@ -381,7 +381,7 @@ struct ScriptContextChunk : Chunk {
 	std::vector<ScriptContextMapEntry> sectionMap;
 	std::map<uint32_t, ScriptChunk *> scripts;
 
-	ScriptContextChunk(DirectorFile *m) : Chunk(m, kScriptContextChunk) {}
+	ScriptContextChunk(DirectorFile *m) : Chunk(m, kScriptContextChunk), lnam(nullptr) {}
 	virtual ~ScriptContextChunk() = default;
 	virtual void read(Common::ReadStream &stream);
 	bool validName(int id) const;

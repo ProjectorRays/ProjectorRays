@@ -33,6 +33,8 @@ static const size_t kChunkHeaderSize = 8;
 DirectorFile::DirectorFile() :
 	_ilsBodyOffset(0),
 	stream(nullptr),
+	keyTable(nullptr),
+	config(nullptr),
 	version(0),
 	capitalX(false),
 	codec(0),
