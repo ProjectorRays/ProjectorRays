@@ -40,7 +40,7 @@ void Handler::readRecord(Common::ReadStream &stream) {
 	lineCount = stream.readUint16();
 	lineOffset = stream.readUint32();
 	// yet to implement
-	if (script->dir->capitalX)
+	if (script->dir->version >= 850)
 		stackHeight = stream.readUint32();
 }
 
@@ -60,7 +60,7 @@ void Handler::writeJSON(Common::JSONWriter &json) const {
 		JSON_WRITE_FIELD(unknown2);
 		JSON_WRITE_FIELD(lineCount);
 		JSON_WRITE_FIELD(lineOffset);
-		if (script->dir->capitalX) {
+		if (script->dir->version >= 850) {
 			JSON_WRITE_FIELD(stackHeight);
 		}
 	json.endObject();
@@ -166,9 +166,7 @@ std::shared_ptr<Node> Handler::pop() {
 }
 
 int Handler::variableMultiplier() {
-	// TODO: Determine what version this changed to 1.
-	// For now approximating it with the point at which Lctx changed to LctX.
-	if (script->dir->capitalX)
+	if (script->dir->version >= 850)
 		return 1;
 	if (script->dir->version >= 500)
 		return 8;

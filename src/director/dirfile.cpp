@@ -36,7 +36,6 @@ DirectorFile::DirectorFile() :
 	keyTable(nullptr),
 	config(nullptr),
 	version(0),
-	capitalX(false),
 	codec(0),
 	afterburned(false) {}
 
@@ -483,10 +482,8 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::Bu
 	case FOURCC('K', 'E', 'Y', '*'):
 		res = std::make_shared<KeyTableChunk>(this);
 		break;
-	case FOURCC('L', 'c', 't', 'X'):
-		capitalX = true;
-		// fall through
 	case FOURCC('L', 'c', 't', 'x'):
+	case FOURCC('L', 'c', 't', 'X'):
 		res = std::make_shared<ScriptContextChunk>(this);
 		break;
 	case FOURCC('L', 'n', 'a', 'm'):
