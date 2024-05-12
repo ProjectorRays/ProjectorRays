@@ -10,6 +10,11 @@
 #include <map>
 #include <string>
 
+namespace Common {
+class JSONWriter;
+class ReadStream;
+}
+
 namespace LingoDec {
 
 /* StandardNames */
@@ -32,6 +37,25 @@ struct StandardNames {
 
 	static std::string getOpcodeName(uint8_t id);
 	static std::string getName(const std::map<unsigned int, std::string> &nameMap, unsigned int id);
+};
+
+/* ScriptNames */
+
+struct ScriptNames {
+	int32_t unknown0;
+	int32_t unknown1;
+	uint32_t len1;
+	uint32_t len2;
+	uint16_t namesOffset;
+	uint16_t namesCount;
+	std::vector<std::string> names;
+
+	unsigned int version;
+
+	ScriptNames(unsigned int version) : version(version) {}
+	void read(Common::ReadStream &stream);
+	bool validName(int id) const;
+	std::string getName(int id) const;
 };
 
 } // namespace LingoDec

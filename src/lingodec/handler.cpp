@@ -14,11 +14,10 @@
 #include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
-#include "director/chunk.h"
-#include "director/dirfile.h"
 #include "lingodec/ast.h"
 #include "lingodec/handler.h"
 #include "lingodec/names.h"
+#include "lingodec/script.h"
 
 namespace LingoDec {
 
@@ -40,30 +39,8 @@ void Handler::readRecord(Common::ReadStream &stream) {
 	lineCount = stream.readUint16();
 	lineOffset = stream.readUint32();
 	// yet to implement
-	if (script->dir->version >= 850)
+	if (script->version >= 850)
 		stackHeight = stream.readUint32();
-}
-
-void Handler::writeJSON(Common::JSONWriter &json) const {
-	json.startObject();
-		JSON_WRITE_FIELD(nameID);
-		JSON_WRITE_FIELD(vectorPos);
-		JSON_WRITE_FIELD(compiledLen);
-		JSON_WRITE_FIELD(compiledOffset);
-		JSON_WRITE_FIELD(argumentCount);
-		JSON_WRITE_FIELD(argumentOffset);
-		JSON_WRITE_FIELD(localsCount);
-		JSON_WRITE_FIELD(localsOffset);
-		JSON_WRITE_FIELD(globalsCount);
-		JSON_WRITE_FIELD(globalsOffset);
-		JSON_WRITE_FIELD(unknown1);
-		JSON_WRITE_FIELD(unknown2);
-		JSON_WRITE_FIELD(lineCount);
-		JSON_WRITE_FIELD(lineOffset);
-		if (script->dir->version >= 850) {
-			JSON_WRITE_FIELD(stackHeight);
-		}
-	json.endObject();
 }
 
 void Handler::readData(Common::ReadStream &stream) {
@@ -166,16 +143,16 @@ std::shared_ptr<Node> Handler::pop() {
 }
 
 int Handler::variableMultiplier() {
-	if (script->dir->version >= 850)
+	if (script->version >= 850)
 		return 1;
-	if (script->dir->version >= 500)
+	if (script->version >= 500)
 		return 8;
 	return 6;
 }
 
 std::shared_ptr<Node> Handler::readVar(int varType) {
 	std::shared_ptr<Node> castID;
-	if (varType == 0x6 && script->dir->version >= 500) // field cast ID
+	if (varType == 0x6 && script->version >= 500) // field cast ID
 		castID = pop();
 	std::shared_ptr<Node> id = pop();
 
@@ -278,7 +255,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	case 0x07: // animation property
 		return std::make_shared<TheExprNode>(StandardNames::getName(StandardNames::animationPropertyNames, propertyID));
 	case 0x08: // animation 2 property
-		if (propertyID == 0x02 && script->dir->version >= 500) { // the number of castMembers supports castLib selection from Director 5.0
+		if (propertyID == 0x02 && script->version >= 500) { // the number of castMembers supports castLib selection from Director 5.0
 			auto castLib = pop();
 			if (!(castLib->type == kLiteralNode && castLib->getValue()->type == kDatumInt && castLib->getValue()->toInt() == 0)) {
 				auto castLibNode = std::make_shared<MemberExprNode>("castLib", castLib, nullptr);
@@ -302,7 +279,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 		{
 			auto propName = StandardNames::getName(StandardNames::memberPropertyNames, propertyID);
 			std::shared_ptr<Node> castID;
-			if (script->dir->version >= 500) {
+			if (script->version >= 500) {
 				castID = pop();
 			}
 			auto memberID = pop();
@@ -312,7 +289,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 			} else if (propertyType == 0x14 || propertyType == 0x15) {
 				prefix = "script";
 			} else {
-				prefix = (script->dir->version >= 500) ? "member" : "cast";
+				prefix = (script->version >= 500) ? "member" : "cast";
 			}
 			auto member = std::make_shared<MemberExprNode>(prefix, std::move(memberID), std::move(castID));
 			std::shared_ptr<Node> entity;
@@ -625,7 +602,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpHiliteChunk:
 		{
 			std::shared_ptr<Node> castID;
-			if (script->dir->version >= 500)
+			if (script->version >= 500)
 				castID = pop();
 			auto fieldID = pop();
 			auto field = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
@@ -654,7 +631,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpGetField:
 		{
 			std::shared_ptr<Node> castID;
-			if (script->dir->version >= 500)
+			if (script->version >= 500)
 				castID = pop();
 			auto fieldID = pop();
 			translation = std::make_shared<MemberExprNode>("field", std::move(fieldID), std::move(castID));
@@ -1265,8 +1242,7 @@ std::string posToString(int32_t pos) {
 	return ss.str();
 }
 
-void Handler::writeBytecodeText(Common::CodeWriter &code) {
-	bool dotSyntax = script->dir->dotSyntax;
+void Handler::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) {
 	bool isMethod = script->isFactory();
 
 	if (!isGenericEvent) {

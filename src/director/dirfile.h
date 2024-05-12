@@ -17,6 +17,7 @@
 
 #include "common/stream.h"
 #include "director/guid.h"
+#include "lingodec/resolver.h"
 
 namespace Director {
 
@@ -36,7 +37,7 @@ struct ChunkInfo {
 	MoaID compressionID;
 };
 
-class DirectorFile {
+class DirectorFile : public LingoDec::ChunkResolver {
 private:
 	size_t _ilsBodyOffset;
 	std::vector<uint8_t> _ilsBuf;
@@ -66,7 +67,7 @@ public:
 	std::unique_ptr<MemoryMapChunk> memoryMap;
 
 	DirectorFile();
-	~DirectorFile();
+	virtual ~DirectorFile();
 
 	bool read(Common::ReadStream *s);
 	void readMemoryMap();
@@ -81,6 +82,8 @@ public:
 	std::shared_ptr<Chunk> readChunk(uint32_t fourCC, uint32_t len = UINT32_MAX);
 	Common::BufferView readChunkData(uint32_t fourCC, uint32_t len);
 	std::shared_ptr<Chunk> makeChunk(uint32_t fourCC, const Common::BufferView &view);
+	virtual LingoDec::Script *getScript(int32_t id);
+	virtual LingoDec::ScriptNames *getScriptNames(int32_t id);
 
 	bool compressionImplemented(MoaID compressionID);
 

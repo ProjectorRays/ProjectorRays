@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include "common/stream.h"
 #include "common/util.h"
 #include "lingodec/enums.h"
 #include "lingodec/names.h"
@@ -299,6 +300,37 @@ std::string StandardNames::getName(const std::map<unsigned int, std::string> &na
 	if (it == nameMap.end())
 		return "ERROR";
 	return it->second;
+}
+
+/* ScriptNames */
+
+void ScriptNames::read(Common::ReadStream &stream) {
+	// Lingo scripts are always big endian regardless of file endianness
+	stream.endianness = Common::kBigEndian;
+
+	unknown0 = stream.readInt32();
+	unknown1 = stream.readInt32();
+	len1 = stream.readUint32();
+	len2 = stream.readUint32();
+	namesOffset = stream.readUint16();
+	namesCount = stream.readUint16();
+
+	stream.seek(namesOffset);
+	names.resize(namesCount);
+	for (auto &name : names) {
+		auto length = stream.readUint8();
+		name = stream.readString(length);
+	}
+}
+
+bool ScriptNames::validName(int id) const {
+	return -1 < id && (unsigned)id < names.size();
+}
+
+std::string ScriptNames::getName(int id) const {
+	if (validName(id))
+		return names[id];
+	return "UNKNOWN_NAME_" + std::to_string(id);
 }
 
 }

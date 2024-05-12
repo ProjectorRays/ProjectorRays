@@ -512,6 +512,14 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::Bu
 	return res;
 }
 
+LingoDec::Script *DirectorFile::getScript(int32_t id) {
+	return static_cast<ScriptChunk *>(getChunk(FOURCC('L', 's', 'c', 'r'), id));
+}
+
+LingoDec::ScriptNames *DirectorFile::getScriptNames(int32_t id) {
+	return static_cast<ScriptNamesChunk *>(getChunk(FOURCC('L', 'n', 'a', 'm'), id));
+}
+
 // compression
 
 bool DirectorFile::compressionImplemented(MoaID compressionID) {
@@ -728,9 +736,9 @@ void DirectorFile::restoreScriptText() {
 			continue;
 
 		for (auto [scriptId, script] : cast->lctx->scripts) {
-			CastMemberChunk *member = script->member;
+			CastMemberChunk *member = static_cast<ScriptChunk *>(script)->member;
 			if (member) {
-				member->setScriptText(script->scriptText("\r"));
+				member->setScriptText(script->scriptText("\r", dotSyntax));
 			}
 		}
 	}
@@ -749,7 +757,7 @@ void DirectorFile::dumpScripts(fs::path castsDir) {
 		for (auto it = cast->lctx->scripts.begin(); it != cast->lctx->scripts.end(); ++it) {
 			std::string scriptType;
 			std::string id;
-			CastMemberChunk *member = it->second->member;
+			CastMemberChunk *member = static_cast<ScriptChunk *>(it->second)->member;
 			if (!member)
 				continue;
 
@@ -778,8 +786,8 @@ void DirectorFile::dumpScripts(fs::path castsDir) {
 			}
 
 			std::string fileName = IO::cleanFileName(scriptType + " " + id);
-			IO::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(IO::kPlatformLineEnding));
-			IO::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(IO::kPlatformLineEnding));
+			IO::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(IO::kPlatformLineEnding, dotSyntax));
+			IO::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(IO::kPlatformLineEnding, dotSyntax));
 		}
 	}
 }

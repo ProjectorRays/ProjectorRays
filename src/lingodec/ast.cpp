@@ -5,12 +5,11 @@
  */
 
 #include "common/codewriter.h"
-#include "common/json.h"
 #include "common/util.h"
-#include "director/chunk.h"
 #include "lingodec/ast.h"
 #include "lingodec/handler.h"
 #include "lingodec/names.h"
+#include "lingodec/script.h"
 
 namespace LingoDec {
 
@@ -109,23 +108,6 @@ void Datum::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const 
 			code.write("]");
 		}
 		return;
-	}
-}
-
-void Datum::writeJSON(Common::JSONWriter &json) const {
-	switch (type) {
-	case kDatumString:
-		json.writeVal(s);
-		break;
-	case kDatumInt:
-		json.writeVal(i);
-		break;
-	case kDatumFloat:
-		json.writeVal(f);
-		break;
-	default:
-		json.writeNull();
-		break;
 	}
 }
 
@@ -236,7 +218,7 @@ void HandlerNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) 
 	if (handler->isGenericEvent) {
 		block->writeScriptText(code, dot, sum);
 	} else {
-		Director::ScriptChunk *script = handler->script;
+		Script *script = handler->script;
 		bool isMethod = script->isFactory();
 		if (isMethod) {
 			code.write("method ");

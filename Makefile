@@ -42,8 +42,10 @@ OBJS = \
 	src/io/fileio.o \
 	src/io/options.o \
 	src/lingodec/ast.o \
+	src/lingodec/context.o \
 	src/lingodec/handler.o \
-	src/lingodec/names.o
+	src/lingodec/names.o \
+	src/lingodec/script.o
 
 src/director/fontmap.o: $(FONTMAP_HEADERS)
 

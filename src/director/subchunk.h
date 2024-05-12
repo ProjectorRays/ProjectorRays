@@ -8,18 +8,12 @@
 #define DIRECTOR_SUBCHUNK_H
 
 #include <cstdint>
-#include <map>
-#include <memory>
 #include <string>
 
 namespace Common {
 class JSONWriter;
 class ReadStream;
 class WriteStream;
-}
-
-namespace LingoDec {
-struct Datum;
 }
 
 namespace Director {
@@ -48,38 +42,12 @@ struct MemoryMapEntry {
 	void writeJSON(Common::JSONWriter &json) const;
 };
 
-struct ScriptContextMapEntry {
-	int32_t unknown0;
-	int32_t sectionID;
-	uint16_t unknown1;
-	uint16_t unknown2;
-
-	void read(Common::ReadStream &stream);
-	void writeJSON(Common::JSONWriter &json) const;
-};
-
-enum LiteralType {
-	kLiteralString	= 1,
-	kLiteralInt		= 4,
-	kLiteralFloat	= 9
-};
-
 struct KeyTableEntry {
 	int32_t sectionID;
 	int32_t castID;
 	uint32_t fourCC;
 
 	void read(Common::ReadStream &stream);
-	void writeJSON(Common::JSONWriter &json) const;
-};
-
-struct LiteralStore {
-	LiteralType type;
-	uint32_t offset;
-	std::shared_ptr<LingoDec::Datum> value;
-
-	void readRecord(Common::ReadStream &stream, int version);
-	void readData(Common::ReadStream &stream, uint32_t startOffset);
 	void writeJSON(Common::JSONWriter &json) const;
 };
 

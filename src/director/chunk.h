@@ -13,17 +13,22 @@
 #include <string>
 #include <vector>
 
-#include "common/stream.h"
 #include "director/castmember.h"
 #include "director/subchunk.h"
+#include "lingodec/context.h"
+#include "lingodec/names.h"
+#include "lingodec/script.h"
 
 namespace Common {
 class CodeWriter;
 class JSONWriter;
+class ReadStream;
+class WriteStream;
 }
 
 namespace LingoDec {
 struct Handler;
+struct ScriptContextMapEntry;
 }
 
 namespace Director {
@@ -305,92 +310,27 @@ struct MemoryMapChunk : Chunk {
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 
-struct ScriptChunk : Chunk {
-	/*  8 */ uint32_t totalLength;
-	/* 12 */ uint32_t totalLength2;
-	/* 16 */ uint16_t headerLength;
-	/* 18 */ uint16_t scriptNumber;
-	/* 20 */ int16_t unk20;
-	/* 22 */ int16_t parentNumber;
-
-	/* 38 */ uint32_t scriptFlags;
-	/* 42 */ int16_t unk42;
-	/* 44 */ int32_t castID;
-	/* 48 */ int16_t factoryNameID;
-	/* 50 */ uint16_t handlerVectorsCount;
-	/* 52 */ uint32_t handlerVectorsOffset;
-	/* 56 */ uint32_t handlerVectorsSize;
-	/* 60 */ uint16_t propertiesCount;
-	/* 62 */ uint32_t propertiesOffset;
-	/* 66 */ uint16_t globalsCount;
-	/* 68 */ uint32_t globalsOffset;
-	/* 72 */ uint16_t handlersCount;
-	/* 74 */ uint32_t handlersOffset;
-	/* 78 */ uint16_t literalsCount;
-	/* 80 */ uint32_t literalsOffset;
-	/* 84 */ uint32_t literalsDataCount;
-	/* 88 */ uint32_t literalsDataOffset;
-
-	std::vector<int16_t> propertyNameIDs;
-	std::vector<int16_t> globalNameIDs;
-
-	std::string factoryName;
-	std::vector<std::string> propertyNames;
-	std::vector<std::string> globalNames;
-	std::vector<std::unique_ptr<LingoDec::Handler>> handlers;
-	std::vector<LiteralStore> literals;
-	std::vector<ScriptChunk *> factories;
-
-	ScriptContextChunk *context;
+struct ScriptChunk : Chunk, LingoDec::Script {
 	CastMemberChunk *member;
 
 	ScriptChunk(DirectorFile *m);
-	virtual ~ScriptChunk();
+	virtual ~ScriptChunk() = default;
 	virtual void read(Common::ReadStream &stream);
-	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
-	bool validName(int id) const;
-	std::string getName(int id) const;
-	void setContext(ScriptContextChunk *ctx);
-	void parse();
-	void writeVarDeclarations(Common::CodeWriter &code) const;
-	void writeScriptText(Common::CodeWriter &code) const;
-	std::string scriptText(const char *lineEnding) const;
-	void writeBytecodeText(Common::CodeWriter &code) const;
-	std::string bytecodeText(const char *lineEnding) const;
 	virtual void writeJSON(Common::JSONWriter &json) const;
-
-	bool isFactory() const;
+	void writeHandlerJSON(const LingoDec::Handler &handler, Common::JSONWriter &json) const;
+	void writeLiteralStoreJSON(const LingoDec::LiteralStore &literalStore, Common::JSONWriter &json) const;
+	void writeDatumJSON(const LingoDec::Datum &datum, Common::JSONWriter &json) const;
 };
 
-struct ScriptContextChunk : Chunk {
-	int32_t unknown0;
-	int32_t unknown1;
-	uint32_t entryCount;
-	uint32_t entryCount2;
-	uint16_t entriesOffset;
-	int16_t unknown2;
-	int32_t unknown3;
-	int32_t unknown4;
-	int32_t unknown5;
-	int32_t lnamSectionID;
-	uint16_t validCount;
-	uint16_t flags;
-	int16_t freePointer;
-
-	ScriptNamesChunk *lnam;
-	std::vector<ScriptContextMapEntry> sectionMap;
-	std::map<uint32_t, ScriptChunk *> scripts;
-
-	ScriptContextChunk(DirectorFile *m) : Chunk(m, kScriptContextChunk), lnam(nullptr) {}
+struct ScriptContextChunk : Chunk, LingoDec::ScriptContext {
+	ScriptContextChunk(DirectorFile *m);
 	virtual ~ScriptContextChunk() = default;
 	virtual void read(Common::ReadStream &stream);
-	bool validName(int id) const;
-	std::string getName(int id) const;
-	void parseScripts();
 	virtual void writeJSON(Common::JSONWriter &json) const;
+	void writeScriptContextMapEntryJSON(const LingoDec::ScriptContextMapEntry &mapEntry, Common::JSONWriter &json) const;
 };
 
-struct ScriptNamesChunk : Chunk {
+struct ScriptNamesChunk : Chunk, LingoDec::ScriptNames {
 	int32_t unknown0;
 	int32_t unknown1;
 	uint32_t len1;
@@ -399,11 +339,9 @@ struct ScriptNamesChunk : Chunk {
 	uint16_t namesCount;
 	std::vector<std::string> names;
 
-	ScriptNamesChunk(DirectorFile *m) : Chunk(m, kScriptNamesChunk) {}
+	ScriptNamesChunk(DirectorFile *m);
 	virtual ~ScriptNamesChunk() = default;
 	virtual void read(Common::ReadStream &stream);
-	bool validName(int id) const;
-	std::string getName(int id) const;
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 

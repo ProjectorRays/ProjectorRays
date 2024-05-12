@@ -20,15 +20,12 @@ class JSONWriter;
 class ReadStream;
 }
 
-namespace Director {
-struct ScriptChunk;
-}
-
 namespace LingoDec {
 
 struct AST;
 struct Bytecode;
 struct Node;
+struct Script;
 
 /* Handler */
 
@@ -53,7 +50,7 @@ struct Handler {
 	std::vector<int16_t> localNameIDs;
 	std::vector<int16_t> globalNameIDs;
 
-	Director::ScriptChunk *script;
+	Script *script;
 	std::vector<Bytecode> bytecodeArray;
 	std::map<uint32_t, size_t> bytecodePosMap;
 	std::vector<std::string> argumentNames;
@@ -66,7 +63,7 @@ struct Handler {
 
 	bool isGenericEvent = false;
 
-	Handler(Director::ScriptChunk *s) {
+	Handler(Script *s) {
 		script = s;
 	}
 
@@ -89,8 +86,7 @@ struct Handler {
 	BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
 	void parse();
 	uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
-	void writeBytecodeText(Common::CodeWriter &code);
-	void writeJSON(Common::JSONWriter &json) const;
+	void writeBytecodeText(Common::CodeWriter &code, bool dotSyntax);
 };
 
 /* Bytecode */

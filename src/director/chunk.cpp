@@ -71,7 +71,7 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 				Common::debug(boost::format("Member %u: No info!") % member->id);
 			}
 			if (lctx && (lctx->scripts.find(member->getScriptID()) != lctx->scripts.end())) {
-				member->script = lctx->scripts[member->getScriptID()];
+				member->script = static_cast<ScriptChunk *>(lctx->scripts[member->getScriptID()]);
 				member->script->member = member;
 			}
 			members[member->id] = member;
@@ -918,78 +918,11 @@ void MemoryMapChunk::writeJSON(Common::JSONWriter &json) const {
 
 ScriptChunk::ScriptChunk(DirectorFile *m) :
 	Chunk(m, kScriptChunk),
-	context(nullptr),
+	LingoDec::Script(m->version),
 	member(nullptr) {}
 
-ScriptChunk::~ScriptChunk() = default;
-
 void ScriptChunk::read(Common::ReadStream &stream) {
-	// Lingo scripts are always big endian regardless of file endianness
-	stream.endianness = Common::kBigEndian;
-
-	stream.seek(8);
-	/*  8 */ totalLength = stream.readUint32();
-	/* 12 */ totalLength2 = stream.readUint32();
-	/* 16 */ headerLength = stream.readUint16();
-	/* 18 */ scriptNumber = stream.readUint16();
-	/* 20 */ unk20 = stream.readInt16();
-	/* 22 */ parentNumber = stream.readInt16();
-	
-	stream.seek(38);
-	/* 38 */ scriptFlags = stream.readUint32();
-	/* 42 */ unk42 = stream.readInt16();
-	/* 44 */ castID = stream.readInt32();
-	/* 48 */ factoryNameID = stream.readInt16();
-	/* 50 */ handlerVectorsCount = stream.readUint16();
-	/* 52 */ handlerVectorsOffset = stream.readUint32();
-	/* 56 */ handlerVectorsSize = stream.readUint32();
-	/* 60 */ propertiesCount = stream.readUint16();
-	/* 62 */ propertiesOffset = stream.readUint32();
-	/* 66 */ globalsCount = stream.readUint16();
-	/* 68 */ globalsOffset = stream.readUint32();
-	/* 72 */ handlersCount = stream.readUint16();
-	/* 74 */ handlersOffset = stream.readUint32();
-	/* 78 */ literalsCount = stream.readUint16();
-	/* 80 */ literalsOffset = stream.readUint32();
-	/* 84 */ literalsDataCount = stream.readUint32();
-	/* 88 */ literalsDataOffset = stream.readUint32();
-
-	propertyNameIDs = readVarnamesTable(stream, propertiesCount, propertiesOffset);
-	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
-
-	handlers.resize(handlersCount);
-	for (auto &handler : handlers) {
-		handler = std::make_unique<LingoDec::Handler>(this);
-	}
-	if ((scriptFlags & LingoDec::kScriptFlagEventScript) && handlersCount > 0) {
-		handlers[0]->isGenericEvent = true;
-	}
-
-	stream.seek(handlersOffset);
-	for (auto &handler : handlers) {
-		handler->readRecord(stream);
-	}
-	for (const auto &handler : handlers) {
-		handler->readData(stream);
-	}
-
-	stream.seek(literalsOffset);
-	literals.resize(literalsCount);
-	for (auto &literal : literals) {
-		literal.readRecord(stream, dir->version);
-	}
-	for (auto &literal : literals) {
-		literal.readData(stream, literalsDataOffset);
-	}
-}
-
-std::vector<int16_t> ScriptChunk::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
-	stream.seek(offset);
-	std::vector<int16_t> nameIDs(count);
-	for (uint16_t i = 0; i < count; i++) {
-		nameIDs[i] = stream.readInt16();
-	}
-	return nameIDs;
+	LingoDec::Script::read(stream);
 }
 
 void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
@@ -1032,185 +965,74 @@ void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
 		json.writeKey("handlers");
 		json.startArray();
 			for (const auto &val : handlers) {
-				val->writeJSON(json);
+				writeHandlerJSON(*val, json);
 			}
 		json.endArray();
 		json.writeKey("literals");
 		json.startArray();
 			for (const auto &val : literals) {
-				val.writeJSON(json);
+				writeLiteralStoreJSON(val, json);
 			}
 		json.endArray();
 	json.endObject();
 }
 
-bool ScriptChunk::validName(int id) const {
-	return context->validName(id);
+void ScriptChunk::writeHandlerJSON(const LingoDec::Handler &handler, Common::JSONWriter &json) const {
+	json.startObject();
+		json.writeField("nameID", handler.nameID);
+		json.writeField("vectorPos", handler.vectorPos);
+		json.writeField("compiledLen", handler.compiledLen);
+		json.writeField("compiledOffset", handler.compiledOffset);
+		json.writeField("argumentCount", handler.argumentCount);
+		json.writeField("argumentOffset", handler.argumentOffset);
+		json.writeField("localsCount", handler.localsCount);
+		json.writeField("localsOffset", handler.localsOffset);
+		json.writeField("globalsCount", handler.globalsCount);
+		json.writeField("globalsOffset", globalsOffset);
+		json.writeField("unknown1", handler.unknown1);
+		json.writeField("unknown2", handler.unknown2);
+		json.writeField("lineCount", handler.lineCount);
+		json.writeField("lineOffset", handler.lineOffset);
+		if (version >= 850) {
+			json.writeField("stackHeight", handler.stackHeight);
+		}
+	json.endObject();
 }
 
-std::string ScriptChunk::getName(int id) const {
-	return context->getName(id);
+void ScriptChunk::writeLiteralStoreJSON(const LingoDec::LiteralStore &literalStore, Common::JSONWriter &json) const {
+	json.startObject();
+		json.writeField("type", literalStore.type);
+		json.writeField("offset", literalStore.offset);
+		json.writeKey("value");
+		writeDatumJSON(*literalStore.value, json);
+	json.endObject();
 }
 
-void ScriptChunk::setContext(ScriptContextChunk *ctx) {
-	this->context = ctx;
-	if (factoryNameID != -1) {
-		factoryName = getName(factoryNameID);
+void ScriptChunk::writeDatumJSON(const LingoDec::Datum &datum, Common::JSONWriter &json) const {
+	switch (datum.type) {
+	case LingoDec::kDatumString:
+		json.writeVal(datum.s);
+		break;
+	case LingoDec::kDatumInt:
+		json.writeVal(datum.i);
+		break;
+	case LingoDec::kDatumFloat:
+		json.writeVal(datum.f);
+		break;
+	default:
+		json.writeNull();
+		break;
 	}
-	for (auto nameID : propertyNameIDs) {
-		if (validName(nameID)) {
-			std::string name = getName(nameID);
-			if (isFactory() && name == "me")
-				continue;
-			propertyNames.push_back(name);
-		}
-	}
-	for (auto nameID : globalNameIDs) {
-		if (validName(nameID)) {
-			globalNames.push_back(getName(nameID));
-		}
-	}
-	for (const auto &handler : handlers) {
-		handler->readNames();
-	}
-}
-
-void ScriptChunk::parse() {
-	for (const auto &handler : handlers) {
-		handler->parse();
-	}
-}
-
-void ScriptChunk::writeVarDeclarations(Common::CodeWriter &code) const {
-	if (!isFactory()) {
-		if (propertyNames.size() > 0) {
-			code.write("property ");
-			for (size_t i = 0; i < propertyNames.size(); i++) {
-				if (i > 0)
-					code.write(", ");
-				code.write(propertyNames[i]);
-			}
-			code.writeLine();
-		}
-	}
-	if (globalNames.size() > 0) {
-		code.write("global ");
-		for (size_t i = 0; i < globalNames.size(); i++) {
-			if (i > 0)
-				code.write(", ");
-			code.write(globalNames[i]);
-		}
-		code.writeLine();
-	}
-}
-
-void ScriptChunk::writeScriptText(Common::CodeWriter &code) const {
-	size_t origSize = code.size();
-	writeVarDeclarations(code);
-	if (isFactory()) {
-		if (code.size() != origSize) {
-			code.writeLine();
-		}
-		code.write("factory ");
-		code.writeLine(factoryName);
-	}
-	for (size_t i = 0; i < handlers.size(); i++) {
-		if ((!isFactory() || i > 0) && code.size() != origSize) {
-			code.writeLine();
-		}
-		handlers[i]->ast->writeScriptText(code, dir->dotSyntax, false);
-	}
-	for (auto factory : factories) {
-		if (code.size() != origSize) {
-			code.writeLine();
-		}
-		factory->writeScriptText(code);
-	}
-}
-
-std::string ScriptChunk::scriptText(const char *lineEnding) const {
-	Common::CodeWriter code(lineEnding);
-	writeScriptText(code);
-	return code.str();
-}
-
-void ScriptChunk::writeBytecodeText(Common::CodeWriter &code) const {
-	size_t origSize = code.size();
-	writeVarDeclarations(code);
-	if (isFactory()) {
-		if (code.size() != origSize) {
-			code.writeLine();
-		}
-		code.write("factory ");
-		code.writeLine(factoryName);
-	}
-	for (size_t i = 0; i < handlers.size(); i++) {
-		if ((!isFactory() || i > 0) && code.size() != origSize) {
-			code.writeLine();
-		}
-		handlers[i]->writeBytecodeText(code);
-	}
-	for (auto factory : factories) {
-		if (code.size() != origSize) {
-			code.writeLine();
-		}
-		factory->writeBytecodeText(code);
-	}
-}
-
-std::string ScriptChunk::bytecodeText(const char *lineEnding) const {
-	Common::CodeWriter code(lineEnding);
-	writeBytecodeText(code);
-	return code.str();
-}
-
-bool ScriptChunk::isFactory() const {
-	return (scriptFlags & LingoDec::kScriptFlagFactoryDef);
 }
 
 /* ScriptContextChunk */
 
+ScriptContextChunk::ScriptContextChunk(DirectorFile *m) :
+		Chunk(m, kScriptContextChunk),
+		LingoDec::ScriptContext(m->version, m) {}
+
 void ScriptContextChunk::read(Common::ReadStream &stream) {
-	// Lingo scripts are always big endian regardless of file endianness
-	stream.endianness = Common::kBigEndian;
-
-	unknown0 = stream.readInt32();
-	unknown1 = stream.readInt32();
-	entryCount = stream.readUint32();
-	entryCount2 = stream.readUint32();
-	entriesOffset = stream.readUint16();
-	unknown2 = stream.readInt16();
-	unknown3 = stream.readInt32();
-	unknown4 = stream.readInt32();
-	unknown5 = stream.readInt32();
-	lnamSectionID = stream.readInt32();
-	validCount = stream.readUint16();
-	flags = stream.readUint16();
-	freePointer = stream.readInt16();
-
-	stream.seek(entriesOffset);
-	sectionMap.resize(entryCount);
-	for (auto &entry : sectionMap) {
-		entry.read(stream);
-	}
-
-	lnam = static_cast<ScriptNamesChunk *>(dir->getChunk(FOURCC('L', 'n', 'a', 'm'), lnamSectionID));
-	for (uint32_t i = 1; i <= entryCount; i++) {
-		auto section = sectionMap[i - 1];
-		if (section.sectionID > -1) {
-			ScriptChunk *script = static_cast<ScriptChunk *>(dir->getChunk(FOURCC('L', 's', 'c', 'r'), section.sectionID));
-			script->setContext(this);
-			scripts[i] = script;
-		}
-	}
-
-	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
-		ScriptChunk *script = it->second;
-		if (script->isFactory()) {
-			ScriptChunk *parent = scripts[script->parentNumber + 1];
-			parent->factories.push_back(script);
-		}
-	}
+	LingoDec::ScriptContext::read(stream);
 }
 
 void ScriptContextChunk::writeJSON(Common::JSONWriter &json) const {
@@ -1231,45 +1053,29 @@ void ScriptContextChunk::writeJSON(Common::JSONWriter &json) const {
 		json.writeKey("sectionMap");
 		json.startArray();
 			for (const auto &val : sectionMap) {
-				val.writeJSON(json);
+				writeScriptContextMapEntryJSON(val, json);
 			}
 		json.endArray();
 	json.endObject();
 }
 
-bool ScriptContextChunk::validName(int id) const {
-	return lnam->validName(id);
-}
-
-std::string ScriptContextChunk::getName(int id) const {
-	return lnam->getName(id);
-}
-
-void ScriptContextChunk::parseScripts() {
-	for (auto it = scripts.begin(); it != scripts.end(); ++it) {
-		it->second->parse();
-	}
+void ScriptContextChunk::writeScriptContextMapEntryJSON(const LingoDec::ScriptContextMapEntry &mapEntry, Common::JSONWriter &json) const {
+	json.startObject();
+		json.writeField("unknown0", mapEntry.unknown0);
+		json.writeField("sectionID", mapEntry.sectionID);
+		json.writeField("unknown1", mapEntry.unknown1);
+		json.writeField("unknown2", mapEntry.unknown2);
+	json.endObject();
 }
 
 /* ScriptNamesChunk */
 
+ScriptNamesChunk::ScriptNamesChunk(DirectorFile *m) :
+		Chunk(m, kScriptNamesChunk),
+		LingoDec::ScriptNames(m->version) {}
+
 void ScriptNamesChunk::read(Common::ReadStream &stream) {
-	// Lingo scripts are always big endian regardless of file endianness
-	stream.endianness = Common::kBigEndian;
-
-	unknown0 = stream.readInt32();
-	unknown1 = stream.readInt32();
-	len1 = stream.readUint32();
-	len2 = stream.readUint32();
-	namesOffset = stream.readUint16();
-	namesCount = stream.readUint16();
-
-	stream.seek(namesOffset);
-	names.resize(namesCount);
-	for (auto &name : names) {
-		auto length = stream.readUint8();
-		name = stream.readString(length);
-	}
+	LingoDec::ScriptNames::read(stream);
 }
 
 void ScriptNamesChunk::writeJSON(Common::JSONWriter &json) const {
@@ -1287,16 +1093,6 @@ void ScriptNamesChunk::writeJSON(Common::JSONWriter &json) const {
 			}
 		json.endArray();
 	json.endObject();
-}
-
-bool ScriptNamesChunk::validName(int id) const {
-	return -1 < id && (unsigned)id < names.size();
-}
-
-std::string ScriptNamesChunk::getName(int id) const {
-	if (validName(id))
-		return names[id];
-	return "UNKNOWN_NAME_" + std::to_string(id);
 }
 
 } // namespace Director

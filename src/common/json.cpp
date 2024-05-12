@@ -117,6 +117,36 @@ void JSONWriter::writeFourCC(uint32_t val) {
 	writeValueSuffix();
 }
 
+void JSONWriter::writeField(std::string key, unsigned int val) {
+	writeKey(key);
+	writeVal(val);
+}
+
+void JSONWriter::writeField(std::string key, int val) {
+	writeKey(key);
+	writeVal(val);
+}
+
+void JSONWriter::writeField(std::string key, double val) {
+	writeKey(key);
+	writeVal(val);
+}
+
+void JSONWriter::writeField(std::string key, std::string val) {
+	writeKey(key);
+	writeVal(val);
+}
+
+void JSONWriter::writeNullField(std::string key) {
+	writeKey(key);
+	writeNull();
+}
+
+void JSONWriter::writeFourCCField(std::string key, uint32_t val) {
+	writeKey(key);
+	writeFourCC(val);
+}
+
 std::string JSONWriter::str() const {
 	return CodeWriter::str();
 }

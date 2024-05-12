@@ -53,6 +53,13 @@ public:
 	void writeNull();
 	void writeFourCC(uint32_t val);
 
+	void writeField(std::string key, unsigned int val);
+	void writeField(std::string key, int val);
+	void writeField(std::string key, double val);
+	void writeField(std::string key, std::string val);
+	void writeNullField(std::string key);
+	void writeFourCCField(std::string key, uint32_t val);
+
 	std::string str() const;
 
 protected:

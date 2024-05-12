@@ -57,24 +57,6 @@ void MemoryMapEntry::writeJSON(Common::JSONWriter &json) const {
 	json.endObject();
 }
 
-/* ScriptContextMapEntry */
-
-void ScriptContextMapEntry::read(Common::ReadStream &stream) {
-	unknown0 = stream.readInt32();
-	sectionID = stream.readInt32();
-	unknown1 = stream.readUint16();
-	unknown2 = stream.readUint16();
-}
-
-void ScriptContextMapEntry::writeJSON(Common::JSONWriter &json) const {
-	json.startObject();
-		JSON_WRITE_FIELD(unknown0);
-		JSON_WRITE_FIELD(sectionID);
-		JSON_WRITE_FIELD(unknown1);
-		JSON_WRITE_FIELD(unknown2);
-	json.endObject();
-}
-
 /* KeyTableEntry */
 
 void KeyTableEntry::read(Common::ReadStream &stream) {
@@ -88,47 +70,6 @@ void KeyTableEntry::writeJSON(Common::JSONWriter &json) const {
 		JSON_WRITE_FIELD(sectionID);
 		JSON_WRITE_FIELD(castID);
 		JSON_WRITE_FOURCC_FIELD(fourCC);
-	json.endObject();
-}
-
-/* LiteralStore */
-
-void LiteralStore::readRecord(Common::ReadStream &stream, int version) {
-	if (version >= 500)
-		type = static_cast<LiteralType>(stream.readUint32());
-	else
-		type = static_cast<LiteralType>(stream.readUint16());
-	offset = stream.readUint32();
-}
-
-void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
-	if (type == kLiteralInt) {
-		value = std::make_shared<LingoDec::Datum>((int)offset);
-	} else {
-		stream.seek(startOffset + offset);
-		auto length = stream.readUint32();
-		if (type == kLiteralString) {
-			value = std::make_shared<LingoDec::Datum>(LingoDec::kDatumString, stream.readString(length - 1));
-		} else if (type == kLiteralFloat) {
-			double floatVal = 0.0;
-			if (length == 8) {
-				floatVal = stream.readDouble();
-			} else if (length == 10) {
-				floatVal = stream.readAppleFloat80();
-			}
-			value = std::make_shared<LingoDec::Datum>(floatVal);
-		} else {
-			value = std::make_shared<LingoDec::Datum>();
-		}
-	}
-}
-
-void LiteralStore::writeJSON(Common::JSONWriter &json) const {
-	json.startObject();
-		JSON_WRITE_FIELD(type);
-		JSON_WRITE_FIELD(offset);
-		json.writeKey("value");
-		value->writeJSON(json);
 	json.endObject();
 }
 

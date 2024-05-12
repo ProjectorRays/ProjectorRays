@@ -13,10 +13,6 @@
 
 #include "lingodec/enums.h"
 
-namespace Common {
-class JSONWriter;
-}
-
 namespace LingoDec {
 
 struct CaseLabelNode;
@@ -56,7 +52,6 @@ struct Datum {
 
 	int toInt();
 	void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
-	void writeJSON(Common::JSONWriter &json) const;
 };
 
 /* Node */

@@ -205,6 +205,12 @@ enum ScriptFlag {
 	kScriptFlagUnkF			= (1 << 0xf)
 };
 
+enum LiteralType {
+	kLiteralString	= 1,
+	kLiteralInt		= 4,
+	kLiteralFloat	= 9
+};
+
 }
 
 #endif // LINGODEC_ENUMS_H
