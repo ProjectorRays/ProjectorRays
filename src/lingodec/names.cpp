@@ -4,6 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include "common/str.h"
 #include "common/stream.h"
 #include "common/util.h"
 #include "lingodec/enums.h"
@@ -13,7 +14,7 @@ namespace LingoDec {
 
 /* StandardNames */
 
-std::map<unsigned int, std::string> StandardNames::opcodeNames = {
+std::map<unsigned int, Common::String> StandardNames::opcodeNames = {
 	// single-byte
 	{ kOpRet,				"ret" },
 	{ kOpRetFactory,		"retfactory" },
@@ -94,7 +95,7 @@ std::map<unsigned int, std::string> StandardNames::opcodeNames = {
 	{ kOpNewObj,			"newobj" }
 };
 
-std::map<unsigned int, std::string> StandardNames::binaryOpNames = {
+std::map<unsigned int, Common::String> StandardNames::binaryOpNames = {
 	{ kOpMul,			"*" },
 	{ kOpAdd,			"+" },
 	{ kOpSub,			"-" },
@@ -114,20 +115,20 @@ std::map<unsigned int, std::string> StandardNames::binaryOpNames = {
 	{ kOpContains0Str,	"starts" }
 };
 
-std::map<unsigned int, std::string> StandardNames::chunkTypeNames = {
+std::map<unsigned int, Common::String> StandardNames::chunkTypeNames = {
 	{ kChunkChar, "char" },
 	{ kChunkWord, "word" },
 	{ kChunkItem, "item" },
 	{ kChunkLine, "line" }
 };
 
-std::map<unsigned int, std::string> StandardNames::putTypeNames = {
+std::map<unsigned int, Common::String> StandardNames::putTypeNames = {
 	{ kPutInto,		"into" },
 	{ kPutAfter,	"after" },
 	{ kPutBefore,	"before" }
 };
 
-std::map<unsigned int, std::string> StandardNames::moviePropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::moviePropertyNames = {
 	{ 0x00, "floatPrecision" },
 	{ 0x01, "mouseDownScript" },
 	{ 0x02, "mouseUpScript" },
@@ -142,7 +143,7 @@ std::map<unsigned int, std::string> StandardNames::moviePropertyNames = {
 	{ 0x0b, "long date" }
 };
 
-std::map<unsigned int, std::string> StandardNames::whenEventNames = {
+std::map<unsigned int, Common::String> StandardNames::whenEventNames = {
 	{ 0x01, "mouseDown" },
 	{ 0x02, "mouseUp" },
 	{ 0x03, "keyDown" },
@@ -150,23 +151,23 @@ std::map<unsigned int, std::string> StandardNames::whenEventNames = {
 	{ 0x05, "timeOut" },
 };
 
-std::map<unsigned int, std::string> StandardNames::menuPropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::menuPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "number of menuItems" }
 };
 
-std::map<unsigned int, std::string> StandardNames::menuItemPropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::menuItemPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "checkMark" },
 	{ 0x03, "enabled" },
 	{ 0x04, "script" }
 };
 
-std::map<unsigned int, std::string> StandardNames::soundPropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::soundPropertyNames = {
 	{ 0x01, "volume" }
 };
 
-std::map<unsigned int, std::string> StandardNames::spritePropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::spritePropertyNames = {
 	{ 0x01, "type" },
 	{ 0x02, "backColor" },
 	{ 0x03, "bottom" },
@@ -211,7 +212,7 @@ std::map<unsigned int, std::string> StandardNames::spritePropertyNames = {
 	{ 0x2a, "name" }
 };
 
-std::map<unsigned int, std::string> StandardNames::animationPropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::animationPropertyNames = {
 	{ 0x01, "beepOn" },
 	{ 0x02, "buttonStyle" },
 	{ 0x03, "centerStage" },
@@ -255,7 +256,7 @@ std::map<unsigned int, std::string> StandardNames::animationPropertyNames = {
 	{ 0x28, "soundMixMedia" }
 };
 
-std::map<unsigned int, std::string> StandardNames::animation2PropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::animation2PropertyNames = {
 	{ 0x01, "perFrameHook" },
 	{ 0x02, "number of castMembers" },
 	{ 0x03, "number of menus" },
@@ -263,7 +264,7 @@ std::map<unsigned int, std::string> StandardNames::animation2PropertyNames = {
 	{ 0x05, "number of xtras" }
 };
 
-std::map<unsigned int, std::string> StandardNames::memberPropertyNames = {
+std::map<unsigned int, Common::String> StandardNames::memberPropertyNames = {
 	{ 0x01, "name" },
 	{ 0x02, "text" },
 	{ 0x03, "textStyle" },
@@ -285,7 +286,7 @@ std::map<unsigned int, std::string> StandardNames::memberPropertyNames = {
 	{ 0x13, "type" }
 };
 
-std::string StandardNames::getOpcodeName(uint8_t id) {
+Common::String StandardNames::getOpcodeName(uint8_t id) {
 	if (id >= 0x40)
 		id = 0x40 + id % 0x40;
 	auto it = opcodeNames.find(id);
@@ -295,7 +296,7 @@ std::string StandardNames::getOpcodeName(uint8_t id) {
 	return it->second;
 }
 
-std::string StandardNames::getName(const std::map<unsigned int, std::string> &nameMap, unsigned int id) {
+Common::String StandardNames::getName(const std::map<unsigned int, Common::String> &nameMap, unsigned int id) {
 	auto it = nameMap.find(id);
 	if (it == nameMap.end())
 		return "ERROR";
@@ -327,10 +328,10 @@ bool ScriptNames::validName(int id) const {
 	return -1 < id && (unsigned)id < names.size();
 }
 
-std::string ScriptNames::getName(int id) const {
+Common::String ScriptNames::getName(int id) const {
 	if (validName(id))
 		return names[id];
-	return "UNKNOWN_NAME_" + std::to_string(id);
+	return Common::String::format("UNKNOWN_NAME_%d", id);
 }
 
 }

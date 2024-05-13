@@ -7,10 +7,15 @@
 #include <iostream>
 
 #include "common/log.h"
+#include "common/str.h"
 
 namespace Common {
 
 bool g_verbose = false;
+
+void log(const Common::String &msg) {
+	std::cout << msg._str << "\n";
+}
 
 void log(const std::string &msg) {
 	std::cout << msg << "\n";
@@ -21,6 +26,11 @@ void log(const boost::format &msg) {
 }
 
 void debug(const std::string &msg) {
+	if (g_verbose)
+		log(msg);
+}
+
+void debug(const Common::String &msg) {
 	if (g_verbose)
 		log(msg);
 }

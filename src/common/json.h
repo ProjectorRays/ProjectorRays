@@ -36,11 +36,11 @@ protected:
 	Context _context = kContextStart;
 
 public:
-	JSONWriter(std::string lineEnding, std::string indentation = "  ")
+	JSONWriter(Common::String lineEnding, Common::String indentation = "  ")
 		: CodeWriter(lineEnding, indentation) {}
 
 	void startObject();
-	void writeKey(std::string key);
+	void writeKey(Common::String key);
 	void endObject();
 
 	void startArray();
@@ -49,21 +49,21 @@ public:
 	void writeVal(unsigned int val);
 	void writeVal(int val);
 	void writeVal(double val);
-	void writeVal(std::string val);
+	void writeVal(Common::String val);
 	void writeNull();
 	void writeFourCC(uint32_t val);
 
-	void writeField(std::string key, unsigned int val);
-	void writeField(std::string key, int val);
-	void writeField(std::string key, double val);
-	void writeField(std::string key, std::string val);
-	void writeNullField(std::string key);
-	void writeFourCCField(std::string key, uint32_t val);
+	void writeField(Common::String key, unsigned int val);
+	void writeField(Common::String key, int val);
+	void writeField(Common::String key, double val);
+	void writeField(Common::String key, Common::String val);
+	void writeNullField(Common::String key);
+	void writeFourCCField(Common::String key, uint32_t val);
 
-	std::string str() const;
+	Common::String str() const;
 
 protected:
-	void writeString(std::string str);
+	void writeString(Common::String str);
 	void writeValuePrefix();
 	void writeValueSuffix();
 	void writeCloseBracePrefix();

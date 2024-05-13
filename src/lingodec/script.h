@@ -8,9 +8,9 @@
 #define LINGODEC_SCRIPT_H
 
 #include <cstdint>
-#include <string>
 #include <vector>
 
+#include "common/str.h"
 #include "lingodec/enums.h"
 
 namespace Common {
@@ -66,9 +66,9 @@ struct Script {
 	std::vector<int16_t> propertyNameIDs;
 	std::vector<int16_t> globalNameIDs;
 
-	std::string factoryName;
-	std::vector<std::string> propertyNames;
-	std::vector<std::string> globalNames;
+	Common::String factoryName;
+	std::vector<Common::String> propertyNames;
+	std::vector<Common::String> globalNames;
 	std::vector<std::unique_ptr<Handler>> handlers;
 	std::vector<LiteralStore> literals;
 	std::vector<Script *> factories;
@@ -81,14 +81,14 @@ struct Script {
 	void read(Common::ReadStream &stream);
 	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
 	bool validName(int id) const;
-	std::string getName(int id) const;
+	Common::String getName(int id) const;
 	void setContext(ScriptContext *ctx);
 	void parse();
 	void writeVarDeclarations(Common::CodeWriter &code) const;
 	void writeScriptText(Common::CodeWriter &code, bool dotSyntax) const;
-	std::string scriptText(const char *lineEnding, bool dotSyntax) const;
+	Common::String scriptText(const char *lineEnding, bool dotSyntax) const;
 	void writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) const;
-	std::string bytecodeText(const char *lineEnding, bool dotSyntax) const;
+	Common::String bytecodeText(const char *lineEnding, bool dotSyntax) const;
 
 	bool isFactory() const;
 };

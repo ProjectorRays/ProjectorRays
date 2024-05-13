@@ -738,7 +738,7 @@ void DirectorFile::restoreScriptText() {
 		for (auto [scriptId, script] : cast->lctx->scripts) {
 			CastMemberChunk *member = static_cast<ScriptChunk *>(script)->member;
 			if (member) {
-				member->setScriptText(script->scriptText("\r", dotSyntax));
+				member->setScriptText(script->scriptText("\r", dotSyntax)._str);
 			}
 		}
 	}
@@ -786,8 +786,8 @@ void DirectorFile::dumpScripts(fs::path castsDir) {
 			}
 
 			std::string fileName = IO::cleanFileName(scriptType + " " + id);
-			IO::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(IO::kPlatformLineEnding, dotSyntax));
-			IO::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(IO::kPlatformLineEnding, dotSyntax));
+			IO::writeFile(castDir / (fileName + ".ls"), it->second->scriptText(IO::kPlatformLineEnding, dotSyntax)._str);
+			IO::writeFile(castDir / (fileName + ".lasm"), it->second->bytecodeText(IO::kPlatformLineEnding, dotSyntax)._str);
 		}
 	}
 }
@@ -813,7 +813,7 @@ void DirectorFile::dumpJSON(fs::path chunksDir) {
 		if (deserializedChunks.find(info.id) != deserializedChunks.end()) {
 			Common::JSONWriter json(IO::kPlatformLineEnding);
 			deserializedChunks[info.id]->writeJSON(json);
-			IO::writeFile(chunksDir / fileName, json.str());
+			IO::writeFile(chunksDir / fileName, json.str()._str);
 		}
 	}
 }

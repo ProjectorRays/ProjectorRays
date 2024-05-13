@@ -64,7 +64,7 @@ bool ScriptContext::validName(int id) const {
 	return lnam->validName(id);
 }
 
-std::string ScriptContext::getName(int id) const {
+Common::String ScriptContext::getName(int id) const {
 	return lnam->getName(id);
 }
 

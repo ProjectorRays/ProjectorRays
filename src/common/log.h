@@ -12,11 +12,15 @@
 
 namespace Common {
 
+class String;
+
 extern bool g_verbose;
 
 void log(const std::string &msg);
+void log(const String &msg);
 void log(const boost::format &msg);
 void debug(const std::string &msg);
+void debug(const String &msg);
 void debug(const boost::format &msg);
 void warning(const std::string &msg);
 void warning(const boost::format &msg);

@@ -9,14 +9,13 @@
 
 #include <map>
 #include <memory>
-#include <string>
 #include <vector>
 
+#include "common/str.h"
 #include "lingodec/enums.h"
 
 namespace Common {
 class CodeWriter;
-class JSONWriter;
 class ReadStream;
 }
 
@@ -53,10 +52,10 @@ struct Handler {
 	Script *script;
 	std::vector<Bytecode> bytecodeArray;
 	std::map<uint32_t, size_t> bytecodePosMap;
-	std::vector<std::string> argumentNames;
-	std::vector<std::string> localNames;
-	std::vector<std::string> globalNames;
-	std::string name;
+	std::vector<Common::String> argumentNames;
+	std::vector<Common::String> localNames;
+	std::vector<Common::String> globalNames;
+	Common::String name;
 
 	std::vector<std::shared_ptr<Node>> stack;
 	std::unique_ptr<AST> ast;
@@ -72,13 +71,13 @@ struct Handler {
 	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
 	void readNames();
 	bool validName(int id) const;
-	std::string getName(int id) const;
-	std::string getArgumentName(int id) const;
-	std::string getLocalName(int id) const;
+	Common::String getName(int id) const;
+	Common::String getArgumentName(int id) const;
+	Common::String getLocalName(int id) const;
 	std::shared_ptr<Node> pop();
 	int variableMultiplier();
 	std::shared_ptr<Node> readVar(int varType);
-	std::string getVarNameFromSet(const Bytecode &bytecode);
+	Common::String getVarNameFromSet(const Bytecode &bytecode);
 	std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
 	std::shared_ptr<Node> readChunkRef(std::shared_ptr<Node> string);
 	void tagLoops();

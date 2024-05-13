@@ -65,16 +65,16 @@ void Datum::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const 
 			}
 		}
 		if (sum) {
-			code.write("\"" + Common::escapeString(s) + "\"");
+			code.write("\"" + Common::escapeString(s._str) + "\"");
 			return;
 		}
 		code.write("\"" + s + "\"");
 		return;
 	case kDatumInt:
-		code.write(std::to_string(i));
+		code.write(Common::String::format("%d", i));
 		return;
 	case kDatumFloat:
-		code.write(Common::floatToString(f));
+		code.write(Common::String::format("%g", f));
 		return;
 	case kDatumList:
 	case kDatumArgList:

@@ -8,11 +8,10 @@
 #define LINGODEC_NAMES_H
 
 #include <map>
-#include <string>
 
 namespace Common {
-class JSONWriter;
 class ReadStream;
+class String;
 }
 
 namespace LingoDec {
@@ -20,23 +19,23 @@ namespace LingoDec {
 /* StandardNames */
 
 struct StandardNames {
-	static std::map<unsigned int, std::string> opcodeNames;
-	static std::map<unsigned int, std::string> binaryOpNames;
-	static std::map<unsigned int, std::string> chunkTypeNames;
-	static std::map<unsigned int, std::string> putTypeNames;
-	static std::map<unsigned int, std::string> moviePropertyNames;
-	static std::map<unsigned int, std::string> whenEventNames;
-	static std::map<unsigned int, std::string> timeNames;
-	static std::map<unsigned int, std::string> menuPropertyNames;
-	static std::map<unsigned int, std::string> menuItemPropertyNames;
-	static std::map<unsigned int, std::string> soundPropertyNames;
-	static std::map<unsigned int, std::string> spritePropertyNames;
-	static std::map<unsigned int, std::string> animationPropertyNames;
-	static std::map<unsigned int, std::string> animation2PropertyNames;
-	static std::map<unsigned int, std::string> memberPropertyNames;
+	static std::map<unsigned int, Common::String> opcodeNames;
+	static std::map<unsigned int, Common::String> binaryOpNames;
+	static std::map<unsigned int, Common::String> chunkTypeNames;
+	static std::map<unsigned int, Common::String> putTypeNames;
+	static std::map<unsigned int, Common::String> moviePropertyNames;
+	static std::map<unsigned int, Common::String> whenEventNames;
+	static std::map<unsigned int, Common::String> timeNames;
+	static std::map<unsigned int, Common::String> menuPropertyNames;
+	static std::map<unsigned int, Common::String> menuItemPropertyNames;
+	static std::map<unsigned int, Common::String> soundPropertyNames;
+	static std::map<unsigned int, Common::String> spritePropertyNames;
+	static std::map<unsigned int, Common::String> animationPropertyNames;
+	static std::map<unsigned int, Common::String> animation2PropertyNames;
+	static std::map<unsigned int, Common::String> memberPropertyNames;
 
-	static std::string getOpcodeName(uint8_t id);
-	static std::string getName(const std::map<unsigned int, std::string> &nameMap, unsigned int id);
+	static Common::String getOpcodeName(uint8_t id);
+	static Common::String getName(const std::map<unsigned int, Common::String> &nameMap, unsigned int id);
 };
 
 /* ScriptNames */
@@ -48,14 +47,14 @@ struct ScriptNames {
 	uint32_t len2;
 	uint16_t namesOffset;
 	uint16_t namesCount;
-	std::vector<std::string> names;
+	std::vector<Common::String> names;
 
 	unsigned int version;
 
 	ScriptNames(unsigned int version) : version(version) {}
 	void read(Common::ReadStream &stream);
 	bool validName(int id) const;
-	std::string getName(int id) const;
+	Common::String getName(int id) const;
 };
 
 } // namespace LingoDec

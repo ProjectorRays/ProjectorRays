@@ -9,9 +9,9 @@
 
 namespace Common {
 
-void JSONWriter::writeString(std::string str) {
+void JSONWriter::writeString(Common::String str) {
 	write("\"");
-	write(escapeString(str));
+	write(escapeString(str._str));
 	write("\"");
 }
 
@@ -43,7 +43,7 @@ void JSONWriter::startObject() {
 	_context = kContextOpenBrace;
 }
 
-void JSONWriter::writeKey(std::string key) {
+void JSONWriter::writeKey(Common::String key) {
 	writeValuePrefix();
 	writeString(key);
 	write(": ");
@@ -94,7 +94,7 @@ void JSONWriter::writeVal(double val) {
 	writeValueSuffix();
 }
 
-void JSONWriter::writeVal(std::string val) {
+void JSONWriter::writeVal(Common::String val) {
 	writeValuePrefix();
 	writeString(val);
 	_context = kContextValue;
@@ -117,38 +117,38 @@ void JSONWriter::writeFourCC(uint32_t val) {
 	writeValueSuffix();
 }
 
-void JSONWriter::writeField(std::string key, unsigned int val) {
+void JSONWriter::writeField(Common::String key, unsigned int val) {
 	writeKey(key);
 	writeVal(val);
 }
 
-void JSONWriter::writeField(std::string key, int val) {
+void JSONWriter::writeField(Common::String key, int val) {
 	writeKey(key);
 	writeVal(val);
 }
 
-void JSONWriter::writeField(std::string key, double val) {
+void JSONWriter::writeField(Common::String key, double val) {
 	writeKey(key);
 	writeVal(val);
 }
 
-void JSONWriter::writeField(std::string key, std::string val) {
+void JSONWriter::writeField(Common::String key, Common::String val) {
 	writeKey(key);
 	writeVal(val);
 }
 
-void JSONWriter::writeNullField(std::string key) {
+void JSONWriter::writeNullField(Common::String key) {
 	writeKey(key);
 	writeNull();
 }
 
-void JSONWriter::writeFourCCField(std::string key, uint32_t val) {
+void JSONWriter::writeFourCCField(Common::String key, uint32_t val) {
 	writeKey(key);
 	writeFourCC(val);
 }
 
-std::string JSONWriter::str() const {
-	return CodeWriter::str();
+Common::String JSONWriter::str() const {
+	return CodeWriter::str()._str;
 }
 
 } // namespace Common

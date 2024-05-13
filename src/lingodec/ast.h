@@ -8,9 +8,9 @@
 #define LINGODEC_AST_H
 
 #include <memory>
-#include <string>
 #include <vector>
 
+#include "common/str.h"
 #include "lingodec/enums.h"
 
 namespace LingoDec {
@@ -27,7 +27,7 @@ struct Datum {
 	DatumType type;
 	int i;
 	double f;
-	std::string s;
+	Common::String s;
 	std::vector<std::shared_ptr<Node>> l;
 
 	Datum() {
@@ -41,7 +41,7 @@ struct Datum {
 		type = kDatumFloat;
 		f = val;
 	}
-	Datum(DatumType t, std::string val) {
+	Datum(DatumType t, Common::String val) {
 		type = t;
 		s = val;
 	}
@@ -123,9 +123,9 @@ struct ErrorNode : ExprNode {
 /* CommentNode */
 
 struct CommentNode : Node {
-	std::string text;
+	Common::String text;
 
-	CommentNode(std::string t) : Node(kCommentNode), text(t) {}
+	CommentNode(Common::String t) : Node(kCommentNode), text(t) {}
 	virtual ~CommentNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
 };
@@ -311,11 +311,11 @@ struct SpriteWithinExprNode : ExprNode {
 /* MemberExprNode */
 
 struct MemberExprNode : ExprNode {
-	std::string type;
+	Common::String type;
 	std::shared_ptr<Node> memberID;
 	std::shared_ptr<Node> castID;
 
-	MemberExprNode(std::string type, std::shared_ptr<Node> memberID, std::shared_ptr<Node> castID)
+	MemberExprNode(Common::String type, std::shared_ptr<Node> memberID, std::shared_ptr<Node> castID)
 		: ExprNode(kMemberExprNode), type(type) {
 		this->memberID = std::move(memberID);
 		this->memberID->parent = this;
@@ -332,9 +332,9 @@ struct MemberExprNode : ExprNode {
 /* VarNode */
 
 struct VarNode : ExprNode {
-	std::string varName;
+	Common::String varName;
 
-	VarNode(std::string v) : ExprNode(kVarNode), varName(v) {}
+	VarNode(Common::String v) : ExprNode(kVarNode), varName(v) {}
 	virtual ~VarNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
@@ -399,11 +399,11 @@ struct RepeatWhileStmtNode : LoopNode {
 /* RepeatWithInStmtNode */
 
 struct RepeatWithInStmtNode : LoopNode {
-	std::string varName;
+	Common::String varName;
 	std::shared_ptr<Node> list;
 	std::shared_ptr<BlockNode> block;
 
-	RepeatWithInStmtNode(uint32_t startIndex, std::string v, std::shared_ptr<Node> l)
+	RepeatWithInStmtNode(uint32_t startIndex, Common::String v, std::shared_ptr<Node> l)
 		: LoopNode(kRepeatWithInStmtNode, startIndex) {
 		varName = v;
 		list = std::move(l);
@@ -418,13 +418,13 @@ struct RepeatWithInStmtNode : LoopNode {
 /* RepeatWithToStmtNode */
 
 struct RepeatWithToStmtNode : LoopNode {
-	std::string varName;
+	Common::String varName;
 	std::shared_ptr<Node> start;
 	bool up;
 	std::shared_ptr<Node> end;
 	std::shared_ptr<BlockNode> block;
 
-	RepeatWithToStmtNode(uint32_t startIndex, std::string v, std::shared_ptr<Node> s, bool up, std::shared_ptr<Node> e)
+	RepeatWithToStmtNode(uint32_t startIndex, Common::String v, std::shared_ptr<Node> s, bool up, std::shared_ptr<Node> e)
 		: LoopNode(kRepeatWithToStmtNode, startIndex), up(up) {
 		varName = v;
 		start = std::move(s);
@@ -517,10 +517,10 @@ struct TellStmtNode : StmtNode {
 /* SoundCmdStmtNode */
 
 struct SoundCmdStmtNode : StmtNode {
-	std::string cmd;
+	Common::String cmd;
 	std::shared_ptr<Node> argList;
 
-	SoundCmdStmtNode(std::string c, std::shared_ptr<Node> a) : StmtNode(kSoundCmdStmtNode) {
+	SoundCmdStmtNode(Common::String c, std::shared_ptr<Node> a) : StmtNode(kSoundCmdStmtNode) {
 		cmd = c;
 		argList = std::move(a);
 		argList->parent = this;
@@ -545,10 +545,10 @@ struct PlayCmdStmtNode : StmtNode {
 /* CallNode */
 
 struct CallNode : Node {
-	std::string name;
+	Common::String name;
 	std::shared_ptr<Node> argList;
 
-	CallNode(std::string n, std::shared_ptr<Node> a) : Node(kCallNode) {
+	CallNode(Common::String n, std::shared_ptr<Node> a) : Node(kCallNode) {
 		name = n;
 		argList = std::move(a);
 		argList->parent = this;
@@ -567,10 +567,10 @@ struct CallNode : Node {
 /* ObjCallNode */
 
 struct ObjCallNode : Node {
-	std::string name;
+	Common::String name;
 	std::shared_ptr<Node> argList;
 
-	ObjCallNode(std::string n, std::shared_ptr<Node> a) : Node(kObjCallNode) {
+	ObjCallNode(Common::String n, std::shared_ptr<Node> a) : Node(kObjCallNode) {
 		name = n;
 		argList = std::move(a);
 		argList->parent = this;
@@ -607,9 +607,9 @@ struct ObjCallV4Node : Node {
 /* TheExprNode */
 
 struct TheExprNode : ExprNode {
-	std::string prop;
+	Common::String prop;
 
-	TheExprNode(std::string p) : ExprNode(kTheExprNode), prop(p) {}
+	TheExprNode(Common::String p) : ExprNode(kTheExprNode), prop(p) {}
 	virtual ~TheExprNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
 };
@@ -711,9 +711,9 @@ struct SpritePropExprNode : ExprNode {
 
 struct ThePropExprNode : ExprNode {
 	std::shared_ptr<Node> obj;
-	std::string prop;
+	Common::String prop;
 
-	ThePropExprNode(std::shared_ptr<Node> o, std::string p)
+	ThePropExprNode(std::shared_ptr<Node> o, Common::String p)
 		: ExprNode(kThePropExprNode), prop(p) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -726,9 +726,9 @@ struct ThePropExprNode : ExprNode {
 
 struct ObjPropExprNode : ExprNode {
 	std::shared_ptr<Node> obj;
-	std::string prop;
+	Common::String prop;
 
-	ObjPropExprNode(std::shared_ptr<Node> o, std::string p)
+	ObjPropExprNode(std::shared_ptr<Node> o, Common::String p)
 		: ExprNode(kObjPropExprNode), prop(p) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -760,11 +760,11 @@ struct ObjBracketExprNode : ExprNode {
 
 struct ObjPropIndexExprNode : ExprNode {
 	std::shared_ptr<Node> obj;
-	std::string prop;
+	Common::String prop;
 	std::shared_ptr<Node> index;
 	std::shared_ptr<Node> index2;
 
-	ObjPropIndexExprNode(std::shared_ptr<Node> o, std::string p, std::shared_ptr<Node> i, std::shared_ptr<Node> i2)
+	ObjPropIndexExprNode(std::shared_ptr<Node> o, Common::String p, std::shared_ptr<Node> i, std::shared_ptr<Node> i2)
 		: ExprNode(kObjPropIndexExprNode), prop(p) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -818,9 +818,9 @@ struct PutStmtNode : StmtNode {
 
 struct WhenStmtNode : StmtNode {
 	int event;
-	std::string script;
+	Common::String script;
 
-	WhenStmtNode(int e, std::string s)
+	WhenStmtNode(int e, Common::String s)
 		: StmtNode(kWhenStmtNode), event(e), script(s) {}
 	virtual ~WhenStmtNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
@@ -829,10 +829,10 @@ struct WhenStmtNode : StmtNode {
 /* NewObjNode */
 
 struct NewObjNode : ExprNode {
-	std::string objType;
+	Common::String objType;
 	std::shared_ptr<Node> objArgs;
 
-	NewObjNode(std::string o, std::shared_ptr<Node> args) : ExprNode(kNewObjNode), objType(o), objArgs(args) {}
+	NewObjNode(Common::String o, std::shared_ptr<Node> args) : ExprNode(kNewObjNode), objType(o), objArgs(args) {}
 	virtual ~NewObjNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
 };

@@ -16,6 +16,8 @@
 
 namespace Common {
 
+class String;
+
 enum Endianness {
 	kBigEndian = 0,
 	kLittleEndian = 1
@@ -109,7 +111,9 @@ public:
 	void writeInt32(int32_t value);
 	void writeDouble(double value);
 	void writeString(const std::string &value);
+	void writeString(const Common::String &value);
 	void writePascalString(const std::string &value);
+	void writePascalString(const Common::String &value);
 };
 
 } // namespace Common

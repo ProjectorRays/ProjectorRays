@@ -7,8 +7,8 @@
 #ifndef COMMON_CODEWRITER_H
 #define COMMON_CODEWRITER_H
 
-#include <string>
 #include <sstream>
+#include "common/str.h"
 
 namespace Common {
 
@@ -16,8 +16,8 @@ class CodeWriter {
 protected:
 	std::stringstream _stream;
 
-	std::string _lineEnding;
-	std::string _indentation;
+	Common::String _lineEnding;
+	Common::String _indentation;
 
 	int _indentationLevel = 0;
 	bool _indentationWritten = false;
@@ -28,18 +28,18 @@ public:
 	bool doIndentation = true;
 
 public:
-	CodeWriter(std::string lineEnding, std::string indentation = "  ")
+	CodeWriter(Common::String lineEnding, Common::String indentation = "  ")
 		: _lineEnding(lineEnding), _indentation(indentation) {}
 
-	void write(std::string str);
+	void write(Common::String str);
 	void write(char ch);
-	void writeLine(std::string str);
+	void writeLine(Common::String str);
 	void writeLine();
 
 	void indent();
 	void unindent();
 
-	std::string str() const;
+	Common::String str() const;
 	size_t lineWidth() const { return _lineWidth; }
 	size_t size() const { return _size; }
 

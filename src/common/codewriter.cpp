@@ -8,7 +8,7 @@
 
 namespace Common {
 
-void CodeWriter::write(std::string str) {
+void CodeWriter::write(Common::String str) {
 	if (str.empty())
 		return;
 
@@ -25,7 +25,7 @@ void CodeWriter::write(char ch) {
 	_size += 1;
 }
 
-void CodeWriter::writeLine(std::string str) {
+void CodeWriter::writeLine(Common::String str) {
 	if (str.empty()) {
 		_stream << _lineEnding;
 	} else {
@@ -54,7 +54,7 @@ void CodeWriter::unindent() {
 	}
 }
 
-std::string CodeWriter::str() const {
+Common::String CodeWriter::str() const {
 	return _stream.str();
 }
 

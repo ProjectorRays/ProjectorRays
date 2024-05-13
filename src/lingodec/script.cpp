@@ -94,7 +94,7 @@ bool Script::validName(int id) const {
 	return context->validName(id);
 }
 
-std::string Script::getName(int id) const {
+Common::String Script::getName(int id) const {
 	return context->getName(id);
 }
 
@@ -105,7 +105,7 @@ void Script::setContext(ScriptContext *ctx) {
 	}
 	for (auto nameID : propertyNameIDs) {
 		if (validName(nameID)) {
-			std::string name = getName(nameID);
+			Common::String name = getName(nameID);
 			if (isFactory() && name == "me")
 				continue;
 			propertyNames.push_back(name);
@@ -174,7 +174,7 @@ void Script::writeScriptText(Common::CodeWriter &code, bool dotSyntax) const {
 	}
 }
 
-std::string Script::scriptText(const char *lineEnding, bool dotSyntax) const {
+Common::String Script::scriptText(const char *lineEnding, bool dotSyntax) const {
 	Common::CodeWriter code(lineEnding);
 	writeScriptText(code, dotSyntax);
 	return code.str();
@@ -204,7 +204,7 @@ void Script::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) const {
 	}
 }
 
-std::string Script::bytecodeText(const char *lineEnding, bool dotSyntax) const {
+Common::String Script::bytecodeText(const char *lineEnding, bool dotSyntax) const {
 	Common::CodeWriter code(lineEnding);
 	writeBytecodeText(code, dotSyntax);
 	return code.str();

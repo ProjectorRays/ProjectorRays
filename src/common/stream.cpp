@@ -10,6 +10,7 @@
 
 #include "common/log.h"
 #include "common/stream.h"
+#include "common/str.h"
 
 namespace Common {
 
@@ -315,8 +316,17 @@ void WriteStream::writeDouble(double value) {
 		boost::endian::store_big_u64(&_data[p], *(uint64_t *)(&value));
 }
 
+void WriteStream::writeString(const Common::String &value) {
+	writeBytes(value._str.c_str(), value.size());
+}
+
 void WriteStream::writeString(const std::string &value) {
 	writeBytes(value.c_str(), value.size());
+}
+
+void WriteStream::writePascalString(const Common::String &value) {
+	writeUint8(value.size());
+	writeString(value);
 }
 
 void WriteStream::writePascalString(const std::string &value) {

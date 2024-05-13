@@ -52,7 +52,7 @@ struct ScriptContext {
 
 	void read(Common::ReadStream &stream);
 	bool validName(int id) const;
-	std::string getName(int id) const;
+	Common::String getName(int id) const;
 	void parseScripts();
 };
 

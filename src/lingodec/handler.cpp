@@ -117,20 +117,20 @@ bool Handler::validName(int id) const {
 	return script->validName(id);
 }
 
-std::string Handler::getName(int id) const {
+Common::String Handler::getName(int id) const {
 	return script->getName(id);
 }
 
-std::string Handler::getArgumentName(int id) const {
+Common::String Handler::getArgumentName(int id) const {
 	if (-1 < id && (unsigned)id < argumentNameIDs.size())
 		return getName(argumentNameIDs[id]);
-	return "UNKNOWN_ARG_" + std::to_string(id);
+	return Common::String::format("UNKNOWN_ARG_%d", id);
 }
 
-std::string Handler::getLocalName(int id) const {
+Common::String Handler::getLocalName(int id) const {
 	if (-1 < id && (unsigned)id < localNameIDs.size())
 		return getName(localNameIDs[id]);
-	return "UNKNOWN_LOCAL_" + std::to_string(id);
+	return Common::String::format("UNKNOWN_LOCAL_%d", id);
 }
 
 std::shared_ptr<Node> Handler::pop() {
@@ -163,13 +163,13 @@ std::shared_ptr<Node> Handler::readVar(int varType) {
 		return id;
 	case 0x4: // arg
 		{
-			std::string name = getArgumentName(id->getValue()->i / variableMultiplier());
+			Common::String name = getArgumentName(id->getValue()->i / variableMultiplier());
 			auto ref = std::make_shared<Datum>(kDatumVarRef, name);
 			return std::make_shared<LiteralNode>(std::move(ref));
 		}
 	case 0x5: // local
 		{
-			std::string name = getLocalName(id->getValue()->i / variableMultiplier());
+			Common::String name = getLocalName(id->getValue()->i / variableMultiplier());
 			auto ref = std::make_shared<Datum>(kDatumVarRef, name);
 			return std::make_shared<LiteralNode>(std::move(ref));
 		}
@@ -182,8 +182,8 @@ std::shared_ptr<Node> Handler::readVar(int varType) {
 	return std::make_shared<ErrorNode>();
 }
 
-std::string Handler::getVarNameFromSet(const Bytecode &bytecode) {
-	std::string varName;
+Common::String Handler::getVarNameFromSet(const Bytecode &bytecode) {
+	Common::String varName;
 	switch (bytecode.opcode) {
 	case kOpSetGlobal:
 	case kOpSetGlobal2:
@@ -283,7 +283,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 				castID = pop();
 			}
 			auto memberID = pop();
-			std::string prefix;
+			Common::String prefix;
 			if (propertyType == 0x0b || propertyType == 0x0c) {
 				prefix = "field";
 			} else if (propertyType == 0x14 || propertyType == 0x15) {
@@ -304,7 +304,7 @@ std::shared_ptr<Node> Handler::readV4Property(int propertyType, int propertyID) 
 	default:
 		break;
 	}
-	return std::make_shared<CommentNode>("ERROR: Unknown property type " + std::to_string(propertyType));
+	return std::make_shared<CommentNode>(Common::String::format("ERROR: Unknown property type %d", propertyType));
 }
 
 std::shared_ptr<Node> Handler::readChunkRef(std::shared_ptr<Node> string) {
@@ -848,7 +848,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			case kTagRepeatWithIn:
 				{
 					auto list = pop();
-					std::string varName = getVarNameFromSet(bytecodeArray[index + 5]);
+					Common::String varName = getVarNameFromSet(bytecodeArray[index + 5]);
 					auto loop = std::make_shared<RepeatWithInStmtNode>(index, varName, std::move(list));
 					loop->block->endPos = endPos;
 					translation = loop;
@@ -863,7 +863,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 					auto start = pop();
 					auto endRepeat = bytecodeArray[endIndex - 1];
 					uint32_t conditionStartIndex = bytecodePosMap[endRepeat.pos - endRepeat.obj];
-					std::string varName = getVarNameFromSet(bytecodeArray[conditionStartIndex - 1]);
+					Common::String varName = getVarNameFromSet(bytecodeArray[conditionStartIndex - 1]);
 					auto loop = std::make_shared<RepeatWithToStmtNode>(index, varName, std::move(start), up, std::move(end));
 					loop->block->endPos = endPos;
 					translation = loop;
@@ -891,13 +891,13 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpExtCall:
 	case kOpTellCall:
 		{
-			std::string name = getName(bytecode.obj);
+			Common::String name = getName(bytecode.obj);
 			auto argList = pop();
 			bool isStatement = (argList->getValue()->type == kDatumArgListNoRet);
 			auto &rawArgList = argList->getValue()->l;
 			size_t nargs = rawArgList.size();
 			if (isStatement && name == "sound" && nargs > 0 && rawArgList[0]->type == kLiteralNode && rawArgList[0]->getValue()->type == kDatumSymbol) {
-				std::string cmd = rawArgList[0]->getValue()->s;
+				Common::String cmd = rawArgList[0]->getValue()->s;
 				rawArgList.erase(rawArgList.begin());
 				translation = std::make_shared<SoundCmdStmtNode>(cmd, std::move(argList));
 			} else if (isStatement && name == "play" && nargs <= 2) {
@@ -968,8 +968,8 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				// This is either a `set eventScript to "script"` or `when event then script` statement.
 				// If the script starts with a space, it's probably a when statement.
 				// If the script contains a line break, it's definitely a when statement.
-				std::string script = value->getValue()->s;
-				if (script.size() > 0 && (script[0] == ' ' || script.find('\r') != std::string::npos)) {
+				Common::String script = value->getValue()->s;
+				if (script.size() > 0 && (script[0] == ' ' || script.find('\r') != Common::String::npos)) {
 					translation = std::make_shared<WhenStmtNode>(propertyID, script);
 				}
 			}
@@ -1126,7 +1126,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		break;
 	case kOpObjCall:
 		{
-			std::string method = getName(bytecode.obj);
+			Common::String method = getName(bytecode.obj);
 			auto argList = pop();
 			auto &rawArgList = argList->getValue()->l;
 			size_t nargs = rawArgList.size();
@@ -1146,7 +1146,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				// obj.getProp(#prop, i) => obj.prop[i]
 				// obj.getProp(#prop, i, i2) => obj.prop[i..i2]
 				auto obj = rawArgList[0];
-				std::string propName  = rawArgList[1]->getValue()->s;
+				Common::String propName  = rawArgList[1]->getValue()->s;
 				auto i = rawArgList[2];
 				auto i2 = (nargs == 4) ? rawArgList[3] : nullptr;
 				translation = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i), std::move(i2));
@@ -1154,7 +1154,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				// obj.setProp(#prop, i, val) => obj.prop[i] = val
 				// obj.setProp(#prop, i, i2, val) => obj.prop[i..i2] = val
 				auto obj = rawArgList[0];
-				std::string propName  = rawArgList[1]->getValue()->s;
+				Common::String propName  = rawArgList[1]->getValue()->s;
 				auto i = rawArgList[2];
 				auto i2 = (nargs == 5) ? rawArgList[3] : nullptr;
 				auto propExpr = std::make_shared<ObjPropIndexExprNode>(std::move(obj), propName, std::move(i), std::move(i2));
@@ -1163,7 +1163,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			} else if (method == "count" && nargs == 2 && rawArgList[1]->getValue()->type == kDatumSymbol) {
 				// obj.count(#prop) => obj.prop.count
 				auto obj = rawArgList[0];
-				std::string propName  = rawArgList[1]->getValue()->s;
+				Common::String propName  = rawArgList[1]->getValue()->s;
 				auto propExpr = std::make_shared<ObjPropExprNode>(std::move(obj), propName);
 				translation = std::make_shared<ObjPropExprNode>(std::move(propExpr), "count");
 			} else if ((method == "setContents" || method == "setContentsAfter" || method == "setContentsBefore") && nargs == 2) {
@@ -1214,7 +1214,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		{
 			auto commentText = StandardNames::getOpcodeName(bytecode.opID);
 			if (bytecode.opcode >= 0x40)
-				commentText += " " + std::to_string(bytecode.obj);
+				commentText += Common::String::format(" %d", bytecode.obj);
 			translation = std::make_shared<CommentNode>(commentText);
 			stack.clear(); // Clear stack so later bytecode won't be too screwed up
 		}
@@ -1236,7 +1236,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	return 1;
 }
 
-std::string posToString(int32_t pos) {
+Common::String posToString(int32_t pos) {
 	std::stringstream ss;
 	ss << "[" << std::setfill(' ') << std::setw(3) << pos << "]";
 	return ss.str();
@@ -1284,7 +1284,7 @@ void Handler::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) {
 		default:
 			if (bytecode.opID > 0x40) {
 				code.write(" ");
-				code.write(std::to_string(bytecode.obj));
+				code.write(Common::String::format("%d", bytecode.obj));
 			}
 			break;
 		}
