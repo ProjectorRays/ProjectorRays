@@ -94,14 +94,14 @@ void Handler::readNames() {
 			continue;
 		argumentNames.push_back(getName(argumentNameIDs[i]));
 	}
-	for (auto nameID : localNameIDs) {
-		if (validName(nameID)) {
-			localNames.push_back(getName(nameID));
+	for (auto nameID_ : localNameIDs) {
+		if (validName(nameID_)) {
+			localNames.push_back(getName(nameID_));
 		}
 	}
-	for (auto nameID : globalNameIDs) {
-		if (validName(nameID)) {
-			globalNames.push_back(getName(nameID));
+	for (auto nameID_ : globalNameIDs) {
+		if (validName(nameID_)) {
+			globalNames.push_back(getName(nameID_));
 		}
 	}
 }
@@ -156,14 +156,14 @@ Common::SharedPtr<Node> Handler::readVar(int varType) {
 		return id;
 	case 0x4: // arg
 		{
-			Common::String name = getArgumentName(id->getValue()->i / variableMultiplier());
-			auto ref = Common::SharedPtr<Datum>(new Datum(kDatumVarRef, name));
+			Common::String name_ = getArgumentName(id->getValue()->i / variableMultiplier());
+			auto ref = Common::SharedPtr<Datum>(new Datum(kDatumVarRef, name_));
 			return Common::SharedPtr<Node>(new LiteralNode(Common::move(ref)));
 		}
 	case 0x5: // local
 		{
-			Common::String name = getLocalName(id->getValue()->i / variableMultiplier());
-			auto ref = Common::SharedPtr<Datum>(new Datum(kDatumVarRef, name));
+			Common::String name_ = getLocalName(id->getValue()->i / variableMultiplier());
+			auto ref = Common::SharedPtr<Datum>(new Datum(kDatumVarRef, name_));
 			return Common::SharedPtr<Node>(new LiteralNode(Common::move(ref)));
 		}
 	case 0x6: // field
@@ -730,8 +730,8 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpGetGlobal:
 	case kOpGetGlobal2:
 		{
-			auto name = getName(bytecode.obj);
-			translation = Common::SharedPtr<Node>(new VarNode(name));
+			auto name_ = getName(bytecode.obj);
+			translation = Common::SharedPtr<Node>(new VarNode(name_));
 		}
 		break;
 	case kOpGetProp:
@@ -884,19 +884,19 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpExtCall:
 	case kOpTellCall:
 		{
-			Common::String name = getName(bytecode.obj);
+			Common::String name_ = getName(bytecode.obj);
 			auto argList = pop();
 			bool isStatement = (argList->getValue()->type == kDatumArgListNoRet);
 			auto &rawArgList = argList->getValue()->l;
 			size_t nargs = rawArgList.size();
-			if (isStatement && name == "sound" && nargs > 0 && rawArgList[0]->type == kLiteralNode && rawArgList[0]->getValue()->type == kDatumSymbol) {
+			if (isStatement && name_ == "sound" && nargs > 0 && rawArgList[0]->type == kLiteralNode && rawArgList[0]->getValue()->type == kDatumSymbol) {
 				Common::String cmd = rawArgList[0]->getValue()->s;
 				rawArgList.erase(rawArgList.begin());
 				translation = Common::SharedPtr<Node>(new SoundCmdStmtNode(cmd, Common::move(argList)));
-			} else if (isStatement && name == "play" && nargs <= 2) {
+			} else if (isStatement && name_ == "play" && nargs <= 2) {
 				translation = Common::SharedPtr<Node>(new PlayCmdStmtNode(Common::move(argList)));
 			} else {
-				translation = Common::SharedPtr<Node>(new CallNode(name, Common::move(argList)));
+				translation = Common::SharedPtr<Node>(new CallNode(name_, Common::move(argList)));
 			}
 		}
 		break;
@@ -961,9 +961,9 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				// This is either a `set eventScript to "script"` or `when event then script` statement.
 				// If the script starts with a space, it's probably a when statement.
 				// If the script contains a line break, it's definitely a when statement.
-				Common::String script = value->getValue()->s;
-				if (script.size() > 0 && (script[0] == ' ' || script.find('\r') != Common::String::npos)) {
-					translation = Common::SharedPtr<Node>(new WhenStmtNode(propertyID, script));
+				Common::String script_ = value->getValue()->s;
+				if (script_.size() > 0 && (script_[0] == ' ' || script_.find('\r') != Common::String::npos)) {
+					translation = Common::SharedPtr<Node>(new WhenStmtNode(propertyID, script_));
 				}
 			}
 			if (!translation) {
@@ -1192,8 +1192,8 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		break;
 	case kOpGetTopLevelProp:
 		{
-			auto name = getName(bytecode.obj);
-			translation = Common::SharedPtr<VarNode>(new VarNode(name));
+			auto name_ = getName(bytecode.obj);
+			translation = Common::SharedPtr<VarNode>(new VarNode(name_));
 		}
 		break;
 	case kOpNewObj:

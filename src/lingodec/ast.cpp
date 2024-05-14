@@ -82,10 +82,10 @@ void Datum::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 		{
 			if (type == kDatumList)
 				code.write("[");
-			for (size_t i = 0; i < l.size(); i++) {
-				if (i > 0)
+			for (size_t ii = 0; ii < l.size(); ii++) {
+				if (ii > 0)
 					code.write(", ");
-				l[i]->writeScriptText(code, dot, sum);
+				l[ii]->writeScriptText(code, dot, sum);
 			}
 			if (type == kDatumList)
 				code.write("]");
@@ -97,12 +97,12 @@ void Datum::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 			if (l.size() == 0) {
 				code.write(":");
 			} else {
-				for (size_t i = 0; i < l.size(); i += 2) {
-					if (i > 0)
+				for (size_t ii = 0; ii < l.size(); ii += 2) {
+					if (ii > 0)
 						code.write(", ");
-					l[i]->writeScriptText(code, dot, sum);
+					l[ii]->writeScriptText(code, dot, sum);
 					code.write(": ");
-					l[i + 1]->writeScriptText(code, dot, sum);
+					l[ii + 1]->writeScriptText(code, dot, sum);
 				}
 			}
 			code.write("]");
