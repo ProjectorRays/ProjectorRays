@@ -13,7 +13,6 @@
 #include "lingodec/enums.h"
 
 namespace Common {
-class CodeWriter;
 class ReadStream;
 }
 
@@ -21,6 +20,7 @@ namespace LingoDec {
 
 struct AST;
 struct Bytecode;
+class CodeWriter;
 struct Node;
 struct Script;
 
@@ -83,7 +83,7 @@ struct Handler {
 	BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
 	void parse();
 	uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
-	void writeBytecodeText(Common::CodeWriter &code, bool dotSyntax);
+	void writeBytecodeText(CodeWriter &code, bool dotSyntax);
 };
 
 /* Bytecode */

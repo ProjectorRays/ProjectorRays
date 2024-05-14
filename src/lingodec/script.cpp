@@ -4,9 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "common/codewriter.h"
 #include "common/stream.h"
 #include "lingodec/ast.h"
+#include "lingodec/codewriter.h"
 #include "lingodec/context.h"
 #include "lingodec/handler.h"
 #include "lingodec/script.h"
@@ -125,7 +125,7 @@ void Script::parse() {
 	}
 }
 
-void Script::writeVarDeclarations(Common::CodeWriter &code) const {
+void Script::writeVarDeclarations(CodeWriter &code) const {
 	if (!isFactory()) {
 		if (propertyNames.size() > 0) {
 			code.write("property ");
@@ -148,7 +148,7 @@ void Script::writeVarDeclarations(Common::CodeWriter &code) const {
 	}
 }
 
-void Script::writeScriptText(Common::CodeWriter &code, bool dotSyntax) const {
+void Script::writeScriptText(CodeWriter &code, bool dotSyntax) const {
 	size_t origSize = code.size();
 	writeVarDeclarations(code);
 	if (isFactory()) {
@@ -173,12 +173,12 @@ void Script::writeScriptText(Common::CodeWriter &code, bool dotSyntax) const {
 }
 
 Common::String Script::scriptText(const char *lineEnding, bool dotSyntax) const {
-	Common::CodeWriter code(lineEnding);
+	CodeWriter code(lineEnding);
 	writeScriptText(code, dotSyntax);
 	return code.str();
 }
 
-void Script::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) const {
+void Script::writeBytecodeText(CodeWriter &code, bool dotSyntax) const {
 	size_t origSize = code.size();
 	writeVarDeclarations(code);
 	if (isFactory()) {
@@ -203,7 +203,7 @@ void Script::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) const {
 }
 
 Common::String Script::bytecodeText(const char *lineEnding, bool dotSyntax) const {
-	Common::CodeWriter code(lineEnding);
+	CodeWriter code(lineEnding);
 	writeBytecodeText(code, dotSyntax);
 	return code.str();
 }

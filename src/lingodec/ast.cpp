@@ -4,9 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "common/codewriter.h"
 #include "common/util.h"
 #include "lingodec/ast.h"
+#include "lingodec/codewriter.h"
 #include "lingodec/handler.h"
 #include "lingodec/names.h"
 #include "lingodec/script.h"
@@ -27,7 +27,7 @@ int Datum::toInt() {
 	return 0;
 }
 
-void Datum::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void Datum::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	switch (type) {
 	case kDatumVoid:
 		code.write("VOID");
@@ -113,7 +113,7 @@ void Datum::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const 
 
 /* AST */
 
-void AST::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void AST::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	root->writeScriptText(code, dot, sum);
 }
 
@@ -169,7 +169,7 @@ bool Node::hasSpaces(bool) {
 
 /* ErrorNode */
 
-void ErrorNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void ErrorNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("ERROR");
 }
 
@@ -179,14 +179,14 @@ bool ErrorNode::hasSpaces(bool) {
 
 /* CommentNode */
 
-void CommentNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void CommentNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("-- ");
 	code.write(text);
 }
 
 /* LiteralNode */
 
-void LiteralNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void LiteralNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	value->writeScriptText(code, dot, sum);
 }
 
@@ -200,7 +200,7 @@ bool LiteralNode::hasSpaces(bool) {
 
 /* BlockNode */
 
-void BlockNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void BlockNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	for (const auto &child : children) {
 		child->writeScriptText(code, dot, sum);
 		code.writeLine();
@@ -214,7 +214,7 @@ void BlockNode::addChild(Common::SharedPtr<Node> child) {
 
 /* HandlerNode */
 
-void HandlerNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void HandlerNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	if (handler->isGenericEvent) {
 		block->writeScriptText(code, dot, sum);
 	} else {
@@ -264,13 +264,13 @@ void HandlerNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) 
 
 /* ExitStmtNode */
 
-void ExitStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void ExitStmtNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("exit");
 }
 
 /* InverseOpNode */
 
-void InverseOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void InverseOpNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("-");
 
 	bool parenOperand = operand->hasSpaces(dot);
@@ -285,7 +285,7 @@ void InverseOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum
 
 /* NotOpNode */
 
-void NotOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void NotOpNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("not ");
 
 	bool parenOperand = operand->hasSpaces(dot);
@@ -300,7 +300,7 @@ void NotOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) co
 
 /* BinaryOpNode */
 
-void BinaryOpNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void BinaryOpNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	unsigned int precedence = getPrecedence();
 	bool parenLeft = false;
 	bool parenRight = false;
@@ -361,7 +361,7 @@ unsigned int BinaryOpNode::getPrecedence() const {
 
 /* ChunkExprNode */
 
-void ChunkExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ChunkExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write(StandardNames::getName(StandardNames::chunkTypeNames, type));
 	code.write(" ");
 	first->writeScriptText(code, dot, sum);
@@ -375,21 +375,21 @@ void ChunkExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum
 
 /* ChunkHiliteStmtNode */
 
-void ChunkHiliteStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ChunkHiliteStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("hilite ");
 	chunk->writeScriptText(code, dot, sum);
 }
 
 /* ChunkDeleteStmtNode */
 
-void ChunkDeleteStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ChunkDeleteStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("delete ");
 	chunk->writeScriptText(code, dot, sum);
 }
 
 /* SpriteIntersectsExprNode */
 
-void SpriteIntersectsExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void SpriteIntersectsExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("sprite ");
 
 	bool parenFirstSprite = (firstSprite->type == kBinaryOpNode);
@@ -415,7 +415,7 @@ void SpriteIntersectsExprNode::writeScriptText(Common::CodeWriter &code, bool do
 
 /* SpriteWithinExprNode */
 
-void SpriteWithinExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void SpriteWithinExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("sprite ");
 
 	bool parenFirstSprite = (firstSprite->type == kBinaryOpNode);
@@ -441,7 +441,7 @@ void SpriteWithinExprNode::writeScriptText(Common::CodeWriter &code, bool dot, b
 
 /* MemberExprNode */
 
-void MemberExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void MemberExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	bool hasCastID = castID && !(castID->type == kLiteralNode && castID->getValue()->type == kDatumInt && castID->getValue()->i == 0);
 	code.write(type);
 	if (dot) {
@@ -485,7 +485,7 @@ bool MemberExprNode::hasSpaces(bool dot) {
 
 /* VarNode */
 
-void VarNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void VarNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write(varName);
 }
 
@@ -495,7 +495,7 @@ bool VarNode::hasSpaces(bool) {
 
 /* AssignmentStmtNode */
 
-void AssignmentStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void AssignmentStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	if (!dot || forceVerbose) {
 		code.write("set ");
 		variable->writeScriptText(code, false, sum); // we want the variable to always be verbose
@@ -510,7 +510,7 @@ void AssignmentStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, boo
 
 /* IfStmtNode */
 
-void IfStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void IfStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("if ");
 	condition->writeScriptText(code, dot, sum);
 	code.write(" then");
@@ -535,7 +535,7 @@ void IfStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) c
 
 /* RepeatWhileStmtNode */
 
-void RepeatWhileStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void RepeatWhileStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("repeat while ");
 	condition->writeScriptText(code, dot, sum);
 	if (!sum) {
@@ -549,7 +549,7 @@ void RepeatWhileStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bo
 
 /* RepeatWithInStmtNode */
 
-void RepeatWithInStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void RepeatWithInStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("repeat with ");
 	code.write(varName);
 	code.write(" in ");
@@ -565,7 +565,7 @@ void RepeatWithInStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, b
 
 /* RepeatWithToStmtNode */
 
-void RepeatWithToStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void RepeatWithToStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("repeat with ");
 	code.write(varName);
 	code.write(" = ");
@@ -587,7 +587,7 @@ void RepeatWithToStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, b
 
 /* CaseLabelNode */
 
-void CaseLabelNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void CaseLabelNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	if (sum) {
 		code.write("(case) ");
 		if (parent->type == kCaseLabelNode) {
@@ -638,7 +638,7 @@ void CaseLabelNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum
 
 /* OtherwiseNode */
 
-void OtherwiseNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void OtherwiseNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	if (sum) {
 		code.write("(case) otherwise:");
 	} else {
@@ -651,13 +651,13 @@ void OtherwiseNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum
 
 /* EndCaseNode */
 
-void EndCaseNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void EndCaseNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("end case");
 }
 
 /* CaseStmtNode */
 
-void CaseStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void CaseStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("case ");
 	value->writeScriptText(code, dot, sum);
 	code.write(" of");
@@ -691,7 +691,7 @@ void CaseStmtNode::addOtherwise() {
 
 /* TellStmtNode */
 
-void TellStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void TellStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("tell ");
 	window->writeScriptText(code, dot, sum);
 	if (!sum) {
@@ -705,7 +705,7 @@ void TellStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum)
 
 /* SoundCmdStmtNode */
 
-void SoundCmdStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void SoundCmdStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("sound ");
 	code.write(cmd);
 	if (argList->getValue()->l.size() > 0) {
@@ -716,7 +716,7 @@ void SoundCmdStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool 
 
 /* PlayCmdStmtNode */
 
-void PlayCmdStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void PlayCmdStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	auto &rawArgs = argList->getValue()->l;
 
 	code.write("play");
@@ -775,7 +775,7 @@ bool CallNode::isMemberExpr() const {
 	return false;
 }
 
-void CallNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void CallNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	if (isExpression && argList->getValue()->l.size() == 0) {
 		if (name == "pi") {
 			code.write("PI");
@@ -851,7 +851,7 @@ bool CallNode::hasSpaces(bool dot) {
 
 /* ObjCallNode */
 
-void ObjCallNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ObjCallNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	auto &rawArgs = argList->getValue()->l;
 
 	auto &obj = rawArgs[0];
@@ -881,7 +881,7 @@ bool ObjCallNode::hasSpaces(bool) {
 
 /* ObjCallV4Node */
 
-void ObjCallV4Node::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ObjCallV4Node::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	obj->writeScriptText(code, dot, sum);
 	code.write("(");
 	argList->writeScriptText(code, dot, sum);
@@ -894,14 +894,14 @@ bool ObjCallV4Node::hasSpaces(bool) {
 
 /* TheExprNode */
 
-void TheExprNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void TheExprNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("the ");
 	code.write(prop);
 }
 
 /* LastStringChunkExprNode */
 
-void LastStringChunkExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) const {
+void LastStringChunkExprNode::writeScriptText(CodeWriter &code, bool, bool sum) const {
 	code.write("the last ");
 	code.write(StandardNames::getName(StandardNames::chunkTypeNames, type));
 	code.write(" in ");
@@ -918,7 +918,7 @@ void LastStringChunkExprNode::writeScriptText(Common::CodeWriter &code, bool, bo
 
 /* StringChunkCountExprNode */
 
-void StringChunkCountExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) const {
+void StringChunkCountExprNode::writeScriptText(CodeWriter &code, bool, bool sum) const {
 	code.write("the number of ");
 	code.write(StandardNames::getName(StandardNames::chunkTypeNames, type)); // we want the object to always be verbose
 	code.write("s in ");
@@ -935,7 +935,7 @@ void StringChunkCountExprNode::writeScriptText(Common::CodeWriter &code, bool, b
 
 /* MenuPropExprNode */
 
-void MenuPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void MenuPropExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("the ");
 	code.write(StandardNames::getName(StandardNames::menuPropertyNames, prop));
 	code.write(" of menu ");
@@ -952,7 +952,7 @@ void MenuPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool 
 
 /* MenuItemPropExprNode */
 
-void MenuItemPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void MenuItemPropExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("the ");
 	code.write(StandardNames::getName(StandardNames::menuItemPropertyNames, prop));
 	code.write(" of menuItem ");
@@ -980,7 +980,7 @@ void MenuItemPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, b
 
 /* SoundPropExprNode */
 
-void SoundPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void SoundPropExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("the ");
 	code.write(StandardNames::getName(StandardNames::soundPropertyNames, prop));
 	code.write(" of sound ");
@@ -997,7 +997,7 @@ void SoundPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool
 
 /* SpritePropExprNode */
 
-void SpritePropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void SpritePropExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("the ");
 	code.write(StandardNames::getName(StandardNames::spritePropertyNames, prop));
 	code.write(" of sprite ");
@@ -1014,7 +1014,7 @@ void SpritePropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, boo
 
 /* ThePropExprNode */
 
-void ThePropExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) const {
+void ThePropExprNode::writeScriptText(CodeWriter &code, bool, bool sum) const {
 	code.write("the ");
 	code.write(prop);
 	code.write(" of ");
@@ -1031,7 +1031,7 @@ void ThePropExprNode::writeScriptText(Common::CodeWriter &code, bool, bool sum) 
 
 /* ObjPropExprNode */
 
-void ObjPropExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ObjPropExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	if (dot) {
 		bool parenObj = obj->hasSpaces(dot);
 		if (parenObj) {
@@ -1066,7 +1066,7 @@ bool ObjPropExprNode::hasSpaces(bool dot) {
 
 /* ObjBracketExprNode */
 
-void ObjBracketExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ObjBracketExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	bool parenObj = obj->hasSpaces(dot);
 	if (parenObj) {
 		code.write("(");
@@ -1087,7 +1087,7 @@ bool ObjBracketExprNode::hasSpaces(bool) {
 
 /* ObjPropIndexExprNode */
 
-void ObjPropIndexExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void ObjPropIndexExprNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	bool parenObj = obj->hasSpaces(dot);
 	if (parenObj) {
 		code.write("(");
@@ -1114,19 +1114,19 @@ bool ObjPropIndexExprNode::hasSpaces(bool) {
 
 /* ExitRepeatStmtNode */
 
-void ExitRepeatStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void ExitRepeatStmtNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("exit repeat");
 }
 
 /* NextRepeatStmtNode */
 
-void NextRepeatStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void NextRepeatStmtNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("next repeat");
 }
 
 /* PutStmtNode */
 
-void PutStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void PutStmtNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("put ");
 	value->writeScriptText(code, dot, sum);
 	code.write(" ");
@@ -1137,7 +1137,7 @@ void PutStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) 
 
 /* WhenStmtNode */
 
-void WhenStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
+void WhenStmtNode::writeScriptText(CodeWriter &code, bool, bool) const {
 	code.write("when ");
 	code.write(StandardNames::getName(StandardNames::whenEventNames, event));
 	code.write(" then");
@@ -1158,7 +1158,7 @@ void WhenStmtNode::writeScriptText(Common::CodeWriter &code, bool, bool) const {
 
 /* NewObjNode */
 
-void NewObjNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
+void NewObjNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 	code.write("new ");
 	code.write(objType);
 	code.write("(");

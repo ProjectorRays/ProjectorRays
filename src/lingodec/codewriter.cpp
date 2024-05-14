@@ -4,9 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "common/codewriter.h"
+#include "lingodec/codewriter.h"
 
-namespace Common {
+namespace LingoDec {
 
 void CodeWriter::write(Common::String str) {
 	if (str.empty())

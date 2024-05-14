@@ -7,7 +7,7 @@
 #ifndef COMMON_JSON_H
 #define COMMON_JSON_H
 
-#include "common/codewriter.h"
+#include "lingodec/codewriter.h"
 #include "common/util.h"
 
 namespace Common {
@@ -15,7 +15,7 @@ namespace Common {
 /**
  * JSONWriter writes a non-standard variant of JSON which allows strings with
  * arbitrary character encodings, unlike standard JSON which mandates Unicode.
- * 
+ *
  * String literals in this variant may contain:
  * - The standard single-character escape sequences \", \\, \b, \f, \n, \r, \t
  * - The non-standard single-character escape sequence \v
@@ -24,7 +24,7 @@ namespace Common {
  * - The non-standard hex code escape sequence \xXX
  */
 
-class JSONWriter : protected CodeWriter {
+class JSONWriter : protected LingoDec::CodeWriter {
 protected:
 	enum Context {
 		kContextStart,

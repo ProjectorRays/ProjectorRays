@@ -4,13 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef COMMON_CODEWRITER_H
-#define COMMON_CODEWRITER_H
+#ifndef LINGODEC_CODEWRITER_H
+#define LINGODEC_CODEWRITER_H
 
 #include <sstream>
 #include "common/str.h"
 
-namespace Common {
+namespace LingoDec {
 
 class CodeWriter {
 protected:
@@ -49,4 +49,4 @@ protected:
 
 } // namespace Common
 
-#endif // COMMON_CODEWRITER_H
+#endif // LINGODEC_CODEWRITER_H

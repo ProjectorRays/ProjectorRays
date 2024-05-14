@@ -26,7 +26,6 @@ fontmaps/%.h: $(patsubst %.h,%.txt,$@)
 
 OBJS = \
 	src/main.o \
-	src/common/codewriter.o \
 	src/common/json.o \
 	src/common/log.o \
 	src/common/stream.o \
@@ -43,6 +42,7 @@ OBJS = \
 	src/io/fileio.o \
 	src/io/options.o \
 	src/lingodec/ast.o \
+	src/lingodec/codewriter.o \
 	src/lingodec/context.o \
 	src/lingodec/handler.o \
 	src/lingodec/names.o \

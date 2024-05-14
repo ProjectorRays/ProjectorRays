@@ -12,12 +12,12 @@
 #include "lingodec/enums.h"
 
 namespace Common {
-class CodeWriter;
 class ReadStream;
 }
 
 namespace LingoDec {
 
+class CodeWriter;
 struct Datum;
 struct Handler;
 struct ScriptContext;
@@ -82,10 +82,10 @@ struct Script {
 	Common::String getName(int id) const;
 	void setContext(ScriptContext *ctx);
 	void parse();
-	void writeVarDeclarations(Common::CodeWriter &code) const;
-	void writeScriptText(Common::CodeWriter &code, bool dotSyntax) const;
+	void writeVarDeclarations(CodeWriter &code) const;
+	void writeScriptText(CodeWriter &code, bool dotSyntax) const;
 	Common::String scriptText(const char *lineEnding, bool dotSyntax) const;
-	void writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) const;
+	void writeBytecodeText(CodeWriter &code, bool dotSyntax) const;
 	Common::String bytecodeText(const char *lineEnding, bool dotSyntax) const;
 
 	bool isFactory() const;

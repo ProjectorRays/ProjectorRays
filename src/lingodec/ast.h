@@ -11,6 +11,7 @@
 #include "common/ptr.h"
 #include "common/str.h"
 #include "common/util.h"
+#include "lingodec/codewriter.h"
 #include "lingodec/enums.h"
 
 namespace LingoDec {
@@ -51,7 +52,7 @@ struct Datum {
 	}
 
 	int toInt();
-	void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* Node */
@@ -66,7 +67,7 @@ struct Node {
 
 	Node(NodeType t) : type(t), isExpression(false), isStatement(false), isLabel(false), isLoop(false), parent(nullptr) {}
 	virtual ~Node() = default;
-	virtual void writeScriptText(Common::CodeWriter&, bool, bool) const {}
+	virtual void writeScriptText(CodeWriter&, bool, bool) const {}
 	virtual Common::SharedPtr<Datum> getValue();
 	Node *ancestorStatement();
 	LoopNode *ancestorLoop();
@@ -116,7 +117,7 @@ struct LoopNode : StmtNode {
 struct ErrorNode : ExprNode {
 	ErrorNode() : ExprNode(kErrorNode) {}
 	virtual ~ErrorNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -127,7 +128,7 @@ struct CommentNode : Node {
 
 	CommentNode(Common::String t) : Node(kCommentNode), text(t) {}
 	virtual ~CommentNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* LiteralNode */
@@ -139,7 +140,7 @@ struct LiteralNode : ExprNode {
 		value = Common::move(d);
 	}
 	virtual ~LiteralNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual Common::SharedPtr<Datum> getValue();
 	virtual bool hasSpaces(bool dot);
 };
@@ -155,7 +156,7 @@ struct BlockNode : Node {
 
 	BlockNode() : Node(kBlockNode), endPos(-1), currentCaseLabel(nullptr) {}
 	virtual ~BlockNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	void addChild(Common::SharedPtr<Node> child);
 };
 
@@ -171,7 +172,7 @@ struct HandlerNode : Node {
 		block->parent = this;
 	}
 	virtual ~HandlerNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* ExitStmtNode */
@@ -179,7 +180,7 @@ struct HandlerNode : Node {
 struct ExitStmtNode : StmtNode {
 	ExitStmtNode() : StmtNode(kExitStmtNode) {}
 	virtual ~ExitStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* InverseOpNode */
@@ -192,7 +193,7 @@ struct InverseOpNode : ExprNode {
 		operand->parent = this;
 	}
 	virtual ~InverseOpNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* NotOpNode */
@@ -205,7 +206,7 @@ struct NotOpNode : ExprNode {
 		operand->parent = this;
 	}
 	virtual ~NotOpNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* BinaryOpNode */
@@ -223,7 +224,7 @@ struct BinaryOpNode : ExprNode {
 		right->parent = this;
 	}
 	virtual ~BinaryOpNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual unsigned int getPrecedence() const;
 };
 
@@ -245,7 +246,7 @@ struct ChunkExprNode : ExprNode {
 		string->parent = this;
 	}
 	virtual ~ChunkExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* ChunkHiliteStmtNode */
@@ -258,7 +259,7 @@ struct ChunkHiliteStmtNode : StmtNode {
 		chunk->parent = this;
 	}
 	virtual ~ChunkHiliteStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* ChunkDeleteStmtNode */
@@ -271,7 +272,7 @@ struct ChunkDeleteStmtNode : StmtNode {
 		chunk->parent = this;
 	}
 	virtual ~ChunkDeleteStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* SpriteIntersectsExprNode */
@@ -288,7 +289,7 @@ struct SpriteIntersectsExprNode : ExprNode {
 		secondSprite->parent = this;
 	}
 	virtual ~SpriteIntersectsExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* SpriteWithinExprNode */
@@ -305,7 +306,7 @@ struct SpriteWithinExprNode : ExprNode {
 		secondSprite->parent = this;
 	}
 	virtual ~SpriteWithinExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* MemberExprNode */
@@ -325,7 +326,7 @@ struct MemberExprNode : ExprNode {
 		}
 	}
 	virtual ~MemberExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -336,7 +337,7 @@ struct VarNode : ExprNode {
 
 	VarNode(Common::String v) : ExprNode(kVarNode), varName(v) {}
 	virtual ~VarNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -356,7 +357,7 @@ struct AssignmentStmtNode : StmtNode {
 	}
 
 	virtual ~AssignmentStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* IfStmtNode */
@@ -376,7 +377,7 @@ struct IfStmtNode : StmtNode {
 		block2->parent = this;
 	}
 	virtual ~IfStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* RepeatWhileStmtNode */
@@ -393,7 +394,7 @@ struct RepeatWhileStmtNode : LoopNode {
 		block->parent = this;
 	}
 	virtual ~RepeatWhileStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* RepeatWithInStmtNode */
@@ -412,7 +413,7 @@ struct RepeatWithInStmtNode : LoopNode {
 		block->parent = this;
 	}
 	virtual ~RepeatWithInStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* RepeatWithToStmtNode */
@@ -435,7 +436,7 @@ struct RepeatWithToStmtNode : LoopNode {
 		block->parent = this;
 	}
 	virtual ~RepeatWithToStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* CaseLabelNode */
@@ -454,7 +455,7 @@ struct CaseLabelNode : LabelNode {
 		value->parent = this;
 	}
 	virtual ~CaseLabelNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* OtherwiseNode */
@@ -467,7 +468,7 @@ struct OtherwiseNode : LabelNode {
 		block->parent = this;
 	}
 	virtual ~OtherwiseNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* EndCaseNode */
@@ -475,7 +476,7 @@ struct OtherwiseNode : LabelNode {
 struct EndCaseNode : LabelNode {
 	EndCaseNode() : LabelNode(kEndCaseNode) {}
 	virtual ~EndCaseNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* CaseStmtNode */
@@ -494,7 +495,7 @@ struct CaseStmtNode : StmtNode {
 		value->parent = this;
 	}
 	virtual ~CaseStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	void addOtherwise();
 };
 
@@ -511,7 +512,7 @@ struct TellStmtNode : StmtNode {
 		block->parent = this;
 	}
 	virtual ~TellStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* SoundCmdStmtNode */
@@ -526,7 +527,7 @@ struct SoundCmdStmtNode : StmtNode {
 		argList->parent = this;
 	}
 	virtual ~SoundCmdStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* PlayCmdStmtNode */
@@ -539,7 +540,7 @@ struct PlayCmdStmtNode : StmtNode {
 		argList->parent = this;
 	}
 	virtual ~PlayCmdStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* CallNode */
@@ -560,7 +561,7 @@ struct CallNode : Node {
 	virtual ~CallNode() = default;
 	bool noParens() const;
 	bool isMemberExpr() const;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -580,7 +581,7 @@ struct ObjCallNode : Node {
 			isExpression = true;
 	}
 	virtual ~ObjCallNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -600,7 +601,7 @@ struct ObjCallV4Node : Node {
 			isExpression = true;
 	}
 	virtual ~ObjCallV4Node() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -611,7 +612,7 @@ struct TheExprNode : ExprNode {
 
 	TheExprNode(Common::String p) : ExprNode(kTheExprNode), prop(p) {}
 	virtual ~TheExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* LastStringChunkExprNode */
@@ -626,7 +627,7 @@ struct LastStringChunkExprNode : ExprNode {
 		obj->parent = this;
 	}
 	virtual ~LastStringChunkExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* StringChunkCountExprNode */
@@ -641,7 +642,7 @@ struct StringChunkCountExprNode : ExprNode {
 		obj->parent = this;
 	}
 	virtual ~StringChunkCountExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* MenuPropExprNode */
@@ -656,7 +657,7 @@ struct MenuPropExprNode : ExprNode {
 		menuID->parent = this;
 	}
 	virtual ~MenuPropExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* MenuItemPropExprNode */
@@ -674,7 +675,7 @@ struct MenuItemPropExprNode : ExprNode {
 		itemID->parent = this;
 	}
 	virtual ~MenuItemPropExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* SoundPropExprNode */
@@ -689,7 +690,7 @@ struct SoundPropExprNode : ExprNode {
 		soundID->parent = this;
 	}
 	virtual ~SoundPropExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* SpritePropExprNode */
@@ -704,7 +705,7 @@ struct SpritePropExprNode : ExprNode {
 		spriteID->parent = this;
 	}
 	virtual ~SpritePropExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* ThePropExprNode */
@@ -719,7 +720,7 @@ struct ThePropExprNode : ExprNode {
 		obj->parent = this;
 	}
 	virtual ~ThePropExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* ObjPropExprNode */
@@ -734,7 +735,7 @@ struct ObjPropExprNode : ExprNode {
 		obj->parent = this;
 	}
 	virtual ~ObjPropExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -752,7 +753,7 @@ struct ObjBracketExprNode : ExprNode {
 		prop->parent = this;
 	}
 	virtual ~ObjBracketExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -776,7 +777,7 @@ struct ObjPropIndexExprNode : ExprNode {
 		}
 	}
 	virtual ~ObjPropIndexExprNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	virtual bool hasSpaces(bool dot);
 };
 
@@ -785,7 +786,7 @@ struct ObjPropIndexExprNode : ExprNode {
 struct ExitRepeatStmtNode : StmtNode {
 	ExitRepeatStmtNode() : StmtNode(kExitRepeatStmtNode) {}
 	virtual ~ExitRepeatStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* NextRepeatStmtNode */
@@ -793,7 +794,7 @@ struct ExitRepeatStmtNode : StmtNode {
 struct NextRepeatStmtNode : StmtNode {
 	NextRepeatStmtNode() : StmtNode(kNextRepeatStmtNode) {}
 	virtual ~NextRepeatStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* PutStmtNode */
@@ -811,7 +812,7 @@ struct PutStmtNode : StmtNode {
 		value->parent = this;
 	}
 	virtual ~PutStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* WhenStmtNode */
@@ -823,7 +824,7 @@ struct WhenStmtNode : StmtNode {
 	WhenStmtNode(int e, Common::String s)
 		: StmtNode(kWhenStmtNode), event(e), script(s) {}
 	virtual ~WhenStmtNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* NewObjNode */
@@ -834,7 +835,7 @@ struct NewObjNode : ExprNode {
 
 	NewObjNode(Common::String o, Common::SharedPtr<Node> args) : ExprNode(kNewObjNode), objType(o), objArgs(args) {}
 	virtual ~NewObjNode() = default;
-	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	virtual void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 };
 
 /* AST */
@@ -848,7 +849,7 @@ struct AST {
 		currentBlock = root->block.get();
 	}
 
-	void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
+	void writeScriptText(CodeWriter &code, bool dot, bool sum) const;
 	void addStatement(Common::SharedPtr<Node> statement);
 	void enterBlock(BlockNode *block);
 	void exitBlock();

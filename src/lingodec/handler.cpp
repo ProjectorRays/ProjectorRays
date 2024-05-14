@@ -4,12 +4,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "common/codewriter.h"
 #include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
 #include "lingodec/ast.h"
+#include "lingodec/codewriter.h"
 #include "lingodec/handler.h"
 #include "lingodec/names.h"
 #include "lingodec/script.h"
@@ -1235,7 +1235,7 @@ Common::String posToString(int32_t pos) {
 	return Common::String::format("[%3d]", pos);
 }
 
-void Handler::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) {
+void Handler::writeBytecodeText(CodeWriter &code, bool dotSyntax) {
 	bool isMethod = script->isFactory();
 
 	if (!isGenericEvent) {
