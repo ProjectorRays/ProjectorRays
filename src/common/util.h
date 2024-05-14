@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 #define FOURCC(a0,a1,a2,a3) ((uint32_t)((a3) | ((a2) << 8) | ((a1) << 16) | ((a0) << 24)))
 
@@ -24,6 +25,11 @@ std::string escapeString(const char *str, size_t size);
 std::string escapeString(std::string str);
 int stricmp(const char *a, const char *b);
 int compareIgnoreCase(const std::string &a, const std::string &b);
+
+template<class T>
+constexpr std::remove_reference_t<T> &&move(T &&t) noexcept {
+  return static_cast<std::remove_reference_t<T> &&>(t);
+}
 
 } // namespace Common
 

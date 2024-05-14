@@ -118,7 +118,7 @@ void AST::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 }
 
 void AST::addStatement(Common::SharedPtr<Node> statement) {
-	currentBlock->addChild(std::move(statement));
+	currentBlock->addChild(Common::move(statement));
 }
 
 void AST::enterBlock(BlockNode *block) {
@@ -209,7 +209,7 @@ void BlockNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) co
 
 void BlockNode::addChild(Common::SharedPtr<Node> child) {
 	child->parent = this;
-	children.push_back(std::move(child));
+	children.push_back(Common::move(child));
 }
 
 /* HandlerNode */

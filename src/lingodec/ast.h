@@ -10,6 +10,7 @@
 #include "common/array.h"
 #include "common/ptr.h"
 #include "common/str.h"
+#include "common/util.h"
 #include "lingodec/enums.h"
 
 namespace LingoDec {
@@ -135,7 +136,7 @@ struct LiteralNode : ExprNode {
 	Common::SharedPtr<Datum> value;
 
 	LiteralNode(Common::SharedPtr<Datum> d) : ExprNode(kLiteralNode) {
-		value = std::move(d);
+		value = Common::move(d);
 	}
 	virtual ~LiteralNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
@@ -187,7 +188,7 @@ struct InverseOpNode : ExprNode {
 	Common::SharedPtr<Node> operand;
 
 	InverseOpNode(Common::SharedPtr<Node> o) : ExprNode(kInverseOpNode) {
-		operand = std::move(o);
+		operand = Common::move(o);
 		operand->parent = this;
 	}
 	virtual ~InverseOpNode() = default;
@@ -200,7 +201,7 @@ struct NotOpNode : ExprNode {
 	Common::SharedPtr<Node> operand;
 
 	NotOpNode(Common::SharedPtr<Node> o) : ExprNode(kNotOpNode) {
-		operand = std::move(o);
+		operand = Common::move(o);
 		operand->parent = this;
 	}
 	virtual ~NotOpNode() = default;
@@ -216,9 +217,9 @@ struct BinaryOpNode : ExprNode {
 
 	BinaryOpNode(OpCode op, Common::SharedPtr<Node> a, Common::SharedPtr<Node> b)
 		: ExprNode(kBinaryOpNode), opcode(op) {
-		left = std::move(a);
+		left = Common::move(a);
 		left->parent = this;
-		right = std::move(b);
+		right = Common::move(b);
 		right->parent = this;
 	}
 	virtual ~BinaryOpNode() = default;
@@ -236,11 +237,11 @@ struct ChunkExprNode : ExprNode {
 
 	ChunkExprNode(ChunkExprType t, Common::SharedPtr<Node> a, Common::SharedPtr<Node> b, Common::SharedPtr<Node> s)
 		: ExprNode(kChunkExprNode), type(t) {
-		first = std::move(a);
+		first = Common::move(a);
 		first->parent = this;
-		last = std::move(b);
+		last = Common::move(b);
 		last->parent = this;
-		string = std::move(s);
+		string = Common::move(s);
 		string->parent = this;
 	}
 	virtual ~ChunkExprNode() = default;
@@ -253,7 +254,7 @@ struct ChunkHiliteStmtNode : StmtNode {
 	Common::SharedPtr<Node> chunk;
 
 	ChunkHiliteStmtNode(Common::SharedPtr<Node> c) : StmtNode(kChunkHiliteStmtNode) {
-		chunk = std::move(c);
+		chunk = Common::move(c);
 		chunk->parent = this;
 	}
 	virtual ~ChunkHiliteStmtNode() = default;
@@ -266,7 +267,7 @@ struct ChunkDeleteStmtNode : StmtNode {
 	Common::SharedPtr<Node> chunk;
 
 	ChunkDeleteStmtNode(Common::SharedPtr<Node> c) : StmtNode(kChunkDeleteStmtNode) {
-		chunk = std::move(c);
+		chunk = Common::move(c);
 		chunk->parent = this;
 	}
 	virtual ~ChunkDeleteStmtNode() = default;
@@ -281,9 +282,9 @@ struct SpriteIntersectsExprNode : ExprNode {
 
 	SpriteIntersectsExprNode(Common::SharedPtr<Node> a, Common::SharedPtr<Node> b)
 		: ExprNode(kSpriteIntersectsExprNode) {
-		firstSprite = std::move(a);
+		firstSprite = Common::move(a);
 		firstSprite->parent = this;
-		secondSprite = std::move(b);
+		secondSprite = Common::move(b);
 		secondSprite->parent = this;
 	}
 	virtual ~SpriteIntersectsExprNode() = default;
@@ -298,9 +299,9 @@ struct SpriteWithinExprNode : ExprNode {
 
 	SpriteWithinExprNode(Common::SharedPtr<Node> a, Common::SharedPtr<Node> b)
 		: ExprNode(kSpriteWithinExprNode) {
-		firstSprite = std::move(a);
+		firstSprite = Common::move(a);
 		firstSprite->parent = this;
-		secondSprite = std::move(b);
+		secondSprite = Common::move(b);
 		secondSprite->parent = this;
 	}
 	virtual ~SpriteWithinExprNode() = default;
@@ -316,10 +317,10 @@ struct MemberExprNode : ExprNode {
 
 	MemberExprNode(Common::String type, Common::SharedPtr<Node> memberID, Common::SharedPtr<Node> castID)
 		: ExprNode(kMemberExprNode), type(type) {
-		this->memberID = std::move(memberID);
+		this->memberID = Common::move(memberID);
 		this->memberID->parent = this;
 		if (castID) {
-			this->castID = std::move(castID);
+			this->castID = Common::move(castID);
 			this->castID->parent = this;
 		}
 	}
@@ -348,9 +349,9 @@ struct AssignmentStmtNode : StmtNode {
 
 	AssignmentStmtNode(Common::SharedPtr<Node> var, Common::SharedPtr<Node> val, bool forceVerbose = false)
 		: StmtNode(kAssignmentStmtNode), forceVerbose(forceVerbose) {
-		variable = std::move(var);
+		variable = Common::move(var);
 		variable->parent = this;
-		value = std::move(val);
+		value = Common::move(val);
 		value->parent = this;
 	}
 
@@ -367,7 +368,7 @@ struct IfStmtNode : StmtNode {
 	Common::SharedPtr<BlockNode> block2;
 
 	IfStmtNode(Common::SharedPtr<Node> c) : StmtNode(kIfStmtNode), hasElse(false) {
-		condition = std::move(c);
+		condition = Common::move(c);
 		condition->parent = this;
 		block1 = Common::SharedPtr<BlockNode>(new BlockNode());
 		block1->parent = this;
@@ -386,7 +387,7 @@ struct RepeatWhileStmtNode : LoopNode {
 
 	RepeatWhileStmtNode(uint32_t startIndex, Common::SharedPtr<Node> c)
 		: LoopNode(kRepeatWhileStmtNode, startIndex) {
-		condition = std::move(c);
+		condition = Common::move(c);
 		condition->parent = this;
 		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
@@ -405,7 +406,7 @@ struct RepeatWithInStmtNode : LoopNode {
 	RepeatWithInStmtNode(uint32_t startIndex, Common::String v, Common::SharedPtr<Node> l)
 		: LoopNode(kRepeatWithInStmtNode, startIndex) {
 		varName = v;
-		list = std::move(l);
+		list = Common::move(l);
 		list->parent = this;
 		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
@@ -426,9 +427,9 @@ struct RepeatWithToStmtNode : LoopNode {
 	RepeatWithToStmtNode(uint32_t startIndex, Common::String v, Common::SharedPtr<Node> s, bool up, Common::SharedPtr<Node> e)
 		: LoopNode(kRepeatWithToStmtNode, startIndex), up(up) {
 		varName = v;
-		start = std::move(s);
+		start = Common::move(s);
 		start->parent = this;
-		end = std::move(e);
+		end = Common::move(e);
 		end->parent = this;
 		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
@@ -449,7 +450,7 @@ struct CaseLabelNode : LabelNode {
 	Common::SharedPtr<BlockNode> block;
 
 	CaseLabelNode(Common::SharedPtr<Node> v, CaseExpect e) : LabelNode(kCaseLabelNode), expect(e) {
-		value = std::move(v);
+		value = Common::move(v);
 		value->parent = this;
 	}
 	virtual ~CaseLabelNode() = default;
@@ -489,7 +490,7 @@ struct CaseStmtNode : StmtNode {
 	int32_t potentialOtherwisePos = -1;
 
 	CaseStmtNode(Common::SharedPtr<Node> v) : StmtNode(kCaseStmtNode) {
-		value = std::move(v);
+		value = Common::move(v);
 		value->parent = this;
 	}
 	virtual ~CaseStmtNode() = default;
@@ -504,7 +505,7 @@ struct TellStmtNode : StmtNode {
 	Common::SharedPtr<BlockNode> block;
 
 	TellStmtNode(Common::SharedPtr<Node> w) : StmtNode(kTellStmtNode) {
-		window = std::move(w);
+		window = Common::move(w);
 		window->parent = this;
 		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
@@ -521,7 +522,7 @@ struct SoundCmdStmtNode : StmtNode {
 
 	SoundCmdStmtNode(Common::String c, Common::SharedPtr<Node> a) : StmtNode(kSoundCmdStmtNode) {
 		cmd = c;
-		argList = std::move(a);
+		argList = Common::move(a);
 		argList->parent = this;
 	}
 	virtual ~SoundCmdStmtNode() = default;
@@ -534,7 +535,7 @@ struct PlayCmdStmtNode : StmtNode {
 	Common::SharedPtr<Node> argList;
 
 	PlayCmdStmtNode(Common::SharedPtr<Node> a) : StmtNode(kPlayCmdStmtNode) {
-		argList = std::move(a);
+		argList = Common::move(a);
 		argList->parent = this;
 	}
 	virtual ~PlayCmdStmtNode() = default;
@@ -549,7 +550,7 @@ struct CallNode : Node {
 
 	CallNode(Common::String n, Common::SharedPtr<Node> a) : Node(kCallNode) {
 		name = n;
-		argList = std::move(a);
+		argList = Common::move(a);
 		argList->parent = this;
 		if (argList->getValue()->type == kDatumArgListNoRet)
 			isStatement = true;
@@ -571,7 +572,7 @@ struct ObjCallNode : Node {
 
 	ObjCallNode(Common::String n, Common::SharedPtr<Node> a) : Node(kObjCallNode) {
 		name = n;
-		argList = std::move(a);
+		argList = Common::move(a);
 		argList->parent = this;
 		if (argList->getValue()->type == kDatumArgListNoRet)
 			isStatement = true;
@@ -591,7 +592,7 @@ struct ObjCallV4Node : Node {
 
 	ObjCallV4Node(Common::SharedPtr<Node> o, Common::SharedPtr<Node> a) : Node(kObjCallV4Node) {
 		obj = o;
-		argList = std::move(a);
+		argList = Common::move(a);
 		argList->parent = this;
 		if (argList->getValue()->type == kDatumArgListNoRet)
 			isStatement = true;
@@ -621,7 +622,7 @@ struct LastStringChunkExprNode : ExprNode {
 
 	LastStringChunkExprNode(ChunkExprType t, Common::SharedPtr<Node> o)
 		: ExprNode(kLastStringChunkExprNode), type(t) {
-		obj = std::move(o);
+		obj = Common::move(o);
 		obj->parent = this;
 	}
 	virtual ~LastStringChunkExprNode() = default;
@@ -636,7 +637,7 @@ struct StringChunkCountExprNode : ExprNode {
 
 	StringChunkCountExprNode(ChunkExprType t, Common::SharedPtr<Node> o)
 		: ExprNode(kStringChunkCountExprNode), type(t) {
-		obj = std::move(o);
+		obj = Common::move(o);
 		obj->parent = this;
 	}
 	virtual ~StringChunkCountExprNode() = default;
@@ -651,7 +652,7 @@ struct MenuPropExprNode : ExprNode {
 
 	MenuPropExprNode(Common::SharedPtr<Node> m, unsigned int p)
 		: ExprNode(kMenuPropExprNode), prop(p) {
-		menuID = std::move(m);
+		menuID = Common::move(m);
 		menuID->parent = this;
 	}
 	virtual ~MenuPropExprNode() = default;
@@ -667,9 +668,9 @@ struct MenuItemPropExprNode : ExprNode {
 
 	MenuItemPropExprNode(Common::SharedPtr<Node> m, Common::SharedPtr<Node> i, unsigned int p)
 		: ExprNode(kMenuItemPropExprNode), prop(p) {
-		menuID = std::move(m);
+		menuID = Common::move(m);
 		menuID->parent = this;
-		itemID = std::move(i);
+		itemID = Common::move(i);
 		itemID->parent = this;
 	}
 	virtual ~MenuItemPropExprNode() = default;
@@ -684,7 +685,7 @@ struct SoundPropExprNode : ExprNode {
 
 	SoundPropExprNode(Common::SharedPtr<Node> s, unsigned int p)
 		: ExprNode(kSoundPropExprNode), prop(p) {
-		soundID = std::move(s);
+		soundID = Common::move(s);
 		soundID->parent = this;
 	}
 	virtual ~SoundPropExprNode() = default;
@@ -699,7 +700,7 @@ struct SpritePropExprNode : ExprNode {
 
 	SpritePropExprNode(Common::SharedPtr<Node> s, unsigned int p)
 		: ExprNode(kSpritePropExprNode), prop(p) {
-		spriteID = std::move(s);
+		spriteID = Common::move(s);
 		spriteID->parent = this;
 	}
 	virtual ~SpritePropExprNode() = default;
@@ -714,7 +715,7 @@ struct ThePropExprNode : ExprNode {
 
 	ThePropExprNode(Common::SharedPtr<Node> o, Common::String p)
 		: ExprNode(kThePropExprNode), prop(p) {
-		obj = std::move(o);
+		obj = Common::move(o);
 		obj->parent = this;
 	}
 	virtual ~ThePropExprNode() = default;
@@ -729,7 +730,7 @@ struct ObjPropExprNode : ExprNode {
 
 	ObjPropExprNode(Common::SharedPtr<Node> o, Common::String p)
 		: ExprNode(kObjPropExprNode), prop(p) {
-		obj = std::move(o);
+		obj = Common::move(o);
 		obj->parent = this;
 	}
 	virtual ~ObjPropExprNode() = default;
@@ -745,9 +746,9 @@ struct ObjBracketExprNode : ExprNode {
 
 	ObjBracketExprNode(Common::SharedPtr<Node> o, Common::SharedPtr<Node> p)
 		: ExprNode(kObjBracketExprNode) {
-		obj = std::move(o);
+		obj = Common::move(o);
 		obj->parent = this;
-		prop = std::move(p);
+		prop = Common::move(p);
 		prop->parent = this;
 	}
 	virtual ~ObjBracketExprNode() = default;
@@ -765,12 +766,12 @@ struct ObjPropIndexExprNode : ExprNode {
 
 	ObjPropIndexExprNode(Common::SharedPtr<Node> o, Common::String p, Common::SharedPtr<Node> i, Common::SharedPtr<Node> i2)
 		: ExprNode(kObjPropIndexExprNode), prop(p) {
-		obj = std::move(o);
+		obj = Common::move(o);
 		obj->parent = this;
-		index = std::move(i);
+		index = Common::move(i);
 		index->parent = this;
 		if (i2) {
-			index2 = std::move(i2);
+			index2 = Common::move(i2);
 			index2->parent = this;
 		}
 	}
@@ -804,9 +805,9 @@ struct PutStmtNode : StmtNode {
 
 	PutStmtNode(PutType t, Common::SharedPtr<Node> var, Common::SharedPtr<Node> val)
 		: StmtNode(kPutStmtNode), type(t) {
-		variable = std::move(var);
+		variable = Common::move(var);
 		variable->parent = this;
-		value = std::move(val);
+		value = Common::move(val);
 		value->parent = this;
 	}
 	virtual ~PutStmtNode() = default;
