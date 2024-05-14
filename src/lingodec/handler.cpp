@@ -659,7 +659,7 @@ uint32 Handler::translateBytecode(Bytecode &bytecode, uint32 index) {
 		break;
 	case kOpSwap:
 		if (stack.size() >= 2) {
-			std::swap(stack[stack.size() - 1], stack[stack.size() - 2]);
+			SWAP(stack[stack.size() - 1], stack[stack.size() - 2]);
 		} else {
 			warning("kOpSwap: Stack too small!");
 		}
@@ -668,7 +668,7 @@ uint32 Handler::translateBytecode(Bytecode &bytecode, uint32 index) {
 	case kOpPushInt16:
 	case kOpPushInt32:
 		{
-			auto i = Common::SharedPtr<Datum>(new Datum(bytecode.obj));
+			auto i = Common::SharedPtr<Datum>(new Datum((int)bytecode.obj));
 			translation = Common::SharedPtr<Node>(new LiteralNode(Common::move(i)));
 		}
 		break;

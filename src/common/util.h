@@ -16,6 +16,7 @@
 
 #define STR_INNER(x) #x
 #define STR(x) STR_INNER(x)
+#define SWAP(a, b) std::swap((a),(b))
 
 #define toPrintable(s) escapeString(s)
 
