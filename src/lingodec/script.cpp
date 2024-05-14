@@ -57,7 +57,7 @@ void Script::read(Common::ReadStream &stream) {
 
 	handlers.resize(handlersCount);
 	for (auto &handler : handlers) {
-		handler = std::make_unique<LingoDec::Handler>(this);
+		handler = Common::ScopedPtr<LingoDec::Handler>(new LingoDec::Handler(this));
 	}
 	if ((scriptFlags & LingoDec::kScriptFlagEventScript) && handlersCount > 0) {
 		handlers[0]->isGenericEvent = true;

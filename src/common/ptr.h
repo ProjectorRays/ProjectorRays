@@ -44,12 +44,38 @@ public:
 
 	ReferenceType operator*() const { return *_ptr; }
 
-	// std::weak_ptr<T> &operator=(const std::weak_ptr<T> &r) {
-	// 	return _ptr = r;
-	// }
-
 private:
 	std::shared_ptr<T> _ptr;
+};
+
+template<class T>
+class ScopedPtr {
+public:
+	typedef T *PointerType;
+	typedef T &ReferenceType;
+
+public:
+	explicit ScopedPtr(PointerType o = nullptr) : _ptr(o) {}
+
+	ScopedPtr(std::nullptr_t) : _ptr(nullptr) {}
+
+	template<class T2>
+	ScopedPtr(ScopedPtr<T2> &&o) : _ptr(o._ptr) {
+		o._pointer = nullptr;
+	}
+
+	template<class T2>
+	ScopedPtr &operator=(ScopedPtr<T2> &&other) {
+		_ptr = other._ptr;
+		return *this;
+	}
+
+	ReferenceType operator*() const { return *_ptr; }
+	PointerType operator->() const { return _ptr.operator->(); }
+	PointerType get() const { return _ptr.get(); }
+
+private:
+	std::unique_ptr<T> _ptr;
 };
 
 } // namespace Common

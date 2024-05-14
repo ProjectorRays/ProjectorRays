@@ -57,7 +57,7 @@ struct Handler {
 	Common::String name;
 
 	Common::Array<Common::SharedPtr<Node>> stack;
-	std::unique_ptr<AST> ast;
+	Common::ScopedPtr<AST> ast;
 
 	bool isGenericEvent = false;
 

@@ -500,7 +500,7 @@ BytecodeTag Handler::identifyLoop(uint32_t startIndex, uint32_t endIndex) {
 void Handler::parse() {
 	tagLoops();
 	stack.clear();
-	ast = std::make_unique<AST>(this);
+	ast = Common::ScopedPtr<AST>(new AST(this));
 	uint32_t i = 0;
 	while (i < bytecodeArray.size()) {
 		auto &bytecode = bytecodeArray[i];
