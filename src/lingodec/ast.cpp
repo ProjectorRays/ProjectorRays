@@ -117,7 +117,7 @@ void AST::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	root->writeScriptText(code, dot, sum);
 }
 
-void AST::addStatement(std::shared_ptr<Node> statement) {
+void AST::addStatement(Common::SharedPtr<Node> statement) {
 	currentBlock->addChild(std::move(statement));
 }
 
@@ -143,8 +143,8 @@ void AST::exitBlock() {
 
 /* Node */
 
-std::shared_ptr<Datum> Node::getValue() {
-	return std::make_shared<Datum>();
+Common::SharedPtr<Datum> Node::getValue() {
+	return Common::SharedPtr<Datum>(new Datum());
 }
 
 Node *Node::ancestorStatement() {
@@ -190,7 +190,7 @@ void LiteralNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) 
 	value->writeScriptText(code, dot, sum);
 }
 
-std::shared_ptr<Datum> LiteralNode::getValue() {
+Common::SharedPtr<Datum> LiteralNode::getValue() {
 	return value;
 }
 
@@ -207,7 +207,7 @@ void BlockNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) co
 	}
 }
 
-void BlockNode::addChild(std::shared_ptr<Node> child) {
+void BlockNode::addChild(Common::SharedPtr<Node> child) {
 	child->parent = this;
 	children.push_back(std::move(child));
 }
@@ -684,7 +684,7 @@ void CaseStmtNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum)
 }
 
 void CaseStmtNode::addOtherwise() {
-	otherwise = std::make_shared<OtherwiseNode>();
+	otherwise = Common::SharedPtr<OtherwiseNode>(new OtherwiseNode());
 	otherwise->parent = this;
 	otherwise->block->endPos = endPos;
 }

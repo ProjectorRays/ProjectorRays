@@ -226,12 +226,12 @@ void LiteralStore::readRecord(Common::ReadStream &stream, int version) {
 
 void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
 	if (type == kLiteralInt) {
-		value = std::make_shared<LingoDec::Datum>((int)offset);
+		value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum((int)offset));
 	} else {
 		stream.seek(startOffset + offset);
 		auto length = stream.readUint32();
 		if (type == kLiteralString) {
-			value = std::make_shared<LingoDec::Datum>(LingoDec::kDatumString, stream.readString(length - 1));
+			value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum(LingoDec::kDatumString, stream.readString(length - 1)));
 		} else if (type == kLiteralFloat) {
 			double floatVal = 0.0;
 			if (length == 8) {
@@ -239,9 +239,9 @@ void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
 			} else if (length == 10) {
 				floatVal = stream.readAppleFloat80();
 			}
-			value = std::make_shared<LingoDec::Datum>(floatVal);
+			value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum(floatVal));
 		} else {
-			value = std::make_shared<LingoDec::Datum>();
+			value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum());
 		}
 	}
 }

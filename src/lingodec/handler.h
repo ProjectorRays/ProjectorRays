@@ -8,7 +8,6 @@
 #define LINGODEC_HANDLER_H
 
 #include <map>
-#include <memory>
 
 #include "common/array.h"
 #include "common/str.h"
@@ -57,7 +56,7 @@ struct Handler {
 	Common::Array<Common::String> globalNames;
 	Common::String name;
 
-	Common::Array<std::shared_ptr<Node>> stack;
+	Common::Array<Common::SharedPtr<Node>> stack;
 	std::unique_ptr<AST> ast;
 
 	bool isGenericEvent = false;
@@ -74,12 +73,12 @@ struct Handler {
 	Common::String getName(int id) const;
 	Common::String getArgumentName(int id) const;
 	Common::String getLocalName(int id) const;
-	std::shared_ptr<Node> pop();
+	Common::SharedPtr<Node> pop();
 	int variableMultiplier();
-	std::shared_ptr<Node> readVar(int varType);
+	Common::SharedPtr<Node> readVar(int varType);
 	Common::String getVarNameFromSet(const Bytecode &bytecode);
-	std::shared_ptr<Node> readV4Property(int propertyType, int propertyID);
-	std::shared_ptr<Node> readChunkRef(std::shared_ptr<Node> string);
+	Common::SharedPtr<Node> readV4Property(int propertyType, int propertyID);
+	Common::SharedPtr<Node> readChunkRef(Common::SharedPtr<Node> string);
 	void tagLoops();
 	bool isRepeatWithIn(uint32_t startIndex, uint32_t endIndex);
 	BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
@@ -97,7 +96,7 @@ struct Bytecode {
 	uint32_t pos;
 	BytecodeTag tag;
 	uint32_t ownerLoop;
-	std::shared_ptr<Node> translation;
+	Common::SharedPtr<Node> translation;
 
 	Bytecode(uint8_t op, int32_t o, uint32_t p)
 		: opID(op), obj(o), pos(p), tag(kTagNone), ownerLoop(UINT32_MAX) {

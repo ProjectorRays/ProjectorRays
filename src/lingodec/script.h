@@ -9,6 +9,7 @@
 
 #include <cstdint>
 
+#include "common/ptr.h"
 #include "common/str.h"
 #include "lingodec/enums.h"
 
@@ -28,7 +29,7 @@ struct ScriptContext;
 struct LiteralStore {
 	LiteralType type;
 	uint32_t offset;
-	std::shared_ptr<Datum> value;
+	Common::SharedPtr<Datum> value;
 
 	void readRecord(Common::ReadStream &stream, int version);
 	void readData(Common::ReadStream &stream, uint32_t startOffset);

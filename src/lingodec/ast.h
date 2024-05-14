@@ -7,9 +7,8 @@
 #ifndef LINGODEC_AST_H
 #define LINGODEC_AST_H
 
-#include <memory>
-
 #include "common/array.h"
+#include "common/ptr.h"
 #include "common/str.h"
 #include "lingodec/enums.h"
 
@@ -28,7 +27,7 @@ struct Datum {
 	int i;
 	double f;
 	Common::String s;
-	Common::Array<std::shared_ptr<Node>> l;
+	Common::Array<Common::SharedPtr<Node>> l;
 
 	Datum() {
 		type = kDatumVoid;
@@ -45,7 +44,7 @@ struct Datum {
 		type = t;
 		s = val;
 	}
-	Datum(DatumType t, Common::Array<std::shared_ptr<Node>> val) {
+	Datum(DatumType t, Common::Array<Common::SharedPtr<Node>> val) {
 		type = t;
 		l = val;
 	}
@@ -67,7 +66,7 @@ struct Node {
 	Node(NodeType t) : type(t), isExpression(false), isStatement(false), isLabel(false), isLoop(false), parent(nullptr) {}
 	virtual ~Node() = default;
 	virtual void writeScriptText(Common::CodeWriter&, bool, bool) const {}
-	virtual std::shared_ptr<Datum> getValue();
+	virtual Common::SharedPtr<Datum> getValue();
 	Node *ancestorStatement();
 	LoopNode *ancestorLoop();
 	virtual bool hasSpaces(bool dot);
@@ -133,21 +132,21 @@ struct CommentNode : Node {
 /* LiteralNode */
 
 struct LiteralNode : ExprNode {
-	std::shared_ptr<Datum> value;
+	Common::SharedPtr<Datum> value;
 
-	LiteralNode(std::shared_ptr<Datum> d) : ExprNode(kLiteralNode) {
+	LiteralNode(Common::SharedPtr<Datum> d) : ExprNode(kLiteralNode) {
 		value = std::move(d);
 	}
 	virtual ~LiteralNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
-	virtual std::shared_ptr<Datum> getValue();
+	virtual Common::SharedPtr<Datum> getValue();
 	virtual bool hasSpaces(bool dot);
 };
 
 /* BlockNode */
 
 struct BlockNode : Node {
-	Common::Array<std::shared_ptr<Node>> children;
+	Common::Array<Common::SharedPtr<Node>> children;
 
 	// for use during translation:
 	uint32_t endPos;
@@ -156,18 +155,18 @@ struct BlockNode : Node {
 	BlockNode() : Node(kBlockNode), endPos(-1), currentCaseLabel(nullptr) {}
 	virtual ~BlockNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
-	void addChild(std::shared_ptr<Node> child);
+	void addChild(Common::SharedPtr<Node> child);
 };
 
 /* HandlerNode */
 
 struct HandlerNode : Node {
 	Handler *handler;
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<BlockNode> block;
 
 	HandlerNode(Handler *h)
 		: Node(kHandlerNode), handler(h) {
-		block = std::make_shared<BlockNode>();
+		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
 	}
 	virtual ~HandlerNode() = default;
@@ -185,9 +184,9 @@ struct ExitStmtNode : StmtNode {
 /* InverseOpNode */
 
 struct InverseOpNode : ExprNode {
-	std::shared_ptr<Node> operand;
+	Common::SharedPtr<Node> operand;
 
-	InverseOpNode(std::shared_ptr<Node> o) : ExprNode(kInverseOpNode) {
+	InverseOpNode(Common::SharedPtr<Node> o) : ExprNode(kInverseOpNode) {
 		operand = std::move(o);
 		operand->parent = this;
 	}
@@ -198,9 +197,9 @@ struct InverseOpNode : ExprNode {
 /* NotOpNode */
 
 struct NotOpNode : ExprNode {
-	std::shared_ptr<Node> operand;
+	Common::SharedPtr<Node> operand;
 
-	NotOpNode(std::shared_ptr<Node> o) : ExprNode(kNotOpNode) {
+	NotOpNode(Common::SharedPtr<Node> o) : ExprNode(kNotOpNode) {
 		operand = std::move(o);
 		operand->parent = this;
 	}
@@ -212,10 +211,10 @@ struct NotOpNode : ExprNode {
 
 struct BinaryOpNode : ExprNode {
 	OpCode opcode;
-	std::shared_ptr<Node> left;
-	std::shared_ptr<Node> right;
+	Common::SharedPtr<Node> left;
+	Common::SharedPtr<Node> right;
 
-	BinaryOpNode(OpCode op, std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+	BinaryOpNode(OpCode op, Common::SharedPtr<Node> a, Common::SharedPtr<Node> b)
 		: ExprNode(kBinaryOpNode), opcode(op) {
 		left = std::move(a);
 		left->parent = this;
@@ -231,11 +230,11 @@ struct BinaryOpNode : ExprNode {
 
 struct ChunkExprNode : ExprNode {
 	ChunkExprType type;
-	std::shared_ptr<Node> first;
-	std::shared_ptr<Node> last;
-	std::shared_ptr<Node> string;
+	Common::SharedPtr<Node> first;
+	Common::SharedPtr<Node> last;
+	Common::SharedPtr<Node> string;
 
-	ChunkExprNode(ChunkExprType t, std::shared_ptr<Node> a, std::shared_ptr<Node> b, std::shared_ptr<Node> s)
+	ChunkExprNode(ChunkExprType t, Common::SharedPtr<Node> a, Common::SharedPtr<Node> b, Common::SharedPtr<Node> s)
 		: ExprNode(kChunkExprNode), type(t) {
 		first = std::move(a);
 		first->parent = this;
@@ -251,9 +250,9 @@ struct ChunkExprNode : ExprNode {
 /* ChunkHiliteStmtNode */
 
 struct ChunkHiliteStmtNode : StmtNode {
-	std::shared_ptr<Node> chunk;
+	Common::SharedPtr<Node> chunk;
 
-	ChunkHiliteStmtNode(std::shared_ptr<Node> c) : StmtNode(kChunkHiliteStmtNode) {
+	ChunkHiliteStmtNode(Common::SharedPtr<Node> c) : StmtNode(kChunkHiliteStmtNode) {
 		chunk = std::move(c);
 		chunk->parent = this;
 	}
@@ -264,9 +263,9 @@ struct ChunkHiliteStmtNode : StmtNode {
 /* ChunkDeleteStmtNode */
 
 struct ChunkDeleteStmtNode : StmtNode {
-	std::shared_ptr<Node> chunk;
+	Common::SharedPtr<Node> chunk;
 
-	ChunkDeleteStmtNode(std::shared_ptr<Node> c) : StmtNode(kChunkDeleteStmtNode) {
+	ChunkDeleteStmtNode(Common::SharedPtr<Node> c) : StmtNode(kChunkDeleteStmtNode) {
 		chunk = std::move(c);
 		chunk->parent = this;
 	}
@@ -277,10 +276,10 @@ struct ChunkDeleteStmtNode : StmtNode {
 /* SpriteIntersectsExprNode */
 
 struct SpriteIntersectsExprNode : ExprNode {
-	std::shared_ptr<Node> firstSprite;
-	std::shared_ptr<Node> secondSprite;
+	Common::SharedPtr<Node> firstSprite;
+	Common::SharedPtr<Node> secondSprite;
 
-	SpriteIntersectsExprNode(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+	SpriteIntersectsExprNode(Common::SharedPtr<Node> a, Common::SharedPtr<Node> b)
 		: ExprNode(kSpriteIntersectsExprNode) {
 		firstSprite = std::move(a);
 		firstSprite->parent = this;
@@ -294,10 +293,10 @@ struct SpriteIntersectsExprNode : ExprNode {
 /* SpriteWithinExprNode */
 
 struct SpriteWithinExprNode : ExprNode {
-	std::shared_ptr<Node> firstSprite;
-	std::shared_ptr<Node> secondSprite;
+	Common::SharedPtr<Node> firstSprite;
+	Common::SharedPtr<Node> secondSprite;
 
-	SpriteWithinExprNode(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
+	SpriteWithinExprNode(Common::SharedPtr<Node> a, Common::SharedPtr<Node> b)
 		: ExprNode(kSpriteWithinExprNode) {
 		firstSprite = std::move(a);
 		firstSprite->parent = this;
@@ -312,10 +311,10 @@ struct SpriteWithinExprNode : ExprNode {
 
 struct MemberExprNode : ExprNode {
 	Common::String type;
-	std::shared_ptr<Node> memberID;
-	std::shared_ptr<Node> castID;
+	Common::SharedPtr<Node> memberID;
+	Common::SharedPtr<Node> castID;
 
-	MemberExprNode(Common::String type, std::shared_ptr<Node> memberID, std::shared_ptr<Node> castID)
+	MemberExprNode(Common::String type, Common::SharedPtr<Node> memberID, Common::SharedPtr<Node> castID)
 		: ExprNode(kMemberExprNode), type(type) {
 		this->memberID = std::move(memberID);
 		this->memberID->parent = this;
@@ -343,11 +342,11 @@ struct VarNode : ExprNode {
 /* AssignmentStmtNode */
 
 struct AssignmentStmtNode : StmtNode {
-	std::shared_ptr<Node> variable;
-	std::shared_ptr<Node> value;
+	Common::SharedPtr<Node> variable;
+	Common::SharedPtr<Node> value;
 	bool forceVerbose;
 
-	AssignmentStmtNode(std::shared_ptr<Node> var, std::shared_ptr<Node> val, bool forceVerbose = false)
+	AssignmentStmtNode(Common::SharedPtr<Node> var, Common::SharedPtr<Node> val, bool forceVerbose = false)
 		: StmtNode(kAssignmentStmtNode), forceVerbose(forceVerbose) {
 		variable = std::move(var);
 		variable->parent = this;
@@ -363,16 +362,16 @@ struct AssignmentStmtNode : StmtNode {
 
 struct IfStmtNode : StmtNode {
 	bool hasElse;
-	std::shared_ptr<Node> condition;
-	std::shared_ptr<BlockNode> block1;
-	std::shared_ptr<BlockNode> block2;
+	Common::SharedPtr<Node> condition;
+	Common::SharedPtr<BlockNode> block1;
+	Common::SharedPtr<BlockNode> block2;
 
-	IfStmtNode(std::shared_ptr<Node> c) : StmtNode(kIfStmtNode), hasElse(false) {
+	IfStmtNode(Common::SharedPtr<Node> c) : StmtNode(kIfStmtNode), hasElse(false) {
 		condition = std::move(c);
 		condition->parent = this;
-		block1 = std::make_shared<BlockNode>();
+		block1 = Common::SharedPtr<BlockNode>(new BlockNode());
 		block1->parent = this;
-		block2 = std::make_shared<BlockNode>();
+		block2 = Common::SharedPtr<BlockNode>(new BlockNode());
 		block2->parent = this;
 	}
 	virtual ~IfStmtNode() = default;
@@ -382,14 +381,14 @@ struct IfStmtNode : StmtNode {
 /* RepeatWhileStmtNode */
 
 struct RepeatWhileStmtNode : LoopNode {
-	std::shared_ptr<Node> condition;
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<Node> condition;
+	Common::SharedPtr<BlockNode> block;
 
-	RepeatWhileStmtNode(uint32_t startIndex, std::shared_ptr<Node> c)
+	RepeatWhileStmtNode(uint32_t startIndex, Common::SharedPtr<Node> c)
 		: LoopNode(kRepeatWhileStmtNode, startIndex) {
 		condition = std::move(c);
 		condition->parent = this;
-		block = std::make_shared<BlockNode>();
+		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
 	}
 	virtual ~RepeatWhileStmtNode() = default;
@@ -400,15 +399,15 @@ struct RepeatWhileStmtNode : LoopNode {
 
 struct RepeatWithInStmtNode : LoopNode {
 	Common::String varName;
-	std::shared_ptr<Node> list;
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<Node> list;
+	Common::SharedPtr<BlockNode> block;
 
-	RepeatWithInStmtNode(uint32_t startIndex, Common::String v, std::shared_ptr<Node> l)
+	RepeatWithInStmtNode(uint32_t startIndex, Common::String v, Common::SharedPtr<Node> l)
 		: LoopNode(kRepeatWithInStmtNode, startIndex) {
 		varName = v;
 		list = std::move(l);
 		list->parent = this;
-		block = std::make_shared<BlockNode>();
+		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
 	}
 	virtual ~RepeatWithInStmtNode() = default;
@@ -419,19 +418,19 @@ struct RepeatWithInStmtNode : LoopNode {
 
 struct RepeatWithToStmtNode : LoopNode {
 	Common::String varName;
-	std::shared_ptr<Node> start;
+	Common::SharedPtr<Node> start;
 	bool up;
-	std::shared_ptr<Node> end;
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<Node> end;
+	Common::SharedPtr<BlockNode> block;
 
-	RepeatWithToStmtNode(uint32_t startIndex, Common::String v, std::shared_ptr<Node> s, bool up, std::shared_ptr<Node> e)
+	RepeatWithToStmtNode(uint32_t startIndex, Common::String v, Common::SharedPtr<Node> s, bool up, Common::SharedPtr<Node> e)
 		: LoopNode(kRepeatWithToStmtNode, startIndex), up(up) {
 		varName = v;
 		start = std::move(s);
 		start->parent = this;
 		end = std::move(e);
 		end->parent = this;
-		block = std::make_shared<BlockNode>();
+		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
 	}
 	virtual ~RepeatWithToStmtNode() = default;
@@ -441,15 +440,15 @@ struct RepeatWithToStmtNode : LoopNode {
 /* CaseLabelNode */
 
 struct CaseLabelNode : LabelNode {
-	std::shared_ptr<Node> value;
+	Common::SharedPtr<Node> value;
 	CaseExpect expect;
 
-	std::shared_ptr<CaseLabelNode> nextOr;
+	Common::SharedPtr<CaseLabelNode> nextOr;
 
-	std::shared_ptr<CaseLabelNode> nextLabel;
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<CaseLabelNode> nextLabel;
+	Common::SharedPtr<BlockNode> block;
 
-	CaseLabelNode(std::shared_ptr<Node> v, CaseExpect e) : LabelNode(kCaseLabelNode), expect(e) {
+	CaseLabelNode(Common::SharedPtr<Node> v, CaseExpect e) : LabelNode(kCaseLabelNode), expect(e) {
 		value = std::move(v);
 		value->parent = this;
 	}
@@ -460,10 +459,10 @@ struct CaseLabelNode : LabelNode {
 /* OtherwiseNode */
 
 struct OtherwiseNode : LabelNode {
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<BlockNode> block;
 
 	OtherwiseNode() : LabelNode(kOtherwiseNode) {
-		block = std::make_shared<BlockNode>();
+		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
 	}
 	virtual ~OtherwiseNode() = default;
@@ -481,15 +480,15 @@ struct EndCaseNode : LabelNode {
 /* CaseStmtNode */
 
 struct CaseStmtNode : StmtNode {
-	std::shared_ptr<Node> value;
-	std::shared_ptr<CaseLabelNode> firstLabel;
-	std::shared_ptr<OtherwiseNode> otherwise;
+	Common::SharedPtr<Node> value;
+	Common::SharedPtr<CaseLabelNode> firstLabel;
+	Common::SharedPtr<OtherwiseNode> otherwise;
 
 	// for use during translation:
 	int32_t endPos = -1;
 	int32_t potentialOtherwisePos = -1;
 
-	CaseStmtNode(std::shared_ptr<Node> v) : StmtNode(kCaseStmtNode) {
+	CaseStmtNode(Common::SharedPtr<Node> v) : StmtNode(kCaseStmtNode) {
 		value = std::move(v);
 		value->parent = this;
 	}
@@ -501,13 +500,13 @@ struct CaseStmtNode : StmtNode {
 /* TellStmtNode */
 
 struct TellStmtNode : StmtNode {
-	std::shared_ptr<Node> window;
-	std::shared_ptr<BlockNode> block;
+	Common::SharedPtr<Node> window;
+	Common::SharedPtr<BlockNode> block;
 
-	TellStmtNode(std::shared_ptr<Node> w) : StmtNode(kTellStmtNode) {
+	TellStmtNode(Common::SharedPtr<Node> w) : StmtNode(kTellStmtNode) {
 		window = std::move(w);
 		window->parent = this;
-		block = std::make_shared<BlockNode>();
+		block = Common::SharedPtr<BlockNode>(new BlockNode());
 		block->parent = this;
 	}
 	virtual ~TellStmtNode() = default;
@@ -518,9 +517,9 @@ struct TellStmtNode : StmtNode {
 
 struct SoundCmdStmtNode : StmtNode {
 	Common::String cmd;
-	std::shared_ptr<Node> argList;
+	Common::SharedPtr<Node> argList;
 
-	SoundCmdStmtNode(Common::String c, std::shared_ptr<Node> a) : StmtNode(kSoundCmdStmtNode) {
+	SoundCmdStmtNode(Common::String c, Common::SharedPtr<Node> a) : StmtNode(kSoundCmdStmtNode) {
 		cmd = c;
 		argList = std::move(a);
 		argList->parent = this;
@@ -532,9 +531,9 @@ struct SoundCmdStmtNode : StmtNode {
 /* PlayCmdStmtNode */
 
 struct PlayCmdStmtNode : StmtNode {
-	std::shared_ptr<Node> argList;
+	Common::SharedPtr<Node> argList;
 
-	PlayCmdStmtNode(std::shared_ptr<Node> a) : StmtNode(kPlayCmdStmtNode) {
+	PlayCmdStmtNode(Common::SharedPtr<Node> a) : StmtNode(kPlayCmdStmtNode) {
 		argList = std::move(a);
 		argList->parent = this;
 	}
@@ -546,9 +545,9 @@ struct PlayCmdStmtNode : StmtNode {
 
 struct CallNode : Node {
 	Common::String name;
-	std::shared_ptr<Node> argList;
+	Common::SharedPtr<Node> argList;
 
-	CallNode(Common::String n, std::shared_ptr<Node> a) : Node(kCallNode) {
+	CallNode(Common::String n, Common::SharedPtr<Node> a) : Node(kCallNode) {
 		name = n;
 		argList = std::move(a);
 		argList->parent = this;
@@ -568,9 +567,9 @@ struct CallNode : Node {
 
 struct ObjCallNode : Node {
 	Common::String name;
-	std::shared_ptr<Node> argList;
+	Common::SharedPtr<Node> argList;
 
-	ObjCallNode(Common::String n, std::shared_ptr<Node> a) : Node(kObjCallNode) {
+	ObjCallNode(Common::String n, Common::SharedPtr<Node> a) : Node(kObjCallNode) {
 		name = n;
 		argList = std::move(a);
 		argList->parent = this;
@@ -587,10 +586,10 @@ struct ObjCallNode : Node {
 /* ObjCallV4Node */
 
 struct ObjCallV4Node : Node {
-	std::shared_ptr<Node> obj;
-	std::shared_ptr<Node> argList;
+	Common::SharedPtr<Node> obj;
+	Common::SharedPtr<Node> argList;
 
-	ObjCallV4Node(std::shared_ptr<Node> o, std::shared_ptr<Node> a) : Node(kObjCallV4Node) {
+	ObjCallV4Node(Common::SharedPtr<Node> o, Common::SharedPtr<Node> a) : Node(kObjCallV4Node) {
 		obj = o;
 		argList = std::move(a);
 		argList->parent = this;
@@ -618,9 +617,9 @@ struct TheExprNode : ExprNode {
 
 struct LastStringChunkExprNode : ExprNode {
 	ChunkExprType type;
-	std::shared_ptr<Node> obj;
+	Common::SharedPtr<Node> obj;
 
-	LastStringChunkExprNode(ChunkExprType t, std::shared_ptr<Node> o)
+	LastStringChunkExprNode(ChunkExprType t, Common::SharedPtr<Node> o)
 		: ExprNode(kLastStringChunkExprNode), type(t) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -633,9 +632,9 @@ struct LastStringChunkExprNode : ExprNode {
 
 struct StringChunkCountExprNode : ExprNode {
 	ChunkExprType type;
-	std::shared_ptr<Node> obj;
+	Common::SharedPtr<Node> obj;
 
-	StringChunkCountExprNode(ChunkExprType t, std::shared_ptr<Node> o)
+	StringChunkCountExprNode(ChunkExprType t, Common::SharedPtr<Node> o)
 		: ExprNode(kStringChunkCountExprNode), type(t) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -647,10 +646,10 @@ struct StringChunkCountExprNode : ExprNode {
 /* MenuPropExprNode */
 
 struct MenuPropExprNode : ExprNode {
-	std::shared_ptr<Node> menuID;
+	Common::SharedPtr<Node> menuID;
 	unsigned int prop;
 
-	MenuPropExprNode(std::shared_ptr<Node> m, unsigned int p)
+	MenuPropExprNode(Common::SharedPtr<Node> m, unsigned int p)
 		: ExprNode(kMenuPropExprNode), prop(p) {
 		menuID = std::move(m);
 		menuID->parent = this;
@@ -662,11 +661,11 @@ struct MenuPropExprNode : ExprNode {
 /* MenuItemPropExprNode */
 
 struct MenuItemPropExprNode : ExprNode {
-	std::shared_ptr<Node> menuID;
-	std::shared_ptr<Node> itemID;
+	Common::SharedPtr<Node> menuID;
+	Common::SharedPtr<Node> itemID;
 	unsigned int prop;
 
-	MenuItemPropExprNode(std::shared_ptr<Node> m, std::shared_ptr<Node> i, unsigned int p)
+	MenuItemPropExprNode(Common::SharedPtr<Node> m, Common::SharedPtr<Node> i, unsigned int p)
 		: ExprNode(kMenuItemPropExprNode), prop(p) {
 		menuID = std::move(m);
 		menuID->parent = this;
@@ -680,10 +679,10 @@ struct MenuItemPropExprNode : ExprNode {
 /* SoundPropExprNode */
 
 struct SoundPropExprNode : ExprNode {
-	std::shared_ptr<Node> soundID;
+	Common::SharedPtr<Node> soundID;
 	unsigned int prop;
 
-	SoundPropExprNode(std::shared_ptr<Node> s, unsigned int p)
+	SoundPropExprNode(Common::SharedPtr<Node> s, unsigned int p)
 		: ExprNode(kSoundPropExprNode), prop(p) {
 		soundID = std::move(s);
 		soundID->parent = this;
@@ -695,10 +694,10 @@ struct SoundPropExprNode : ExprNode {
 /* SpritePropExprNode */
 
 struct SpritePropExprNode : ExprNode {
-	std::shared_ptr<Node> spriteID;
+	Common::SharedPtr<Node> spriteID;
 	unsigned int prop;
 
-	SpritePropExprNode(std::shared_ptr<Node> s, unsigned int p)
+	SpritePropExprNode(Common::SharedPtr<Node> s, unsigned int p)
 		: ExprNode(kSpritePropExprNode), prop(p) {
 		spriteID = std::move(s);
 		spriteID->parent = this;
@@ -710,10 +709,10 @@ struct SpritePropExprNode : ExprNode {
 /* ThePropExprNode */
 
 struct ThePropExprNode : ExprNode {
-	std::shared_ptr<Node> obj;
+	Common::SharedPtr<Node> obj;
 	Common::String prop;
 
-	ThePropExprNode(std::shared_ptr<Node> o, Common::String p)
+	ThePropExprNode(Common::SharedPtr<Node> o, Common::String p)
 		: ExprNode(kThePropExprNode), prop(p) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -725,10 +724,10 @@ struct ThePropExprNode : ExprNode {
 /* ObjPropExprNode */
 
 struct ObjPropExprNode : ExprNode {
-	std::shared_ptr<Node> obj;
+	Common::SharedPtr<Node> obj;
 	Common::String prop;
 
-	ObjPropExprNode(std::shared_ptr<Node> o, Common::String p)
+	ObjPropExprNode(Common::SharedPtr<Node> o, Common::String p)
 		: ExprNode(kObjPropExprNode), prop(p) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -741,10 +740,10 @@ struct ObjPropExprNode : ExprNode {
 /* ObjBracketExprNode */
 
 struct ObjBracketExprNode : ExprNode {
-	std::shared_ptr<Node> obj;
-	std::shared_ptr<Node> prop;
+	Common::SharedPtr<Node> obj;
+	Common::SharedPtr<Node> prop;
 
-	ObjBracketExprNode(std::shared_ptr<Node> o, std::shared_ptr<Node> p)
+	ObjBracketExprNode(Common::SharedPtr<Node> o, Common::SharedPtr<Node> p)
 		: ExprNode(kObjBracketExprNode) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -759,12 +758,12 @@ struct ObjBracketExprNode : ExprNode {
 /* ObjPropIndexExprNode */
 
 struct ObjPropIndexExprNode : ExprNode {
-	std::shared_ptr<Node> obj;
+	Common::SharedPtr<Node> obj;
 	Common::String prop;
-	std::shared_ptr<Node> index;
-	std::shared_ptr<Node> index2;
+	Common::SharedPtr<Node> index;
+	Common::SharedPtr<Node> index2;
 
-	ObjPropIndexExprNode(std::shared_ptr<Node> o, Common::String p, std::shared_ptr<Node> i, std::shared_ptr<Node> i2)
+	ObjPropIndexExprNode(Common::SharedPtr<Node> o, Common::String p, Common::SharedPtr<Node> i, Common::SharedPtr<Node> i2)
 		: ExprNode(kObjPropIndexExprNode), prop(p) {
 		obj = std::move(o);
 		obj->parent = this;
@@ -800,10 +799,10 @@ struct NextRepeatStmtNode : StmtNode {
 
 struct PutStmtNode : StmtNode {
 	PutType type;
-	std::shared_ptr<Node> variable;
-	std::shared_ptr<Node> value;
+	Common::SharedPtr<Node> variable;
+	Common::SharedPtr<Node> value;
 
-	PutStmtNode(PutType t, std::shared_ptr<Node> var, std::shared_ptr<Node> val)
+	PutStmtNode(PutType t, Common::SharedPtr<Node> var, Common::SharedPtr<Node> val)
 		: StmtNode(kPutStmtNode), type(t) {
 		variable = std::move(var);
 		variable->parent = this;
@@ -830,9 +829,9 @@ struct WhenStmtNode : StmtNode {
 
 struct NewObjNode : ExprNode {
 	Common::String objType;
-	std::shared_ptr<Node> objArgs;
+	Common::SharedPtr<Node> objArgs;
 
-	NewObjNode(Common::String o, std::shared_ptr<Node> args) : ExprNode(kNewObjNode), objType(o), objArgs(args) {}
+	NewObjNode(Common::String o, Common::SharedPtr<Node> args) : ExprNode(kNewObjNode), objType(o), objArgs(args) {}
 	virtual ~NewObjNode() = default;
 	virtual void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
 };
@@ -840,16 +839,16 @@ struct NewObjNode : ExprNode {
 /* AST */
 
 struct AST {
-	std::shared_ptr<HandlerNode> root;
+	Common::SharedPtr<HandlerNode> root;
 	BlockNode *currentBlock;
 
 	AST(Handler *handler){
-		root = std::make_shared<HandlerNode>(handler);
+		root = Common::SharedPtr<HandlerNode>(new HandlerNode(handler));
 		currentBlock = root->block.get();
 	}
 
 	void writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const;
-	void addStatement(std::shared_ptr<Node> statement);
+	void addStatement(Common::SharedPtr<Node> statement);
 	void enterBlock(BlockNode *block);
 	void exitBlock();
 };
