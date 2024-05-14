@@ -1269,7 +1269,7 @@ void Handler::writeBytecodeText(CodeWriter &code, bool dotSyntax) const {
 			break;
 		case kOpPushFloat32:
 			code.write(" ");
-			code.write(Common::String::format("%g", (*(float *)(&bytecode.obj))));
+			code.write(Common::String::format("%g", (*(const float *)(&bytecode.obj))));
 			break;
 		default:
 			if (bytecode.opID > 0x40) {
