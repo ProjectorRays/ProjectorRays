@@ -7,7 +7,6 @@
 #ifndef LINGODEC_CONTEXT_H
 #define LINGODEC_CONTEXT_H
 
-#include <cstdint>
 #include "common/array.h"
 #include "common/stablemap.h"
 

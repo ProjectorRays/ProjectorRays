@@ -7,8 +7,6 @@
 #ifndef LINGODEC_RESOLVER_H
 #define LINGODEC_RESOLVER_H
 
-#include <cstdint>
-
 namespace LingoDec {
 
 struct Script;

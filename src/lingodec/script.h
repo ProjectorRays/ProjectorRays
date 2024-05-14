@@ -7,8 +7,6 @@
 #ifndef LINGODEC_SCRIPT_H
 #define LINGODEC_SCRIPT_H
 
-#include <cstdint>
-
 #include "common/ptr.h"
 #include "common/str.h"
 #include "lingodec/enums.h"
