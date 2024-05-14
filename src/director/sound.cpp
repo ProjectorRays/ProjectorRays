@@ -16,7 +16,7 @@
 namespace Director {
 
 ssize_t ReadStream_read(void *stream, void *buf, size_t count) {
-	return ((Common::ReadStream *)stream)->readUpToBytes(count, (uint8_t *)buf);
+	return ((Common::ReadStream *)stream)->read(buf, count);
 }
 
 off_t ReadStream_lseek(void *stream, off_t offset, int whence) {
@@ -210,10 +210,10 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 	uint32_t loopEnd = in.readUint32();
 	out.writeUint32(loopEnd);
 
-	uint8_t encode = in.readUint8();
+	uint8_t encode = in.readByte();
 	out.writeUint8(encode);
 
-	uint8_t baseFrequency = in.readUint8();
+	uint8_t baseFrequency = in.readByte();
 	out.writeUint8(baseFrequency);
 
 	uint32_t numSamples;

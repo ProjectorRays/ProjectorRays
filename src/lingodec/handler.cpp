@@ -47,7 +47,7 @@ void Handler::readData(Common::ReadStream &stream) {
 	stream.seek(compiledOffset);
 	while (stream.pos() < compiledOffset + compiledLen) {
 		uint32_t pos = stream.pos() - compiledOffset;
-		uint8_t op = stream.readUint8();
+		uint8_t op = stream.readByte();
 		OpCode opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
 		// argument can be one, two or four bytes
 		int32_t obj = 0;
@@ -67,9 +67,9 @@ void Handler::readData(Common::ReadStream &stream) {
 			// one byte
 			if (opcode == kOpPushInt8) {
 				// treat pushint's arg as signed
-				obj = stream.readInt8();
+				obj = stream.readSByte();
 			} else {
-				obj = stream.readUint8();
+				obj = stream.readByte();
 			}
 		}
 		Bytecode bytecode(op, obj, pos);

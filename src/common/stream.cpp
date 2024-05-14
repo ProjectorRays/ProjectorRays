@@ -70,7 +70,7 @@ BufferView ReadStream::readByteView(size_t len) {
 	return res;
 }
 
-ssize_t ReadStream::readUpToBytes(size_t len, uint8_t *dest) {
+ssize_t ReadStream::read(void *dest, size_t len) {
 	if (eof())
 		return 0;
 
@@ -100,18 +100,18 @@ ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	return outLen;
 }
 
-uint8_t ReadStream::readUint8() {
+uint8_t ReadStream::readByte() {
 	size_t p = _pos;
 	_pos += 1;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readUint8: Read past end of stream!");
+		throw std::runtime_error("ReadStream::readByte: Read past end of stream!");
 	}
 
 	return _data[p];
 }
 
-int8_t ReadStream::readInt8() {
-	return (int8_t)readUint8();
+int8_t ReadStream::readSByte() {
+	return (int8_t)readByte();
 }
 
 uint16_t ReadStream::readUint16() {
@@ -201,7 +201,7 @@ uint32_t ReadStream::readVarInt() {
 	uint32_t val = 0;
 	uint8_t b;
 	do {
-		b = readUint8();
+		b = readByte();
 		val = (val << 7) | (b & 0x7f); // The 7 least significant bits are appended to the result
 	} while (b >> 7); // If the most significant bit is 1, there's another byte after
 	return val;
@@ -224,16 +224,16 @@ std::string ReadStream::readString(size_t len) {
 
 std::string ReadStream::readCString() {
 	std::string res;
-	char ch = readInt8();
+	char ch = readSByte();
 	while (ch) {
 		res += ch;
-		ch = readInt8();
+		ch = readSByte();
 	}
 	return res;
 }
 
 std::string ReadStream::readPascalString() {
-	uint8_t len = readUint8();
+	uint8_t len = readByte();
 	return readString(len);
 }
 

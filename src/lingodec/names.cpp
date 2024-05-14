@@ -328,7 +328,7 @@ void ScriptNames::read(Common::ReadStream &stream) {
 	stream.seek(namesOffset);
 	names.resize(namesCount);
 	for (auto &name : names) {
-		auto length = stream.readUint8();
+		auto length = stream.readByte();
 		name = stream.readString(length);
 	}
 }

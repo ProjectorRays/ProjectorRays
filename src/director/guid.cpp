@@ -16,7 +16,7 @@ void MoaID::read(Common::ReadStream &stream) {
 	data2 = stream.readUint16();
 	data3 = stream.readUint16();
 	for (size_t i = 0; i < 8; i++) {
-		data4[i] = stream.readUint8();
+		data4[i] = stream.readByte();
 	}
 }
 

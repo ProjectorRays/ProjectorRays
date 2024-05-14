@@ -129,7 +129,7 @@ bool DirectorFile::readAfterburnerMap() {
 		Common::debug(Common::String::format("Fver: imapVersion: %u directorVersion: 0x%X", imapVersion, directorVersion));
 	}
 	if (fverVersion >= 0x501) {
-		uint8_t versionStringLen = stream->readUint8();
+		uint8_t versionStringLen = stream->readByte();
 		fverVersionString = stream->readString(versionStringLen);
 		Common::debug(Common::String::format("Fver: versionString: %s", fverVersionString.c_str()));
 	}

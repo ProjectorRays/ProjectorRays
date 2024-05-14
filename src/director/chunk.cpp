@@ -149,11 +149,11 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 
 		// these bytes are common but stored in the specific data
 		uint32_t specificDataLeft = specificDataLen;
-		type = static_cast<MemberType>(stream.readUint8());
+		type = static_cast<MemberType>(stream.readByte());
 		specificDataLeft -= 1;
 		if (specificDataLeft) {
 			hasFlags1 = true;
-			flags1 = stream.readUint8();
+			flags1 = stream.readByte();
 			specificDataLeft -= 1;
 		} else {
 			hasFlags1 = false;
@@ -395,13 +395,13 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	/* 10 */ movieRight = stream.readInt16();
 	/* 12 */ minMember = stream.readInt16();
 	/* 14 */ maxMember = stream.readInt16();
-	/* 16 */ field9 = stream.readInt8();
-	/* 17 */ field10 = stream.readInt8();
+	/* 16 */ field9 = stream.readSByte();
+	/* 17 */ field10 = stream.readSByte();
 	if (ver < 700) {
 		/* 18 */ preD7field11 = stream.readInt16();
 	} else {
-		/* 18 */ D7stageColorG = stream.readUint8();
-		/* 19 */ D7stageColorB = stream.readUint8();
+		/* 18 */ D7stageColorG = stream.readByte();
+		/* 19 */ D7stageColorB = stream.readByte();
 	}
 	/* 20 */ commentFont = stream.readInt16();
 	/* 22 */ commentSize = stream.readInt16();
@@ -409,20 +409,20 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 	if (ver < 700) {
 		/* 26 */ preD7stageColor = stream.readInt16();
 	} else {
-		/* 26 */ D7stageColorIsRGB = stream.readUint8();
-		/* 27 */ D7stageColorR = stream.readUint8();
+		/* 26 */ D7stageColorIsRGB = stream.readByte();
+		/* 27 */ D7stageColorR = stream.readByte();
 	}
 	/* 28 */ bitDepth = stream.readInt16();
-	/* 30 */ field17 = stream.readUint8();
-	/* 31 */ field18 = stream.readUint8();
+	/* 30 */ field17 = stream.readByte();
+	/* 31 */ field18 = stream.readByte();
 	/* 32 */ field19 = stream.readInt32();
 	/* 36 */ /* directorVersion = */ stream.readInt16();
 	/* 38 */ field21 = stream.readInt16();
 	/* 40 */ field22 = stream.readInt32();
 	/* 44 */ field23 = stream.readInt32();
 	/* 48 */ field24 = stream.readInt32();
-	/* 52 */ field25 = stream.readInt8();
-	/* 53 */ field26 = stream.readUint8();
+	/* 52 */ field25 = stream.readSByte();
+	/* 53 */ field26 = stream.readByte();
 	/* 54 */ frameRate = stream.readInt16();
 	/* 56 */ platform = stream.readInt16();
 	/* 58 */ protection = stream.readInt16();
