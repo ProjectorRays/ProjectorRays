@@ -7,8 +7,8 @@
 #include "common/str.h"
 #include "common/stream.h"
 #include "common/util.h"
-#include "lingodec/enums.h"
-#include "lingodec/names.h"
+#include "./enums.h"
+#include "./names.h"
 
 namespace LingoDec {
 

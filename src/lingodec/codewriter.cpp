@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "lingodec/codewriter.h"
+#include "./codewriter.h"
 
 namespace LingoDec {
 

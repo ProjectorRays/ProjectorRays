@@ -6,11 +6,11 @@
 
 #include "common/stream.h"
 #include "common/util.h"
-#include "lingodec/ast.h"
-#include "lingodec/codewriter.h"
-#include "lingodec/handler.h"
-#include "lingodec/names.h"
-#include "lingodec/script.h"
+#include "./ast.h"
+#include "./codewriter.h"
+#include "./handler.h"
+#include "./names.h"
+#include "./script.h"
 
 namespace LingoDec {
 

@@ -9,7 +9,7 @@
 
 #include "common/ptr.h"
 #include "common/str.h"
-#include "lingodec/enums.h"
+#include "./enums.h"
 
 namespace Common {
 class ReadStream;

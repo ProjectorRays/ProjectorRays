@@ -5,11 +5,11 @@
  */
 
 #include "common/stream.h"
-#include "lingodec/ast.h"
-#include "lingodec/codewriter.h"
-#include "lingodec/context.h"
-#include "lingodec/handler.h"
-#include "lingodec/script.h"
+#include "./ast.h"
+#include "./codewriter.h"
+#include "./context.h"
+#include "./handler.h"
+#include "./script.h"
 
 double readAppleFloat80(void *ptr);
 

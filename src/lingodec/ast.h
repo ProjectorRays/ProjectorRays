@@ -11,8 +11,8 @@
 #include "common/ptr.h"
 #include "common/str.h"
 #include "common/util.h"
-#include "lingodec/codewriter.h"
-#include "lingodec/enums.h"
+#include "./codewriter.h"
+#include "./enums.h"
 
 namespace LingoDec {
 

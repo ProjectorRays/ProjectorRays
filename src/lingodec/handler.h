@@ -10,7 +10,7 @@
 #include "common/array.h"
 #include "common/stablemap.h"
 #include "common/str.h"
-#include "lingodec/enums.h"
+#include "./enums.h"
 
 namespace Common {
 class SeekableReadStream;

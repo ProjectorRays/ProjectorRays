@@ -6,10 +6,10 @@
 
 #include "common/stream.h"
 #include "common/util.h"
-#include "lingodec/context.h"
-#include "lingodec/names.h"
-#include "lingodec/resolver.h"
-#include "lingodec/script.h"
+#include "./context.h"
+#include "./names.h"
+#include "./resolver.h"
+#include "./script.h"
 
 namespace LingoDec {
 
