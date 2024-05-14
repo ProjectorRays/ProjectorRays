@@ -4,11 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <algorithm>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-
 #include "common/codewriter.h"
 #include "common/json.h"
 #include "common/log.h"
