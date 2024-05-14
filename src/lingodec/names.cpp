@@ -12,9 +12,18 @@
 
 namespace LingoDec {
 
+template<class Key, class Val>
+static Common::StableMap<Key, Val> toMap(std::initializer_list<Common::Pair<Key, Val>> items) {
+	Common::StableMap<Key, Val> stableMap;
+	for(auto item : items) {
+		stableMap.insert(Common::Pair<Key, Val>(item.first, item.second));
+	}
+	return stableMap;
+}
+
 /* StandardNames */
 
-std::map<unsigned int, Common::String> StandardNames::opcodeNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::opcodeNames = toMap<unsigned int, Common::String>({
 	// single-byte
 	{ kOpRet,				"ret" },
 	{ kOpRetFactory,		"retfactory" },
@@ -93,9 +102,9 @@ std::map<unsigned int, Common::String> StandardNames::opcodeNames = {
 	{ kOpPushFloat32,		"pushfloat32" },
 	{ kOpGetTopLevelProp,	"gettoplevelprop" },
 	{ kOpNewObj,			"newobj" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::binaryOpNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::binaryOpNames = toMap<unsigned int, Common::String>({
 	{ kOpMul,			"*" },
 	{ kOpAdd,			"+" },
 	{ kOpSub,			"-" },
@@ -113,22 +122,22 @@ std::map<unsigned int, Common::String> StandardNames::binaryOpNames = {
 	{ kOpOr,			"or" },
 	{ kOpContainsStr,	"contains" },
 	{ kOpContains0Str,	"starts" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::chunkTypeNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::chunkTypeNames = toMap<unsigned int, Common::String>({
 	{ kChunkChar, "char" },
 	{ kChunkWord, "word" },
 	{ kChunkItem, "item" },
 	{ kChunkLine, "line" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::putTypeNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::putTypeNames = toMap<unsigned int, Common::String>({
 	{ kPutInto,		"into" },
 	{ kPutAfter,	"after" },
 	{ kPutBefore,	"before" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::moviePropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::moviePropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x00, "floatPrecision" },
 	{ 0x01, "mouseDownScript" },
 	{ 0x02, "mouseUpScript" },
@@ -141,33 +150,33 @@ std::map<unsigned int, Common::String> StandardNames::moviePropertyNames = {
 	{ 0x09, "short date" },
 	{ 0x0a, "abbr date" },
 	{ 0x0b, "long date" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::whenEventNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::whenEventNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "mouseDown" },
 	{ 0x02, "mouseUp" },
 	{ 0x03, "keyDown" },
 	{ 0x04, "keyUp" },
 	{ 0x05, "timeOut" },
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::menuPropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::menuPropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "name" },
 	{ 0x02, "number of menuItems" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::menuItemPropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::menuItemPropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "name" },
 	{ 0x02, "checkMark" },
 	{ 0x03, "enabled" },
 	{ 0x04, "script" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::soundPropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::soundPropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "volume" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::spritePropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::spritePropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "type" },
 	{ 0x02, "backColor" },
 	{ 0x03, "bottom" },
@@ -210,9 +219,9 @@ std::map<unsigned int, Common::String> StandardNames::spritePropertyNames = {
 	{ 0x28, "mostRecentCuePoint" },
 	{ 0x29, "tweened" },
 	{ 0x2a, "name" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::animationPropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::animationPropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "beepOn" },
 	{ 0x02, "buttonStyle" },
 	{ 0x03, "centerStage" },
@@ -254,17 +263,17 @@ std::map<unsigned int, Common::String> StandardNames::animationPropertyNames = {
 	{ 0x26, "safePlayer" },
 	{ 0x27, "soundKeepDevice" },
 	{ 0x28, "soundMixMedia" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::animation2PropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::animation2PropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "perFrameHook" },
 	{ 0x02, "number of castMembers" },
 	{ 0x03, "number of menus" },
 	{ 0x04, "number of castLibs" },
 	{ 0x05, "number of xtras" }
-};
+});
 
-std::map<unsigned int, Common::String> StandardNames::memberPropertyNames = {
+Common::StableMap<unsigned int, Common::String> StandardNames::memberPropertyNames = toMap<unsigned int, Common::String>({
 	{ 0x01, "name" },
 	{ 0x02, "text" },
 	{ 0x03, "textStyle" },
@@ -284,7 +293,7 @@ std::map<unsigned int, Common::String> StandardNames::memberPropertyNames = {
 	{ 0x11, "foreColor" },
 	{ 0x12, "backColor" },
 	{ 0x13, "type" }
-};
+});
 
 Common::String StandardNames::getOpcodeName(uint8_t id) {
 	if (id >= 0x40)
@@ -296,7 +305,7 @@ Common::String StandardNames::getOpcodeName(uint8_t id) {
 	return it->second;
 }
 
-Common::String StandardNames::getName(const std::map<unsigned int, Common::String> &nameMap, unsigned int id) {
+Common::String StandardNames::getName(const Common::StableMap<unsigned int, Common::String> &nameMap, unsigned int id) {
 	auto it = nameMap.find(id);
 	if (it == nameMap.end())
 		return "ERROR";

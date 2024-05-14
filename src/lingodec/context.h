@@ -8,8 +8,8 @@
 #define LINGODEC_CONTEXT_H
 
 #include <cstdint>
-#include <map>
 #include "common/array.h"
+#include "common/stablemap.h"
 
 namespace Common {
 class ReadStream;
@@ -43,7 +43,7 @@ struct ScriptContext {
 	ChunkResolver *resolver;
 	ScriptNames *lnam;
 	Common::Array<ScriptContextMapEntry> sectionMap;
-	std::map<uint32_t, Script *> scripts;
+	Common::StableMap<uint32_t, Script *> scripts;
 
 	ScriptContext(unsigned int version, ChunkResolver *resolver) : version(version),
 																   resolver(resolver),

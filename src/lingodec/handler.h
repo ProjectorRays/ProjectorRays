@@ -7,9 +7,8 @@
 #ifndef LINGODEC_HANDLER_H
 #define LINGODEC_HANDLER_H
 
-#include <map>
-
 #include "common/array.h"
+#include "common/stablemap.h"
 #include "common/str.h"
 #include "lingodec/enums.h"
 
@@ -50,7 +49,7 @@ struct Handler {
 
 	Script *script;
 	Common::Array<Bytecode> bytecodeArray;
-	std::map<uint32_t, size_t> bytecodePosMap;
+	Common::StableMap<uint32_t, size_t> bytecodePosMap;
 	Common::Array<Common::String> argumentNames;
 	Common::Array<Common::String> localNames;
 	Common::Array<Common::String> globalNames;

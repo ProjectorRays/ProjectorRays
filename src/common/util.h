@@ -9,9 +9,8 @@
 
 #include <cstdint>
 #include <string>
-#include <memory>
 
-#define FOURCC(a0,a1,a2,a3) ((uint32_t)((a3) | ((a2) << 8) | ((a1) << 16) | ((a0) << 24)))
+#define FOURCC(a0, a1, a2, a3) ((uint32_t)((a3) | ((a2) << 8) | ((a1) << 16) | ((a0) << 24)))
 
 #define STR_INNER(x) #x
 #define STR(x) STR_INNER(x)
@@ -28,8 +27,18 @@ int compareIgnoreCase(const std::string &a, const std::string &b);
 
 template<class T>
 constexpr std::remove_reference_t<T> &&move(T &&t) noexcept {
-  return static_cast<std::remove_reference_t<T> &&>(t);
+	return static_cast<std::remove_reference_t<T> &&>(t);
 }
+
+template<class T1, class T2>
+struct Pair {
+	T1 first;
+	T2 second;
+
+	Pair() {}
+	Pair(T1 first_, T2 second_) : first(first_), second(second_) {
+	}
+};
 
 } // namespace Common
 
