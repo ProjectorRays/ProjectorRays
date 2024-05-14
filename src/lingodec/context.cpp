@@ -19,21 +19,19 @@ struct ScriptContextMapEntry;
 
 void ScriptContext::read(Common::ReadStream &stream) {
 	// Lingo scripts are always big endian regardless of file endianness
-	stream.endianness = Common::kBigEndian;
-
-	unknown0 = stream.readInt32();
-	unknown1 = stream.readInt32();
-	entryCount = stream.readUint32();
-	entryCount2 = stream.readUint32();
-	entriesOffset = stream.readUint16();
-	unknown2 = stream.readInt16();
-	unknown3 = stream.readInt32();
-	unknown4 = stream.readInt32();
-	unknown5 = stream.readInt32();
-	lnamSectionID = stream.readInt32();
-	validCount = stream.readUint16();
-	flags = stream.readUint16();
-	freePointer = stream.readInt16();
+	unknown0 = stream.readSint32BE();
+	unknown1 = stream.readSint32BE();
+	entryCount = stream.readUint32BE();
+	entryCount2 = stream.readUint32BE();
+	entriesOffset = stream.readUint16BE();
+	unknown2 = stream.readSint16BE();
+	unknown3 = stream.readSint32BE();
+	unknown4 = stream.readSint32BE();
+	unknown5 = stream.readSint32BE();
+	lnamSectionID = stream.readSint32BE();
+	validCount = stream.readUint16BE();
+	flags = stream.readUint16BE();
+	freePointer = stream.readSint16BE();
 
 	stream.seek(entriesOffset);
 	sectionMap.resize(entryCount);
@@ -77,10 +75,10 @@ void ScriptContext::parseScripts() {
 /* ScriptContextMapEntry */
 
 void ScriptContextMapEntry::read(Common::ReadStream &stream) {
-	unknown0 = stream.readInt32();
-	sectionID = stream.readInt32();
-	unknown1 = stream.readUint16();
-	unknown2 = stream.readUint16();
+	unknown0 = stream.readSint32BE();
+	sectionID = stream.readSint32BE();
+	unknown1 = stream.readUint16BE();
+	unknown2 = stream.readUint16BE();
 }
 
 } // namespace LingoDec

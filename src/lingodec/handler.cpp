@@ -24,23 +24,23 @@ namespace LingoDec {
 /* Handler */
 
 void Handler::readRecord(Common::ReadStream &stream) {
-	nameID = stream.readInt16();
-	vectorPos = stream.readUint16();
-	compiledLen = stream.readUint32();
-	compiledOffset = stream.readUint32();
-	argumentCount = stream.readUint16();
-	argumentOffset = stream.readUint32();
-	localsCount = stream.readUint16();
-	localsOffset = stream.readUint32();
-	globalsCount = stream.readUint16();
-	globalsOffset = stream.readUint32();
-	unknown1 = stream.readUint32();
-	unknown2 = stream.readUint16();
-	lineCount = stream.readUint16();
-	lineOffset = stream.readUint32();
+	nameID = stream.readSint16BE();
+	vectorPos = stream.readUint16BE();
+	compiledLen = stream.readUint32BE();
+	compiledOffset = stream.readUint32BE();
+	argumentCount = stream.readUint16BE();
+	argumentOffset = stream.readUint32BE();
+	localsCount = stream.readUint16BE();
+	localsOffset = stream.readUint32BE();
+	globalsCount = stream.readUint16BE();
+	globalsOffset = stream.readUint32BE();
+	unknown1 = stream.readUint32BE();
+	unknown2 = stream.readUint16BE();
+	lineCount = stream.readUint16BE();
+	lineOffset = stream.readUint32BE();
 	// yet to implement
 	if (script->version >= 850)
-		stackHeight = stream.readUint32();
+		stackHeight = stream.readUint32BE();
 }
 
 void Handler::readData(Common::ReadStream &stream) {
@@ -53,15 +53,15 @@ void Handler::readData(Common::ReadStream &stream) {
 		int32_t obj = 0;
 		if (op >= 0xc0) {
 			// four bytes
-			obj = stream.readInt32();
+			obj = stream.readSint32BE();
 		} else if (op >= 0x80) {
 			// two bytes
 			if (opcode == kOpPushInt16 || opcode == kOpPushInt8) {
 				// treat pushint's arg as signed
 				// pushint8 may be used to push a 16-bit int in older Lingo
-				obj = stream.readInt16();
+				obj = stream.readSint16BE();
 			} else {
-				obj = stream.readUint16();
+				obj = stream.readUint16BE();
 			}
 		} else if (op >= 0x40) {
 			// one byte
@@ -87,7 +87,7 @@ Common::Array<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, ui
 	Common::Array<int16_t> nameIDs;
 	nameIDs.resize(count);
 	for (size_t i = 0; i < count; i++) {
-		nameIDs[i] = stream.readUint16();
+		nameIDs[i] = stream.readUint16BE();
 	}
 	return nameIDs;
 }

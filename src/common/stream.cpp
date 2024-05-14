@@ -130,6 +130,22 @@ int16_t ReadStream::readInt16() {
 	return (int16_t)readUint16();
 }
 
+uint16_t ReadStream::readUint16BE() {
+	size_t p = _pos;
+
+	_pos += 2;
+
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readUint16BE: Read past end of stream!");
+	}
+
+	return (_data[p] << 8 | _data[p+1]);
+}
+
+int16_t ReadStream::readSint16BE() {
+	return (int16_t)readUint16BE();
+}
+
 uint32_t ReadStream::readUint32() {
 	size_t p = _pos;
 	_pos += 4;
@@ -144,6 +160,22 @@ uint32_t ReadStream::readUint32() {
 
 int32_t ReadStream::readInt32() {
 	return (int32_t)readUint32();
+}
+
+uint32_t ReadStream::readUint32BE() {
+	size_t p = _pos;
+
+	_pos += 4;
+
+	if (pastEOF()) {
+		throw std::runtime_error("ReadStream::readUint32BE: Read past end of stream!");
+	}
+
+	return (_data[p] << 24 | _data[p+1] << 16 | _data[p+2] << 8 | _data[p+3]);
+}
+
+int32_t ReadStream::readSint32BE() {
+	return (int32_t)readUint32BE();
 }
 
 double ReadStream::readDouble() {

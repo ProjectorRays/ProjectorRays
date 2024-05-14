@@ -316,20 +316,17 @@ Common::String StandardNames::getName(const Common::StableMap<unsigned int, Comm
 
 void ScriptNames::read(Common::ReadStream &stream) {
 	// Lingo scripts are always big endian regardless of file endianness
-	stream.endianness = Common::kBigEndian;
-
-	unknown0 = stream.readInt32();
-	unknown1 = stream.readInt32();
-	len1 = stream.readUint32();
-	len2 = stream.readUint32();
-	namesOffset = stream.readUint16();
-	namesCount = stream.readUint16();
+	unknown0 = stream.readSint32BE();
+	unknown1 = stream.readSint32BE();
+	len1 = stream.readUint32BE();
+	len2 = stream.readUint32BE();
+	namesOffset = stream.readUint16BE();
+	namesCount = stream.readUint16BE();
 
 	stream.seek(namesOffset);
 	names.resize(namesCount);
 	for (auto &name : names) {
-		auto length = stream.readByte();
-		name = stream.readString(length);
+		name = stream.readPascalString();
 	}
 }
 

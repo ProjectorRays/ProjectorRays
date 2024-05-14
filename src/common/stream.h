@@ -81,7 +81,8 @@ public:
 	int8_t readSByte();
 	uint32_t readUint32BE();
 	int32_t readSint32BE();
-
+	uint16_t readUint16BE();
+	int16_t readSint16BE();
 
 	uint16_t readUint16();
 	int16_t readInt16();

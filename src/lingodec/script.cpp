@@ -23,34 +23,32 @@ Script::~Script() = default;
 
 void Script::read(Common::ReadStream &stream) {
 	// Lingo scripts are always big endian regardless of file endianness
-	stream.endianness = Common::kBigEndian;
-
 	stream.seek(8);
-	/*  8 */ totalLength = stream.readUint32();
-	/* 12 */ totalLength2 = stream.readUint32();
-	/* 16 */ headerLength = stream.readUint16();
-	/* 18 */ scriptNumber = stream.readUint16();
-	/* 20 */ unk20 = stream.readInt16();
-	/* 22 */ parentNumber = stream.readInt16();
-	
+	/*  8 */ totalLength = stream.readUint32BE();
+	/* 12 */ totalLength2 = stream.readUint32BE();
+	/* 16 */ headerLength = stream.readUint16BE();
+	/* 18 */ scriptNumber = stream.readUint16BE();
+	/* 20 */ unk20 = stream.readSint16BE();
+	/* 22 */ parentNumber = stream.readSint16BE();
+
 	stream.seek(38);
-	/* 38 */ scriptFlags = stream.readUint32();
-	/* 42 */ unk42 = stream.readInt16();
-	/* 44 */ castID = stream.readInt32();
-	/* 48 */ factoryNameID = stream.readInt16();
-	/* 50 */ handlerVectorsCount = stream.readUint16();
-	/* 52 */ handlerVectorsOffset = stream.readUint32();
-	/* 56 */ handlerVectorsSize = stream.readUint32();
-	/* 60 */ propertiesCount = stream.readUint16();
-	/* 62 */ propertiesOffset = stream.readUint32();
-	/* 66 */ globalsCount = stream.readUint16();
-	/* 68 */ globalsOffset = stream.readUint32();
-	/* 72 */ handlersCount = stream.readUint16();
-	/* 74 */ handlersOffset = stream.readUint32();
-	/* 78 */ literalsCount = stream.readUint16();
-	/* 80 */ literalsOffset = stream.readUint32();
-	/* 84 */ literalsDataCount = stream.readUint32();
-	/* 88 */ literalsDataOffset = stream.readUint32();
+	/* 38 */ scriptFlags = stream.readUint32BE();
+	/* 42 */ unk42 = stream.readSint16BE();
+	/* 44 */ castID = stream.readSint32BE();
+	/* 48 */ factoryNameID = stream.readSint16BE();
+	/* 50 */ handlerVectorsCount = stream.readUint16BE();
+	/* 52 */ handlerVectorsOffset = stream.readUint32BE();
+	/* 56 */ handlerVectorsSize = stream.readUint32BE();
+	/* 60 */ propertiesCount = stream.readUint16BE();
+	/* 62 */ propertiesOffset = stream.readUint32BE();
+	/* 66 */ globalsCount = stream.readUint16BE();
+	/* 68 */ globalsOffset = stream.readUint32BE();
+	/* 72 */ handlersCount = stream.readUint16BE();
+	/* 74 */ handlersOffset = stream.readUint32BE();
+	/* 78 */ literalsCount = stream.readUint16BE();
+	/* 80 */ literalsOffset = stream.readUint32BE();
+	/* 84 */ literalsDataCount = stream.readUint32BE();
+	/* 88 */ literalsDataOffset = stream.readUint32BE();
 
 	propertyNameIDs = readVarnamesTable(stream, propertiesCount, propertiesOffset);
 	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
@@ -85,7 +83,7 @@ Common::Array<int16_t> Script::readVarnamesTable(Common::ReadStream &stream, uin
 	stream.seek(offset);
 	Common::Array<int16_t> nameIDs(count);
 	for (uint16_t i = 0; i < count; i++) {
-		nameIDs[i] = stream.readInt16();
+		nameIDs[i] = stream.readSint16BE();
 	}
 	return nameIDs;
 }
@@ -218,10 +216,10 @@ bool Script::isFactory() const {
 
 void LiteralStore::readRecord(Common::ReadStream &stream, int version) {
 	if (version >= 500)
-		type = static_cast<LiteralType>(stream.readUint32());
+		type = static_cast<LiteralType>(stream.readUint32BE());
 	else
-		type = static_cast<LiteralType>(stream.readUint16());
-	offset = stream.readUint32();
+		type = static_cast<LiteralType>(stream.readUint16BE());
+	offset = stream.readUint32BE();
 }
 
 void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
@@ -231,7 +229,11 @@ void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
 		stream.seek(startOffset + offset);
 		auto length = stream.readUint32();
 		if (type == kLiteralString) {
-			value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum(LingoDec::kDatumString, stream.readString(length - 1)));
+			char *buf = new char[length];
+			stream.read(buf, length - 1);
+			buf[length - 1] = '\0';
+			value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum(LingoDec::kDatumString, Common::String(buf)));
+			delete[] buf;
 		} else if (type == kLiteralFloat) {
 			double floatVal = 0.0;
 			if (length == 8) {
