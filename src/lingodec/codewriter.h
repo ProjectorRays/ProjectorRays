@@ -7,14 +7,13 @@
 #ifndef LINGODEC_CODEWRITER_H
 #define LINGODEC_CODEWRITER_H
 
-#include <sstream>
 #include "common/str.h"
 
 namespace LingoDec {
 
 class CodeWriter {
 protected:
-	std::stringstream _stream;
+	Common::String _res;
 
 	Common::String _lineEnding;
 	Common::String _indentation;

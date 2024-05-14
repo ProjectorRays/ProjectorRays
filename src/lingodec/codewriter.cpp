@@ -13,24 +13,25 @@ void CodeWriter::write(Common::String str) {
 		return;
 
 	writeIndentation();
-	_stream << str;
+	_res += str;
 	_lineWidth += str.size();
 	_size += str.size();
 }
 
 void CodeWriter::write(char ch) {
 	writeIndentation();
-	_stream << ch;
+	_res += ch;
 	_lineWidth += 1;
 	_size += 1;
 }
 
 void CodeWriter::writeLine(Common::String str) {
 	if (str.empty()) {
-		_stream << _lineEnding;
+		_res += _lineEnding;
 	} else {
 		writeIndentation();
-		_stream << str << _lineEnding;
+		_res += str;
+		_res += _lineEnding;
 	}
 	_indentationWritten = false;
 	_lineWidth = 0;
@@ -38,7 +39,7 @@ void CodeWriter::writeLine(Common::String str) {
 }
 
 void CodeWriter::writeLine() {
-	_stream << _lineEnding;
+	_res += _lineEnding;
 	_indentationWritten = false;
 	_lineWidth = 0;
 	_size += _lineEnding.size();
@@ -55,7 +56,7 @@ void CodeWriter::unindent() {
 }
 
 Common::String CodeWriter::str() const {
-	return _stream.str();
+	return _res;
 }
 
 void CodeWriter::writeIndentation() {
@@ -63,7 +64,7 @@ void CodeWriter::writeIndentation() {
 		return;
 
 	for (int i = 0; i < _indentationLevel; i++) {
-		_stream << _indentation;
+		_res += _indentation;
 	}
 
 	_indentationWritten = true;
