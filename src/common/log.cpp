@@ -17,35 +17,13 @@ void log(const Common::String &msg) {
 	std::cout << msg._str << "\n";
 }
 
-void log(const std::string &msg) {
-	std::cout << msg << "\n";
-}
-
-void log(const boost::format &msg) {
-	std::cout << msg << "\n";
-}
-
-void debug(const std::string &msg) {
-	if (g_verbose)
-		log(msg);
-}
-
 void debug(const Common::String &msg) {
 	if (g_verbose)
 		log(msg);
 }
 
-void debug(const boost::format &msg) {
-	if (g_verbose)
-		log(msg);
-}
-
-void warning(const std::string &msg) {
-	std::cerr << msg << "\n";
-}
-
-void warning(const boost::format &msg) {
-	std::cerr << msg << "\n";
+void warning(const Common::String &msg) {
+	std::cerr << msg._str << "\n";
 }
 
 } // namespace Common

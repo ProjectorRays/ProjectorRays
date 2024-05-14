@@ -4,8 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <boost/format.hpp>
-
 #include "common/stream.h"
 #include "director/guid.h"
 
@@ -22,12 +20,11 @@ void MoaID::read(Common::ReadStream &stream) {
 	}
 }
 
-std::string MoaID::toString() const {
-	return boost::str(
-		boost::format("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X")
-			% data1 % data2 % data3
-			% (unsigned int)data4[0] % (unsigned int)data4[1] % (unsigned int)data4[2] % (unsigned int)data4[3]
-			% (unsigned int)data4[4] % (unsigned int)data4[5] % (unsigned int)data4[6] % (unsigned int)data4[7]
+Common::String MoaID::toString() const {
+	return Common::String::format("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+			data1, data2, data3,
+			(unsigned int)data4[0], (unsigned int)data4[1], (unsigned int)data4[2], (unsigned int)data4[3],
+			(unsigned int)data4[4], (unsigned int)data4[5], (unsigned int)data4[6], (unsigned int)data4[7]
 	);
 }
 

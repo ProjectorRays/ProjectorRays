@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <boost/format.hpp>
 #include <boost/endian/conversion.hpp>
 #include <zlib.h>
 
@@ -94,7 +93,7 @@ ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	unsigned long outLen = destLen;
 	int ret = uncompress(dest, &outLen, &_data[p], len);
 	if (ret != Z_OK) {
-		Common::warning(boost::format("zlib decompression error %d!") % ret);
+		Common::warning(Common::String::format("zlib decompression error %d!", ret));
 		return -1;
 	}
 

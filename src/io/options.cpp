@@ -12,6 +12,7 @@ namespace fs = std::filesystem;
 
 #include "io/options.h"
 #include "common/log.h"
+#include "common/str.h"
 #include "common/util.h"
 
 namespace IO {
@@ -204,7 +205,7 @@ void Options::parse(int argc, char *argv[]) {
 						}
 					}
 				}
-			} 
+			}
 			if (info->argName) {
 				if (!optionArgFound) {
 					if (i < argc - 1) {
@@ -321,7 +322,7 @@ std::vector<std::pair<std::string, std::string>> Options::getOptionText(Command 
 	for (const OptionInfo &info : _optionInfo) {
 		if (!(info.cmd & cmd) || info.debug != debug)
 			continue;
-		
+
 		std::string left = "    ";
 		if (info.shortName) {
 			left += "-";
@@ -335,7 +336,7 @@ std::vector<std::pair<std::string, std::string>> Options::getOptionText(Command 
 			left += info.argName;
 			left += ">";
 		}
-		
+
 		std::string right = "    ";
 		right += info.desc;
 

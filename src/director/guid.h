@@ -8,7 +8,7 @@
 #define DIRECTOR_GUID_H
 
 #include <cstdint>
-#include <string>
+#include "common/str.h"
 
 namespace Common {
 class ReadStream;
@@ -43,7 +43,7 @@ struct MoaID {
 	}
 
 	void read(Common::ReadStream &stream);
-	std::string toString() const;
+	Common::String toString() const;
 
 	bool operator==(const MoaID &other) const;
 	bool operator!=(const MoaID &other) const;

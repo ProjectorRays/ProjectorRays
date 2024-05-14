@@ -47,6 +47,8 @@ public:
 		return *this;
 	}
 
+	const char *c_str() { return _str.c_str(); }
+
 public:
 	std::string _str;
 	static const uint32 npos = 0xFFFFFFFF;

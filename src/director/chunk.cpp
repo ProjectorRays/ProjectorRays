@@ -4,8 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include <boost/format.hpp>
-
 #include "common/json.h"
 #include "common/log.h"
 #include "common/stream.h"
@@ -65,10 +63,10 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 		if (sectionID > 0) {
 			CastMemberChunk *member = static_cast<CastMemberChunk *>(dir->getChunk(FOURCC('C', 'A', 'S', 't'), sectionID));
 			member->id = i + minMember;
-			Common::debug(boost::format("Member %u: name: \"%s\" chunk: %d")
-							% member->id % member->getName() % sectionID);
+			Common::debug(Common::String::format("Member %u: name: \"%s\" chunk: %d",
+							member->id, member->getName().c_str(), sectionID));
 			if (!member->info) {
-				Common::debug(boost::format("Member %u: No info!") % member->id);
+				Common::debug(Common::String::format("Member %u: No info!", member->id));
 			}
 			if (lctx && (lctx->scripts.find(member->getScriptID()) != lctx->scripts.end())) {
 				member->script = static_cast<ScriptChunk *>(lctx->scripts[member->getScriptID()]);
@@ -434,7 +432,7 @@ void ConfigChunk::read(Common::ReadStream &stream) {
 
 	uint32_t computedChecksum = computeChecksum();
 	if (checksum != computedChecksum) {
-		Common::warning(boost::format("Checksums don't match! Stored: %u Computed: %u") % checksum % computedChecksum);
+		Common::warning(Common::String::format("Checksums don't match! Stored: %u Computed: %u", checksum, computedChecksum));
 	}
 }
 
@@ -497,34 +495,34 @@ uint32_t ConfigChunk::computeChecksum() {
 	unsigned int ver = humanVersion(directorVersion);
 
 	uint32_t check = len + 1;
-	Common::debug(boost::format("Checksum step 1 (= %1% + 1): %2%") % len % check);
+	Common::debug(Common::String::format("Checksum step 1 (= %1% + 1): %2%", len, check));
 
 	check *= fileVersion + 2;
-	Common::debug(boost::format("Checksum step 2 (*= %1% + 2): %2%") % fileVersion % check);
+	Common::debug(Common::String::format("Checksum step 2 (*= %1% + 2): %2%", fileVersion, check));
 
 	check /= movieTop + 3;
-	Common::debug(boost::format("Checksum step 3 (/= %1% + 3): %2%") % movieTop % check);
+	Common::debug(Common::String::format("Checksum step 3 (/= %1% + 3): %2%", movieTop, check));
 
 	check *= movieLeft + 4;
-	Common::debug(boost::format("Checksum step 4 (*= %1% + 4): %2%") % movieLeft % check);
+	Common::debug(Common::String::format("Checksum step 4 (*= %1% + 4): %2%", movieLeft, check));
 
 	check /= movieBottom + 5;
-	Common::debug(boost::format("Checksum step 5 (/= %1% + 5): %2%") % movieBottom % check);
+	Common::debug(Common::String::format("Checksum step 5 (/= %1% + 5): %2%", movieBottom, check));
 
 	check *= movieRight + 6;
-	Common::debug(boost::format("Checksum step 6 (*= %1% + 6): %2%") % movieRight % check);
+	Common::debug(Common::String::format("Checksum step 6 (*= %1% + 6): %2%", movieRight, check));
 
 	check -= minMember + 7;
-	Common::debug(boost::format("Checksum step 7 (-= %1% + 7): %2%") % minMember % check);
+	Common::debug(Common::String::format("Checksum step 7 (-= %1% + 7): %2%", minMember, check));
 
 	check *= maxMember + 8;
-	Common::debug(boost::format("Checksum step 8 (*= %1% + 8): %2%") % maxMember % check);
+	Common::debug(Common::String::format("Checksum step 8 (*= %1% + 8): %2%", maxMember, check));
 
 	check -= field9 + 9;
-	Common::debug(boost::format("Checksum step 9 (-= %1% + 9): %2%") % (int)field9 % check);
+	Common::debug(Common::String::format("Checksum step 9 (-= %1% + 9): %2%", (int)field9, check));
 
 	check -= field10 + 10;
-	Common::debug(boost::format("Checksum step 10 (-= %1% + 10): %2%") % (int)field10 % check);
+	Common::debug(Common::String::format("Checksum step 10 (-= %1% + 10): %2%", (int)field10, check));
 
 	int32_t operand11;
 	if (ver < 700) {
@@ -535,63 +533,63 @@ uint32_t ConfigChunk::computeChecksum() {
 						: (int16_t)((D7stageColorG << 8) | D7stageColorB);
 	}
 	check += operand11 + 11;
-	Common::debug(boost::format("Checksum step 11 (+= %1% + 11): %2%") % operand11 % check);
+	Common::debug(Common::String::format("Checksum step 11 (+= %1% + 11): %2%", operand11, check));
 
 	check *= commentFont + 12;
-	Common::debug(boost::format("Checksum step 12 (*= %1% + 12): %2%") % commentFont % check);
+	Common::debug(Common::String::format("Checksum step 12 (*= %1% + 12): %2%", commentFont, check));
 
 	check += commentSize + 13;
-	Common::debug(boost::format("Checksum step 13 (+= %1% + 13): %2%") % commentSize % check);
+	Common::debug(Common::String::format("Checksum step 13 (+= %1% + 13): %2%", commentSize, check));
 
 	int32_t operand14 = (ver < 800) ? (uint8_t)((commentStyle >> 8) & 0xFF) : commentStyle;
 	check *= operand14 + 14;
-	Common::debug(boost::format("Checksum step 14 (*= %1% + 14): %2%") % operand14 % check);
+	Common::debug(Common::String::format("Checksum step 14 (*= %1% + 14): %2%", operand14, check));
 
 	int32_t operand15 = (ver < 700) ? preD7stageColor : D7stageColorR;
 	check += operand15 + 15;
-	Common::debug(boost::format("Checksum step 15 (+= %1% + 15): %2%") % operand15 % check);
+	Common::debug(Common::String::format("Checksum step 15 (+= %1% + 15): %2%", operand15, check));
 
 	check += bitDepth + 16;
-	Common::debug(boost::format("Checksum step 16 (+= %1% + 16): %2%") % bitDepth % check);
+	Common::debug(Common::String::format("Checksum step 16 (+= %1% + 16): %2%", bitDepth, check));
 
 	check += field17 + 17;
-	Common::debug(boost::format("Checksum step 17 (+= %1% + 17): %2%") % (unsigned int)field17 % check);
+	Common::debug(Common::String::format("Checksum step 17 (+= %1% + 17): %2%", (unsigned int)field17, check));
 
 	check *= field18 + 18;
-	Common::debug(boost::format("Checksum step 18 (*= %1% + 18): %2%") % (unsigned int)field18 % check);
+	Common::debug(Common::String::format("Checksum step 18 (*= %1% + 18): %2%", (unsigned int)field18, check));
 
 	check += field19 + 19;
-	Common::debug(boost::format("Checksum step 19 (+= %1% + 19): %2%") % field19 % check);
+	Common::debug(Common::String::format("Checksum step 19 (+= %1% + 19): %2%", field19, check));
 
 	check *= directorVersion + 20;
-	Common::debug(boost::format("Checksum step 20 (*= %1% + 20): %2%") % directorVersion % check);
+	Common::debug(Common::String::format("Checksum step 20 (*= %1% + 20): %2%", directorVersion, check));
 
 	check += field21 + 21;
-	Common::debug(boost::format("Checksum step 21 (+= %1% + 21): %2%") % field21 % check);
+	Common::debug(Common::String::format("Checksum step 21 (+= %1% + 21): %2%", field21, check));
 
 	check += field22 + 22;
-	Common::debug(boost::format("Checksum step 22 (+= %1% + 22): %2%") % field22 % check);
+	Common::debug(Common::String::format("Checksum step 22 (+= %1% + 22): %2%", field22, check));
 
 	check += field23 + 23;
-	Common::debug(boost::format("Checksum step 23 (+= %1% + 23): %2%") % field23 % check);
+	Common::debug(Common::String::format("Checksum step 23 (+= %1% + 23): %2%", field23, check));
 
 	check += field24 + 24;
-	Common::debug(boost::format("Checksum step 24 (+= %1% + 24): %2%") % field24 % check);
+	Common::debug(Common::String::format("Checksum step 24 (+= %1% + 24): %2%", field24, check));
 
 	check *= field25 + 25;
-	Common::debug(boost::format("Checksum step 25 (*= %1% + 25): %2%") % (int)field25 % check);
+	Common::debug(Common::String::format("Checksum step 25 (*= %1% + 25): %2%", (int)field25, check));
 
 	check += frameRate + 26;
-	Common::debug(boost::format("Checksum step 26 (+= %1% + 26): %2%") % frameRate % check);
+	Common::debug(Common::String::format("Checksum step 26 (+= %1% + 26): %2%", frameRate, check));
 
 	check *= platform + 27;
-	Common::debug(boost::format("Checksum step 27 (*= %1% + 27): %2%") % platform % check);
+	Common::debug(Common::String::format("Checksum step 27 (*= %1% + 27): %2%", platform, check));
 
 	check *= (protection * 0xE06) + 0xFF450000;
-	Common::debug(boost::format("Checksum step 28 (*= (%1% * 0xE06) + 0xFF450000): %2%") % protection % check);
+	Common::debug(Common::String::format("Checksum step 28 (*= (%1% * 0xE06) + 0xFF450000): %2%", protection, check));
 
 	check ^= FOURCC('r', 'a', 'l', 'f');
-	Common::debug(boost::format("Checksum step 29 (^= ralf): %1%") % check);
+	Common::debug(Common::String::format("Checksum step 29 (^= ralf): %1%", check));
 
 	return check;
 }
