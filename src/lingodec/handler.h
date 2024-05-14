@@ -27,27 +27,27 @@ struct Script;
 /* Handler */
 
 struct Handler {
-	int16_t nameID;
-	uint16_t vectorPos;
-	uint32_t compiledLen;
-	uint32_t compiledOffset;
-	uint16_t argumentCount;
-	uint32_t argumentOffset;
-	uint16_t localsCount;
-	uint32_t localsOffset;
-	uint16_t globalsCount;
-	uint32_t globalsOffset;
-	uint32_t unknown1;
-	uint16_t unknown2;
-	uint16_t lineCount;
-	uint32_t lineOffset;
-	uint32_t stackHeight;
+	int16_t nameID = 0;
+	uint16_t vectorPos = 0;
+	uint32_t compiledLen = 0;
+	uint32_t compiledOffset = 0;
+	uint16_t argumentCount = 0;
+	uint32_t argumentOffset = 0;
+	uint16_t localsCount = 0;
+	uint32_t localsOffset = 0;
+	uint16_t globalsCount = 0;
+	uint32_t globalsOffset = 0;
+	uint32_t unknown1 = 0;
+	uint16_t unknown2 = 0;
+	uint16_t lineCount = 0;
+	uint32_t lineOffset = 0;
+	uint32_t stackHeight = 0;
 
 	Common::Array<int16_t> argumentNameIDs;
 	Common::Array<int16_t> localNameIDs;
 	Common::Array<int16_t> globalNameIDs;
 
-	Script *script;
+	Script *script = nullptr;
 	Common::Array<Bytecode> bytecodeArray;
 	Common::StableMap<uint32_t, size_t> bytecodePosMap;
 	Common::Array<Common::String> argumentNames;
@@ -56,11 +56,13 @@ struct Handler {
 	Common::String name;
 
 	Common::Array<Common::SharedPtr<Node>> stack;
-	Common::ScopedPtr<AST> ast;
+	AST ast;
 
 	bool isGenericEvent = false;
 
-	Handler(Script *s) {
+	Handler(): ast(this) {}
+
+	void setScript(Script *s) {
 		script = s;
 	}
 
@@ -83,7 +85,7 @@ struct Handler {
 	BytecodeTag identifyLoop(uint32_t startIndex, uint32_t endIndex);
 	void parse();
 	uint32_t translateBytecode(Bytecode &bytecode, uint32_t index);
-	void writeBytecodeText(CodeWriter &code, bool dotSyntax);
+	void writeBytecodeText(CodeWriter &code, bool dotSyntax) const;
 };
 
 /* Bytecode */

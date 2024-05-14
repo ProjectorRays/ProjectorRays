@@ -67,7 +67,7 @@ struct Script {
 	Common::String factoryName;
 	Common::Array<Common::String> propertyNames;
 	Common::Array<Common::String> globalNames;
-	Common::Array<Common::ScopedPtr<Handler>> handlers;
+	Common::Array<Handler> handlers;
 	Common::Array<LiteralStore> literals;
 	Common::Array<Script *> factories;
 

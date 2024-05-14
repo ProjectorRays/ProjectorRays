@@ -236,7 +236,7 @@ void HandlerNode::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 		}
 		code.writeLine();
 		code.indent();
-		if (isMethod && script->propertyNames.size() > 0 && handler == script->handlers[0].get()) {
+		if (isMethod && script->propertyNames.size() > 0 && handler == &script->handlers[0]) {
 			code.write("instance ");
 			for (size_t i = 0; i < script->propertyNames.size(); i++) {
 				if (i > 0)

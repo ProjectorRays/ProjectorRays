@@ -963,7 +963,7 @@ void ScriptChunk::writeJSON(Common::JSONWriter &json) const {
 		json.writeKey("handlers");
 		json.startArray();
 			for (const auto &val : handlers) {
-				writeHandlerJSON(*val, json);
+				writeHandlerJSON(val, json);
 			}
 		json.endArray();
 		json.writeKey("literals");

@@ -493,34 +493,33 @@ BytecodeTag Handler::identifyLoop(uint32_t startIndex, uint32_t endIndex) {
 void Handler::parse() {
 	tagLoops();
 	stack.clear();
-	ast = Common::ScopedPtr<AST>(new AST(this));
 	uint32_t i = 0;
 	while (i < bytecodeArray.size()) {
 		auto &bytecode = bytecodeArray[i];
 		uint32_t pos = bytecode.pos;
 		// exit last block if at end
-		while (pos == ast->currentBlock->endPos) {
-			auto exitedBlock = ast->currentBlock;
-			auto ancestorStmt = ast->currentBlock->ancestorStatement();
-			ast->exitBlock();
+		while (pos == ast.currentBlock->endPos) {
+			auto exitedBlock = ast.currentBlock;
+			auto ancestorStmt = ast.currentBlock->ancestorStatement();
+			ast.exitBlock();
 			if (ancestorStmt) {
 				if (ancestorStmt->type == kIfStmtNode) {
 					auto ifStatement = static_cast<IfStmtNode *>(ancestorStmt);
 					if (ifStatement->hasElse && exitedBlock == ifStatement->block1.get()) {
-						ast->enterBlock(ifStatement->block2.get());
+						ast.enterBlock(ifStatement->block2.get());
 					}
 				} else if (ancestorStmt->type == kCaseStmtNode) {
 					auto caseStmt = static_cast<CaseStmtNode *>(ancestorStmt);
-					auto caseLabel = ast->currentBlock->currentCaseLabel;
+					auto caseLabel = ast.currentBlock->currentCaseLabel;
 					if (caseLabel) {
 						if (caseLabel->expect == kCaseExpectOtherwise) {
-							ast->currentBlock->currentCaseLabel = nullptr;
+							ast.currentBlock->currentCaseLabel = nullptr;
 							caseStmt->addOtherwise();
 							size_t otherwiseIndex = bytecodePosMap[caseStmt->potentialOtherwisePos];
 							bytecodeArray[otherwiseIndex].translation = Common::SharedPtr<Node>(caseStmt->otherwise);
-							ast->enterBlock(caseStmt->otherwise->block.get());
+							ast.enterBlock(caseStmt->otherwise->block.get());
 						} else if (caseLabel->expect == kCaseExpectEnd) {
-							ast->currentBlock->currentCaseLabel = nullptr;
+							ast.currentBlock->currentCaseLabel = nullptr;
 						}
 					}
 				}
@@ -640,7 +639,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		break;
 	case kOpEndTell:
 		{
-			ast->exitBlock();
+			ast.exitBlock();
 			return 1;
 		}
 		break;
@@ -778,7 +777,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			uint32_t targetPos = bytecode.pos + bytecode.obj;
 			size_t targetIndex = bytecodePosMap[targetPos];
 			auto &targetBytecode = bytecodeArray[targetIndex];
-			auto ancestorLoop = ast->currentBlock->ancestorLoop();
+			auto ancestorLoop = ast.currentBlock->ancestorLoop();
 			if (ancestorLoop) {
 				if (bytecodeArray[targetIndex - 1].opcode == kOpEndRepeat && bytecodeArray[targetIndex - 1].ownerLoop == ancestorLoop->startIndex) {
 					translation = Common::SharedPtr<Node>(new ExitRepeatStmtNode());
@@ -789,11 +788,11 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				}
 			}
 			auto &nextBytecode = bytecodeArray[index + 1];
-			auto ancestorStatement = ast->currentBlock->ancestorStatement();
-			if (ancestorStatement && nextBytecode.pos == ast->currentBlock->endPos) {
+			auto ancestorStatement = ast.currentBlock->ancestorStatement();
+			if (ancestorStatement && nextBytecode.pos == ast.currentBlock->endPos) {
 				if (ancestorStatement->type == kIfStmtNode) {
 					auto ifStmt = static_cast<IfStmtNode *>(ancestorStatement);
-					if (ast->currentBlock == ifStmt->block1.get()) {
+					if (ast.currentBlock == ifStmt->block1.get()) {
 						ifStmt->hasElse = true;
 						ifStmt->block2->endPos = targetPos;
 						return 1; // if statement amended, nothing to push
@@ -878,7 +877,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpLocalCall:
 		{
 			auto argList = pop();
-			translation = Common::SharedPtr<Node>(new CallNode(script->handlers[bytecode.obj]->name, Common::move(argList)));
+			translation = Common::SharedPtr<Node>(new CallNode(script->handlers[bytecode.obj].name, Common::move(argList)));
 		}
 		break;
 	case kOpExtCall:
@@ -1008,7 +1007,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			// In a 'repeat with ... in list' statement, this peeked value is the list.
 			// In a cases statement, this is the switch expression.
 
-			auto prevLabel = ast->currentBlock->currentCaseLabel;
+			auto prevLabel = ast.currentBlock->currentCaseLabel;
 
 			// This must be a case. Find the comparison against the switch expression.
 			auto originalStackSize = stack.size();
@@ -1024,7 +1023,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			);
 			if (currIndex >= bytecodeArray.size()) {
 				bytecode.translation = Common::SharedPtr<Node>(new CommentNode("ERROR: Expected eq or nteq!"));
-				ast->addStatement(bytecode.translation);
+				ast.addStatement(bytecode.translation);
 				return currIndex - index + 1;
 			}
 
@@ -1037,7 +1036,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			currBytecode = &bytecodeArray[currIndex];
 			if (currIndex >= bytecodeArray.size() || currBytecode->opcode != kOpJmpIfZ) {
 				bytecode.translation = Common::SharedPtr<Node>(new CommentNode("ERROR: Expected jmpifz!"));
-				ast->addStatement(bytecode.translation);
+				ast.addStatement(bytecode.translation);
 				return currIndex - index + 1;
 			}
 
@@ -1061,7 +1060,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 
 			auto currLabel = Common::SharedPtr<CaseLabelNode>(new CaseLabelNode(Common::move(caseValue), expect));
 			jmpifz.translation = currLabel;
-			ast->currentBlock->currentCaseLabel = currLabel.get();
+			ast.currentBlock->currentCaseLabel = currLabel.get();
 
 			if (!prevLabel) {
 				auto peekedValue = pop();
@@ -1069,7 +1068,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				caseStmt->firstLabel = currLabel;
 				currLabel->parent = caseStmt.get();
 				bytecode.translation = caseStmt;
-				ast->addStatement(caseStmt);
+				ast.addStatement(caseStmt);
 			} else if (prevLabel->expect == kCaseExpectOr) {
 				prevLabel->nextOr = currLabel;
 				currLabel->parent = prevLabel;
@@ -1084,7 +1083,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 				currLabel->block = Common::SharedPtr<BlockNode>(new BlockNode());
 				currLabel->block->parent = currLabel.get();
 				currLabel->block->endPos = jmpPos;
-				ast->enterBlock(currLabel->block.get());
+				ast.enterBlock(currLabel->block.get());
 			}
 
 			return currIndex - index + 1;
@@ -1220,11 +1219,11 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	if (translation->isExpression) {
 		stack.push_back(Common::move(translation));
 	} else {
-		ast->addStatement(Common::move(translation));
+		ast.addStatement(Common::move(translation));
 	}
 
 	if (nextBlock)
-		ast->enterBlock(nextBlock);
+		ast.enterBlock(nextBlock);
 
 	return 1;
 }
@@ -1233,7 +1232,7 @@ Common::String posToString(int32_t pos) {
 	return Common::String::format("[%3d]", pos);
 }
 
-void Handler::writeBytecodeText(CodeWriter &code, bool dotSyntax) {
+void Handler::writeBytecodeText(CodeWriter &code, bool dotSyntax) const {
 	bool isMethod = script->isFactory();
 
 	if (!isGenericEvent) {

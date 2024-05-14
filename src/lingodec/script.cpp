@@ -57,18 +57,18 @@ void Script::read(Common::SeekableReadStream &stream) {
 
 	handlers.resize(handlersCount);
 	for (auto &handler : handlers) {
-		handler = Common::ScopedPtr<LingoDec::Handler>(new LingoDec::Handler(this));
+		handler.setScript(this);
 	}
 	if ((scriptFlags & LingoDec::kScriptFlagEventScript) && handlersCount > 0) {
-		handlers[0]->isGenericEvent = true;
+		handlers[0].isGenericEvent = true;
 	}
 
 	stream.seek(handlersOffset);
 	for (auto &handler : handlers) {
-		handler->readRecord(stream);
+		handler.readRecord(stream);
 	}
-	for (const auto &handler : handlers) {
-		handler->readData(stream);
+	for (auto &handler : handlers) {
+		handler.readData(stream);
 	}
 
 	stream.seek(literalsOffset);
@@ -116,14 +116,14 @@ void Script::setContext(ScriptContext *ctx) {
 			globalNames.push_back(getName(nameID));
 		}
 	}
-	for (const auto &handler : handlers) {
-		handler->readNames();
+	for (auto &handler : handlers) {
+		handler.readNames();
 	}
 }
 
 void Script::parse() {
-	for (const auto &handler : handlers) {
-		handler->parse();
+	for (auto &handler : handlers) {
+		handler.parse();
 	}
 }
 
@@ -164,7 +164,7 @@ void Script::writeScriptText(CodeWriter &code, bool dotSyntax) const {
 		if ((!isFactory() || i > 0) && code.size() != origSize) {
 			code.writeLine();
 		}
-		handlers[i]->ast->writeScriptText(code, dotSyntax, false);
+		handlers[i].ast.writeScriptText(code, dotSyntax, false);
 	}
 	for (auto factory : factories) {
 		if (code.size() != origSize) {
@@ -194,7 +194,7 @@ void Script::writeBytecodeText(CodeWriter &code, bool dotSyntax) const {
 		if ((!isFactory() || i > 0) && code.size() != origSize) {
 			code.writeLine();
 		}
-		handlers[i]->writeBytecodeText(code, dotSyntax);
+		handlers[i].writeBytecodeText(code, dotSyntax);
 	}
 	for (auto factory : factories) {
 		if (code.size() != origSize) {
