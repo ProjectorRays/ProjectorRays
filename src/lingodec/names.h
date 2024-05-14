@@ -8,6 +8,7 @@
 #define LINGODEC_NAMES_H
 
 #include <map>
+#include "common/array.h"
 
 namespace Common {
 class ReadStream;
@@ -47,7 +48,7 @@ struct ScriptNames {
 	uint32_t len2;
 	uint16_t namesOffset;
 	uint16_t namesCount;
-	std::vector<Common::String> names;
+	Common::Array<Common::String> names;
 
 	unsigned int version;
 

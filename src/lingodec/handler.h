@@ -9,8 +9,8 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 
+#include "common/array.h"
 #include "common/str.h"
 #include "lingodec/enums.h"
 
@@ -45,19 +45,19 @@ struct Handler {
 	uint32_t lineOffset;
 	uint32_t stackHeight;
 
-	std::vector<int16_t> argumentNameIDs;
-	std::vector<int16_t> localNameIDs;
-	std::vector<int16_t> globalNameIDs;
+	Common::Array<int16_t> argumentNameIDs;
+	Common::Array<int16_t> localNameIDs;
+	Common::Array<int16_t> globalNameIDs;
 
 	Script *script;
-	std::vector<Bytecode> bytecodeArray;
+	Common::Array<Bytecode> bytecodeArray;
 	std::map<uint32_t, size_t> bytecodePosMap;
-	std::vector<Common::String> argumentNames;
-	std::vector<Common::String> localNames;
-	std::vector<Common::String> globalNames;
+	Common::Array<Common::String> argumentNames;
+	Common::Array<Common::String> localNames;
+	Common::Array<Common::String> globalNames;
 	Common::String name;
 
-	std::vector<std::shared_ptr<Node>> stack;
+	Common::Array<std::shared_ptr<Node>> stack;
 	std::unique_ptr<AST> ast;
 
 	bool isGenericEvent = false;
@@ -68,7 +68,7 @@ struct Handler {
 
 	void readRecord(Common::ReadStream &stream);
 	void readData(Common::ReadStream &stream);
-	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
+	Common::Array<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
 	void readNames();
 	bool validName(int id) const;
 	Common::String getName(int id) const;

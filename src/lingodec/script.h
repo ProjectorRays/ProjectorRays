@@ -8,7 +8,6 @@
 #define LINGODEC_SCRIPT_H
 
 #include <cstdint>
-#include <vector>
 
 #include "common/str.h"
 #include "lingodec/enums.h"
@@ -63,15 +62,15 @@ struct Script {
 	/* 84 */ uint32_t literalsDataCount;
 	/* 88 */ uint32_t literalsDataOffset;
 
-	std::vector<int16_t> propertyNameIDs;
-	std::vector<int16_t> globalNameIDs;
+	Common::Array<int16_t> propertyNameIDs;
+	Common::Array<int16_t> globalNameIDs;
 
 	Common::String factoryName;
-	std::vector<Common::String> propertyNames;
-	std::vector<Common::String> globalNames;
-	std::vector<std::unique_ptr<Handler>> handlers;
-	std::vector<LiteralStore> literals;
-	std::vector<Script *> factories;
+	Common::Array<Common::String> propertyNames;
+	Common::Array<Common::String> globalNames;
+	Common::Array<std::unique_ptr<Handler>> handlers;
+	Common::Array<LiteralStore> literals;
+	Common::Array<Script *> factories;
 
 	unsigned int version;
 	ScriptContext *context;
@@ -79,7 +78,7 @@ struct Script {
 	Script(unsigned int version);
 	~Script();
 	void read(Common::ReadStream &stream);
-	std::vector<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
+	Common::Array<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
 	bool validName(int id) const;
 	Common::String getName(int id) const;
 	void setContext(ScriptContext *ctx);

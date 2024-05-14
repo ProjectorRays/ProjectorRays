@@ -81,9 +81,9 @@ void Script::read(Common::ReadStream &stream) {
 	}
 }
 
-std::vector<int16_t> Script::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
+Common::Array<int16_t> Script::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
 	stream.seek(offset);
-	std::vector<int16_t> nameIDs(count);
+	Common::Array<int16_t> nameIDs(count);
 	for (uint16_t i = 0; i < count; i++) {
 		nameIDs[i] = stream.readInt16();
 	}

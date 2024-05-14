@@ -8,8 +8,8 @@
 #define LINGODEC_AST_H
 
 #include <memory>
-#include <vector>
 
+#include "common/array.h"
 #include "common/str.h"
 #include "lingodec/enums.h"
 
@@ -28,7 +28,7 @@ struct Datum {
 	int i;
 	double f;
 	Common::String s;
-	std::vector<std::shared_ptr<Node>> l;
+	Common::Array<std::shared_ptr<Node>> l;
 
 	Datum() {
 		type = kDatumVoid;
@@ -45,7 +45,7 @@ struct Datum {
 		type = t;
 		s = val;
 	}
-	Datum(DatumType t, std::vector<std::shared_ptr<Node>> val) {
+	Datum(DatumType t, Common::Array<std::shared_ptr<Node>> val) {
 		type = t;
 		l = val;
 	}
@@ -147,7 +147,7 @@ struct LiteralNode : ExprNode {
 /* BlockNode */
 
 struct BlockNode : Node {
-	std::vector<std::shared_ptr<Node>> children;
+	Common::Array<std::shared_ptr<Node>> children;
 
 	// for use during translation:
 	uint32_t endPos;

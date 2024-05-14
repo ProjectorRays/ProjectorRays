@@ -82,9 +82,9 @@ void Handler::readData(Common::ReadStream &stream) {
 	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
 }
 
-std::vector<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
+Common::Array<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
 	stream.seek(offset);
-	std::vector<int16_t> nameIDs;
+	Common::Array<int16_t> nameIDs;
 	nameIDs.resize(count);
 	for (size_t i = 0; i < count; i++) {
 		nameIDs[i] = stream.readUint16();
@@ -689,7 +689,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpPushArgListNoRet:
 		{
 			auto argCount = bytecode.obj;
-			std::vector<std::shared_ptr<Node>> args;
+			Common::Array<std::shared_ptr<Node>> args;
 			args.resize(argCount);
 			while (argCount) {
 				argCount--;
@@ -702,7 +702,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 	case kOpPushArgList:
 		{
 			auto argCount = bytecode.obj;
-			std::vector<std::shared_ptr<Node>> args;
+			Common::Array<std::shared_ptr<Node>> args;
 			args.resize(argCount);
 			while (argCount) {
 				argCount--;

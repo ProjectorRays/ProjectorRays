@@ -9,7 +9,7 @@
 
 #include <cstdint>
 #include <map>
-#include <vector>
+#include "common/array.h"
 
 namespace Common {
 class ReadStream;
@@ -42,13 +42,12 @@ struct ScriptContext {
 	unsigned int version;
 	ChunkResolver *resolver;
 	ScriptNames *lnam;
-	std::vector<ScriptContextMapEntry> sectionMap;
+	Common::Array<ScriptContextMapEntry> sectionMap;
 	std::map<uint32_t, Script *> scripts;
 
-	ScriptContext(unsigned int version, ChunkResolver *resolver) :
-		version(version),
-		resolver(resolver),
-		lnam(nullptr) {}
+	ScriptContext(unsigned int version, ChunkResolver *resolver) : version(version),
+																   resolver(resolver),
+																   lnam(nullptr) {}
 
 	void read(Common::ReadStream &stream);
 	bool validName(int id) const;
