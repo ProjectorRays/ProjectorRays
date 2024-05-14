@@ -330,13 +330,15 @@ void WriteStream::writePascalString(const std::string &value) {
 
 } // namespace Common
 
-double readAppleFloat80(uint8_t *ptr) {
+double readAppleFloat80(void *ptr_) {
 	// Adapted from @moralrecordings' code
 	// from engines/director/lingo/lingo-bytecode.cpp in ScummVM
 
 	// Floats are stored as an "80 bit IEEE Standard 754 floating
 	// point number (Standard Apple Numeric Environment [SANE] data type
 	// Extended).
+
+	uint8_t *ptr = (uint8_t *)ptr_;
 
 	size_t p = 0;
 

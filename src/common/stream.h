@@ -122,7 +122,7 @@ public:
 
 } // namespace Common
 
-double readAppleFloat80(uint8_t *ptr);
+double readAppleFloat80(void *ptr);
 
 
 #endif // COMMON_STREAM_H

@@ -11,6 +11,8 @@
 #include "lingodec/handler.h"
 #include "lingodec/script.h"
 
+double readAppleFloat80(void *ptr);
+
 namespace LingoDec {
 
 /* Script */
