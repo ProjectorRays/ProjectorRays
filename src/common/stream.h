@@ -89,7 +89,6 @@ public:
 	uint32_t readUint32();
 	int32_t readInt32();
 	double readDouble();
-	double readAppleFloat80();
 	uint32_t readVarInt();
 	std::string readString(size_t len);
 	std::string readCString();
@@ -122,5 +121,8 @@ public:
 };
 
 } // namespace Common
+
+double readAppleFloat80(uint8_t *ptr);
+
 
 #endif // COMMON_STREAM_H

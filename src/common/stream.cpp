@@ -192,43 +192,6 @@ double ReadStream::readDouble() {
 	return *(double *)(&f64bin);
 }
 
-double ReadStream::readAppleFloat80() {
-	// Adapted from @moralrecordings' code
-	// from engines/director/lingo/lingo-bytecode.cpp in ScummVM
-
-	// Floats are stored as an "80 bit IEEE Standard 754 floating
-	// point number (Standard Apple Numeric Environment [SANE] data type
-	// Extended).
-
-	size_t p = _pos;
-	_pos += 10;
-	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readAppleFloat80: Read past end of stream!");
-	}
-
-	uint16_t exponent = boost::endian::load_big_u16(&_data[p]);
-	uint64_t f64sign = (uint64_t)(exponent & 0x8000) << 48;
-	exponent &= 0x7fff;
-	uint64_t fraction = boost::endian::load_big_u64(&_data[p + 2]);
-	fraction &= 0x7fffffffffffffffULL;
-	uint64_t f64exp = 0;
-	if (exponent == 0) {
-		f64exp = 0;
-	} else if (exponent == 0x7fff) {
-		f64exp = 0x7ff;
-	} else {
-		int32_t normexp = (int32_t)exponent - 0x3fff;
-		if ((-0x3fe > normexp) || (normexp >= 0x3ff)) {
-			throw std::runtime_error("Constant float exponent too big for a double");
-		}
-		f64exp = (uint64_t)(normexp + 0x3ff);
-	}
-	f64exp <<= 52;
-	uint64_t f64fract = fraction >> 11;
-	uint64_t f64bin = f64sign | f64exp | f64fract;
-	return *(double *)(&f64bin);
-}
-
 uint32_t ReadStream::readVarInt() {
 	uint32_t val = 0;
 	uint8_t b;
@@ -366,3 +329,36 @@ void WriteStream::writePascalString(const std::string &value) {
 }
 
 } // namespace Common
+
+double readAppleFloat80(uint8_t *ptr) {
+	// Adapted from @moralrecordings' code
+	// from engines/director/lingo/lingo-bytecode.cpp in ScummVM
+
+	// Floats are stored as an "80 bit IEEE Standard 754 floating
+	// point number (Standard Apple Numeric Environment [SANE] data type
+	// Extended).
+
+	size_t p = 0;
+
+	uint16_t exponent = boost::endian::load_big_u16(&ptr[p]);
+	uint64_t f64sign = (uint64_t)(exponent & 0x8000) << 48;
+	exponent &= 0x7fff;
+	uint64_t fraction = boost::endian::load_big_u64(&ptr[p + 2]);
+	fraction &= 0x7fffffffffffffffULL;
+	uint64_t f64exp = 0;
+	if (exponent == 0) {
+		f64exp = 0;
+	} else if (exponent == 0x7fff) {
+		f64exp = 0x7ff;
+	} else {
+		int32_t normexp = (int32_t)exponent - 0x3fff;
+		if ((-0x3fe > normexp) || (normexp >= 0x3ff)) {
+			throw std::runtime_error("Constant float exponent too big for a double");
+		}
+		f64exp = (uint64_t)(normexp + 0x3ff);
+	}
+	f64exp <<= 52;
+	uint64_t f64fract = fraction >> 11;
+	uint64_t f64bin = f64sign | f64exp | f64fract;
+	return *(double *)(&f64bin);
+}

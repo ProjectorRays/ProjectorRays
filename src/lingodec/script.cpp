@@ -239,7 +239,9 @@ void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
 			if (length == 8) {
 				floatVal = stream.readDouble();
 			} else if (length == 10) {
-				floatVal = stream.readAppleFloat80();
+				uint8_t buf[10];
+				stream.read(buf, 10);
+				floatVal = readAppleFloat80(buf);
 			}
 			value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum(floatVal));
 		} else {
