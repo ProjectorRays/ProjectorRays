@@ -1237,9 +1237,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 }
 
 Common::String posToString(int32_t pos) {
-	std::stringstream ss;
-	ss << "[" << std::setfill(' ') << std::setw(3) << pos << "]";
-	return ss.str();
+	return Common::String::format("[%3d]", pos);
 }
 
 void Handler::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) {
