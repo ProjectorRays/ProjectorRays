@@ -15,12 +15,12 @@
 
 namespace Director {
 
-ssize_t ReadStream_read(void *stream, void *buf, size_t count) {
-	return ((Common::ReadStream *)stream)->read(buf, count);
+ssize_t SeekableReadStream_read(void *stream, void *buf, size_t count) {
+	return ((Common::SeekableReadStream *)stream)->read(buf, count);
 }
 
-off_t ReadStream_lseek(void *stream, off_t offset, int whence) {
-	return ((Common::ReadStream *)stream)->lseek(offset, whence);
+off_t SeekableReadStream_lseek(void *stream, off_t offset, int whence) {
+	return ((Common::SeekableReadStream *)stream)->lseek(offset, whence);
 }
 
 #define CHECK_ERR(name) \
@@ -45,7 +45,7 @@ size_t samplesToBytes(size_t samples, int channels, int sampleSize) {
 }
 
 bool decodeMP3(
-	Common::ReadStream &in,
+	Common::SeekableReadStream &in,
 	Common::WriteStream &out,
 	int hdrSampleRate,
 	int hdrChannels,
@@ -92,8 +92,8 @@ bool decodeMP3(
 	mpg123_param(mh, MPG123_FLAGS, flags, 0.0);
 	CHECK_ERR("mpg123_param");
 
-	// set mpg123 to use our ReadStream functions
-	err = mpg123_replace_reader_handle(mh, ReadStream_read, ReadStream_lseek, NULL);
+	// set mpg123 to use our SeekableReadStream functions
+	err = mpg123_replace_reader_handle(mh, SeekableReadStream_read, SeekableReadStream_lseek, NULL);
 	CHECK_ERR("mpg123_replace_reader_handle");
 
 	// now begin reading from the stream
@@ -143,7 +143,7 @@ bool decodeMP3(
 	return true;
 }
 
-ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t chunkID) {
+ssize_t decompressSnd(Common::SeekableReadStream &in, Common::WriteStream &out, int32_t chunkID) {
 	if (in.size() == 0)
 		return 0;
 
@@ -270,7 +270,7 @@ ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t 
 	// MP3 data
 
 	Common::BufferView mp3View = in.readByteView(in.size() - in.pos());
-	Common::ReadStream mp3Stream(mp3View, in.endianness);
+	Common::SeekableReadStream mp3Stream(mp3View, in.endianness);
 	if (!decodeMP3(mp3Stream, out, sampleRate, numChannels, sampleSize, skipSamples, chunkID))
 		return -1;
 

@@ -11,7 +11,7 @@
 #include "common/stablemap.h"
 
 namespace Common {
-class ReadStream;
+class SeekableReadStream;
 }
 
 namespace LingoDec {
@@ -48,7 +48,7 @@ struct ScriptContext {
 																   resolver(resolver),
 																   lnam(nullptr) {}
 
-	void read(Common::ReadStream &stream);
+	void read(Common::SeekableReadStream &stream);
 	bool validName(int id) const;
 	Common::String getName(int id) const;
 	void parseScripts();
@@ -62,7 +62,7 @@ struct ScriptContextMapEntry {
 	uint16_t unknown1;
 	uint16_t unknown2;
 
-	void read(Common::ReadStream &stream);
+	void read(Common::SeekableReadStream &stream);
 };
 
 } // namespace LingoDec

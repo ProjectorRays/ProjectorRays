@@ -62,15 +62,15 @@ bool Stream::pastEOF() const {
 	return  _pos > _size;
 }
 
-/* ReadStream */
+/* SeekableReadStream */
 
-BufferView ReadStream::readByteView(size_t len) {
+BufferView SeekableReadStream::readByteView(size_t len) {
 	BufferView res(_data + _pos, len);
 	_pos += len;
 	return res;
 }
 
-ssize_t ReadStream::read(void *dest, size_t len) {
+ssize_t SeekableReadStream::read(void *dest, size_t len) {
 	if (eof())
 		return 0;
 
@@ -83,11 +83,11 @@ ssize_t ReadStream::read(void *dest, size_t len) {
 	return len;
 }
 
-ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
+ssize_t SeekableReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	size_t p = _pos;
 	_pos += len;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readZlibBytes: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readZlibBytes: Read past end of stream!");
 	}
 
 	unsigned long outLen = destLen;
@@ -100,25 +100,25 @@ ssize_t ReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t destLen) {
 	return outLen;
 }
 
-uint8_t ReadStream::readByte() {
+uint8_t SeekableReadStream::readByte() {
 	size_t p = _pos;
 	_pos += 1;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readByte: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readByte: Read past end of stream!");
 	}
 
 	return _data[p];
 }
 
-int8_t ReadStream::readSByte() {
+int8_t SeekableReadStream::readSByte() {
 	return (int8_t)readByte();
 }
 
-uint16_t ReadStream::readUint16() {
+uint16_t SeekableReadStream::readUint16() {
 	size_t p = _pos;
 	_pos += 2;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readUint16: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readUint16: Read past end of stream!");
 	}
 
 	return endianness
@@ -126,31 +126,31 @@ uint16_t ReadStream::readUint16() {
 		: boost::endian::load_big_u16(&_data[p]);
 }
 
-int16_t ReadStream::readInt16() {
+int16_t SeekableReadStream::readInt16() {
 	return (int16_t)readUint16();
 }
 
-uint16_t ReadStream::readUint16BE() {
+uint16_t SeekableReadStream::readUint16BE() {
 	size_t p = _pos;
 
 	_pos += 2;
 
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readUint16BE: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readUint16BE: Read past end of stream!");
 	}
 
 	return (_data[p] << 8 | _data[p+1]);
 }
 
-int16_t ReadStream::readSint16BE() {
+int16_t SeekableReadStream::readSint16BE() {
 	return (int16_t)readUint16BE();
 }
 
-uint32_t ReadStream::readUint32() {
+uint32_t SeekableReadStream::readUint32() {
 	size_t p = _pos;
 	_pos += 4;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readUint32: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readUint32: Read past end of stream!");
 	}
 
 	return endianness
@@ -158,31 +158,31 @@ uint32_t ReadStream::readUint32() {
 		: boost::endian::load_big_u32(&_data[p]);
 }
 
-int32_t ReadStream::readInt32() {
+int32_t SeekableReadStream::readInt32() {
 	return (int32_t)readUint32();
 }
 
-uint32_t ReadStream::readUint32BE() {
+uint32_t SeekableReadStream::readUint32BE() {
 	size_t p = _pos;
 
 	_pos += 4;
 
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readUint32BE: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readUint32BE: Read past end of stream!");
 	}
 
 	return (_data[p] << 24 | _data[p+1] << 16 | _data[p+2] << 8 | _data[p+3]);
 }
 
-int32_t ReadStream::readSint32BE() {
+int32_t SeekableReadStream::readSint32BE() {
 	return (int32_t)readUint32BE();
 }
 
-double ReadStream::readDouble() {
+double SeekableReadStream::readDoubleBE() {
 	size_t p = _pos;
 	_pos += 4;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readDouble: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readDouble: Read past end of stream!");
 	}
 
 	uint64_t f64bin = endianness
@@ -192,7 +192,7 @@ double ReadStream::readDouble() {
 	return *(double *)(&f64bin);
 }
 
-uint32_t ReadStream::readVarInt() {
+uint32_t SeekableReadStream::readVarInt() {
 	uint32_t val = 0;
 	uint8_t b;
 	do {
@@ -202,11 +202,11 @@ uint32_t ReadStream::readVarInt() {
 	return val;
 }
 
-std::string ReadStream::readString(size_t len) {
+std::string SeekableReadStream::readString(size_t len) {
 	size_t p = _pos;
 	_pos += len;
 	if (pastEOF()) {
-		throw std::runtime_error("ReadStream::readString: Read past end of stream!");
+		throw std::runtime_error("SeekableReadStream::readString: Read past end of stream!");
 	}
 
 	char *str = new char[len + 1];
@@ -217,7 +217,7 @@ std::string ReadStream::readString(size_t len) {
 	return res;
 }
 
-std::string ReadStream::readCString() {
+std::string SeekableReadStream::readCString() {
 	std::string res;
 	char ch = readSByte();
 	while (ch) {
@@ -227,7 +227,7 @@ std::string ReadStream::readCString() {
 	return res;
 }
 
-std::string ReadStream::readPascalString() {
+std::string SeekableReadStream::readPascalString() {
 	uint8_t len = readByte();
 	return readString(len);
 }

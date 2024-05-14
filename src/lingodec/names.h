@@ -11,7 +11,7 @@
 #include "common/stablemap.h"
 
 namespace Common {
-class ReadStream;
+class SeekableReadStream;
 class String;
 }
 
@@ -53,7 +53,7 @@ struct ScriptNames {
 	unsigned int version;
 
 	ScriptNames(unsigned int version) : version(version) {}
-	void read(Common::ReadStream &stream);
+	void read(Common::SeekableReadStream &stream);
 	bool validName(int id) const;
 	Common::String getName(int id) const;
 };

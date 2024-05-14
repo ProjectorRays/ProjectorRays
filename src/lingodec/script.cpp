@@ -21,7 +21,7 @@ Script::Script(unsigned int version) :
 
 Script::~Script() = default;
 
-void Script::read(Common::ReadStream &stream) {
+void Script::read(Common::SeekableReadStream &stream) {
 	// Lingo scripts are always big endian regardless of file endianness
 	stream.seek(8);
 	/*  8 */ totalLength = stream.readUint32BE();
@@ -79,7 +79,7 @@ void Script::read(Common::ReadStream &stream) {
 	}
 }
 
-Common::Array<int16_t> Script::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
+Common::Array<int16_t> Script::readVarnamesTable(Common::SeekableReadStream &stream, uint16_t count, uint32_t offset) {
 	stream.seek(offset);
 	Common::Array<int16_t> nameIDs(count);
 	for (uint16_t i = 0; i < count; i++) {
@@ -214,7 +214,7 @@ bool Script::isFactory() const {
 
 /* LiteralStore */
 
-void LiteralStore::readRecord(Common::ReadStream &stream, int version) {
+void LiteralStore::readRecord(Common::SeekableReadStream &stream, int version) {
 	if (version >= 500)
 		type = static_cast<LiteralType>(stream.readUint32BE());
 	else
@@ -222,12 +222,12 @@ void LiteralStore::readRecord(Common::ReadStream &stream, int version) {
 	offset = stream.readUint32BE();
 }
 
-void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
+void LiteralStore::readData(Common::SeekableReadStream &stream, uint32_t startOffset) {
 	if (type == kLiteralInt) {
 		value = Common::SharedPtr<LingoDec::Datum>(new LingoDec::Datum((int)offset));
 	} else {
 		stream.seek(startOffset + offset);
-		auto length = stream.readUint32();
+		auto length = stream.readUint32BE();
 		if (type == kLiteralString) {
 			char *buf = new char[length];
 			stream.read(buf, length - 1);
@@ -237,7 +237,7 @@ void LiteralStore::readData(Common::ReadStream &stream, uint32_t startOffset) {
 		} else if (type == kLiteralFloat) {
 			double floatVal = 0.0;
 			if (length == 8) {
-				floatVal = stream.readDouble();
+				floatVal = stream.readDoubleBE();
 			} else if (length == 10) {
 				uint8_t buf[10];
 				stream.read(buf, 10);

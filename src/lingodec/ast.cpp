@@ -65,7 +65,7 @@ void Datum::writeScriptText(CodeWriter &code, bool dot, bool sum) const {
 			}
 		}
 		if (sum) {
-			code.write("\"" + Common::escapeString(s._str) + "\"");
+			code.write("\"" + Common::toPrintable(s) + "\"");
 			return;
 		}
 		code.write("\"" + s + "\"");

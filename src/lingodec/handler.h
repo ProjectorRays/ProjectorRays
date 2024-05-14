@@ -13,7 +13,7 @@
 #include "lingodec/enums.h"
 
 namespace Common {
-class ReadStream;
+class SeekableReadStream;
 }
 
 namespace LingoDec {
@@ -64,9 +64,9 @@ struct Handler {
 		script = s;
 	}
 
-	void readRecord(Common::ReadStream &stream);
-	void readData(Common::ReadStream &stream);
-	Common::Array<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
+	void readRecord(Common::SeekableReadStream &stream);
+	void readData(Common::SeekableReadStream &stream);
+	Common::Array<int16_t> readVarnamesTable(Common::SeekableReadStream &stream, uint16_t count, uint32_t offset);
 	void readNames();
 	bool validName(int id) const;
 	Common::String getName(int id) const;

@@ -64,14 +64,14 @@ public:
 	bool pastEOF() const;
 };
 
-/* ReadStream */
+/* SeekableReadStream */
 
-class ReadStream : public Stream {
+class SeekableReadStream : public Stream {
 public:
-	ReadStream(uint8_t *d, size_t s, Endianness e = kBigEndian, size_t p = 0)
+	SeekableReadStream(uint8_t *d, size_t s, Endianness e = kBigEndian, size_t p = 0)
 		: Stream(d, s, e, p) {}
 
-	ReadStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
+	SeekableReadStream(const BufferView &view, Endianness e = kBigEndian, size_t p = 0)
 		: Stream(view, e, p) {}
 
 	BufferView readByteView(size_t len);
@@ -88,7 +88,7 @@ public:
 	int16_t readInt16();
 	uint32_t readUint32();
 	int32_t readInt32();
-	double readDouble();
+	double readDoubleBE();
 	uint32_t readVarInt();
 	std::string readString(size_t len);
 	std::string readCString();

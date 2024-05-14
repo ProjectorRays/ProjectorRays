@@ -4,8 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "common/json.h"
-#include "common/log.h"
 #include "common/stream.h"
 #include "common/util.h"
 #include "lingodec/ast.h"
@@ -18,7 +16,7 @@ namespace LingoDec {
 
 /* Handler */
 
-void Handler::readRecord(Common::ReadStream &stream) {
+void Handler::readRecord(Common::SeekableReadStream &stream) {
 	nameID = stream.readSint16BE();
 	vectorPos = stream.readUint16BE();
 	compiledLen = stream.readUint32BE();
@@ -38,7 +36,7 @@ void Handler::readRecord(Common::ReadStream &stream) {
 		stackHeight = stream.readUint32BE();
 }
 
-void Handler::readData(Common::ReadStream &stream) {
+void Handler::readData(Common::SeekableReadStream &stream) {
 	stream.seek(compiledOffset);
 	while (stream.pos() < compiledOffset + compiledLen) {
 		uint32_t pos = stream.pos() - compiledOffset;
@@ -77,7 +75,7 @@ void Handler::readData(Common::ReadStream &stream) {
 	globalNameIDs = readVarnamesTable(stream, globalsCount, globalsOffset);
 }
 
-Common::Array<int16_t> Handler::readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset) {
+Common::Array<int16_t> Handler::readVarnamesTable(Common::SeekableReadStream &stream, uint16_t count, uint32_t offset) {
 	stream.seek(offset);
 	Common::Array<int16_t> nameIDs;
 	nameIDs.resize(count);
@@ -171,7 +169,7 @@ Common::SharedPtr<Node> Handler::readVar(int varType) {
 	case 0x6: // field
 		return Common::SharedPtr<Node>(new MemberExprNode("field", Common::move(id), Common::move(castID)));
 	default:
-		Common::warning(Common::String::format("findVar: unhandled var type %d", varType));
+		warning(Common::String::format("findVar: unhandled var type %d", varType).c_str());
 		break;
 	}
 	return Common::SharedPtr<Node>(new ErrorNode());
@@ -664,7 +662,7 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 		if (stack.size() >= 2) {
 			std::swap(stack[stack.size() - 1], stack[stack.size() - 2]);
 		} else {
-			Common::warning("kOpSwap: Stack too small!");
+			warning("kOpSwap: Stack too small!");
 		}
 		return 1;
 	case kOpPushInt8:
@@ -1272,7 +1270,7 @@ void Handler::writeBytecodeText(CodeWriter &code, bool dotSyntax) {
 			break;
 		case kOpPushFloat32:
 			code.write(" ");
-			code.write(Common::floatToString(*(float *)(&bytecode.obj)));
+			code.write(Common::String::format("%g", (*(float *)(&bytecode.obj))));
 			break;
 		default:
 			if (bytecode.opID > 0x40) {

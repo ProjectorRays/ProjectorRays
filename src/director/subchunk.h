@@ -12,7 +12,7 @@
 
 namespace Common {
 class JSONWriter;
-class ReadStream;
+class SeekableReadStream;
 class WriteStream;
 }
 
@@ -37,7 +37,7 @@ struct MemoryMapEntry {
 	int16_t unknown0;
 	int32_t next;
 
-	void read(Common::ReadStream &stream);
+	void read(Common::SeekableReadStream &stream);
 	void write(Common::WriteStream &stream);
 	void writeJSON(Common::JSONWriter &json) const;
 };
@@ -47,7 +47,7 @@ struct KeyTableEntry {
 	int32_t castID;
 	uint32_t fourCC;
 
-	void read(Common::ReadStream &stream);
+	void read(Common::SeekableReadStream &stream);
 	void writeJSON(Common::JSONWriter &json) const;
 };
 

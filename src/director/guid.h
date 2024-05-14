@@ -11,7 +11,7 @@
 #include "common/str.h"
 
 namespace Common {
-class ReadStream;
+class SeekableReadStream;
 }
 
 namespace Director {
@@ -42,7 +42,7 @@ struct MoaID {
 		data4[7] = d47;
 	}
 
-	void read(Common::ReadStream &stream);
+	void read(Common::SeekableReadStream &stream);
 	Common::String toString() const;
 
 	bool operator==(const MoaID &other) const;

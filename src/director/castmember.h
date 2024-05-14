@@ -9,7 +9,7 @@
 
 namespace Common {
 class JSONWriter;
-class ReadStream;
+class SeekableReadStream;
 }
 
 namespace Director {
@@ -38,7 +38,7 @@ struct CastMember {
 
 	CastMember(DirectorFile *d, MemberType t) : dir(d), type(t) {}
 	virtual ~CastMember() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 
@@ -53,7 +53,7 @@ struct ScriptMember : CastMember {
 
 	ScriptMember(DirectorFile *m) : CastMember(m, kScriptMember) {}
 	virtual ~ScriptMember() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 

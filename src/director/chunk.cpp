@@ -27,7 +27,7 @@ void Chunk::writeJSON(Common::JSONWriter &json) const {
 
 /* CastChunk */
 
-void CastChunk::read(Common::ReadStream &stream) {
+void CastChunk::read(Common::SeekableReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 	while (!stream.eof()) {
 		auto id = stream.readInt32();
@@ -79,7 +79,7 @@ void CastChunk::populate(const std::string &castName, int32_t id, uint16_t minMe
 
 /* CastListChunk */
 
-void CastListChunk::read(Common::ReadStream &stream) {
+void CastListChunk::read(Common::SeekableReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 	ListChunk::read(stream);
 	entries.resize(castCount);
@@ -91,7 +91,7 @@ void CastListChunk::read(Common::ReadStream &stream) {
 		if (itemsPerCast >= 3)
 			entries[i].preloadSettings = readUint16(i * itemsPerCast + 3);
 		if (itemsPerCast >= 4) {
-			Common::ReadStream item(items[i * itemsPerCast + 4], itemEndianness);
+			Common::SeekableReadStream item(items[i * itemsPerCast + 4], itemEndianness);
 			entries[i].minMember = item.readUint16();
 			entries[i].maxMember = item.readUint16();
 			entries[i].id = item.readInt32();
@@ -99,7 +99,7 @@ void CastListChunk::read(Common::ReadStream &stream) {
 	}
 }
 
-void CastListChunk::readHeader(Common::ReadStream &stream) {
+void CastListChunk::readHeader(Common::SeekableReadStream &stream) {
 	dataOffset = stream.readUint32();
 	unk0 = stream.readUint16();
 	castCount = stream.readUint16();
@@ -125,7 +125,7 @@ void CastListChunk::writeJSON(Common::JSONWriter &json) const {
 
 /* CastMemberChunk */
 
-void CastMemberChunk::read(Common::ReadStream &stream) {
+void CastMemberChunk::read(Common::SeekableReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 
 	if (dir->version >= 500) {
@@ -135,7 +135,7 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 
 		// info
 		if (infoLen) {
-			Common::ReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
+			Common::SeekableReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
 			info = std::make_shared<CastInfoChunk>(dir);
 			info->read(infoStream);
 		}
@@ -163,7 +163,7 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		specificData = stream.readByteView(specificDataLeft);
 
 		// info
-		Common::ReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
+		Common::SeekableReadStream infoStream(stream.readByteView(infoLen), stream.endianness);
 		if (infoLen) {
 			info = std::make_shared<CastInfoChunk>(dir);
 			info->read(infoStream);
@@ -178,7 +178,7 @@ void CastMemberChunk::read(Common::ReadStream &stream) {
 		member = std::make_unique<CastMember>(dir, type);
 		break;
 	}
-	Common::ReadStream specificStream(specificData, stream.endianness);
+	Common::SeekableReadStream specificStream(specificData, stream.endianness);
 	member->read(specificStream);
 }
 
@@ -278,7 +278,7 @@ void CastMemberChunk::writeJSON(Common::JSONWriter &json) const {
 
 /* CastInfoChunk */
 
-void CastInfoChunk::read(Common::ReadStream &stream) {
+void CastInfoChunk::read(Common::SeekableReadStream &stream) {
 	ListChunk::read(stream);
 	scriptSrcText = readString(0);
 	name = readPascalString(1);
@@ -308,7 +308,7 @@ void CastInfoChunk::read(Common::ReadStream &stream) {
 	}
 }
 
-void CastInfoChunk::readHeader(Common::ReadStream &stream) {
+void CastInfoChunk::readHeader(Common::SeekableReadStream &stream) {
 	dataOffset = stream.readUint32();
 	unk1 = stream.readUint32();
 	unk2 = stream.readUint32();
@@ -379,7 +379,7 @@ void CastInfoChunk::writeJSON(Common::JSONWriter &json) const {
 
 /* ConfigChunk */
 
-void ConfigChunk::read(Common::ReadStream &stream) {
+void ConfigChunk::read(Common::SeekableReadStream &stream) {
 	stream.endianness = Common::kBigEndian;
 
 	stream.seek(36);
@@ -651,7 +651,7 @@ void ConfigChunk::writeJSON(Common::JSONWriter &json) const {
 
 /* InitialMapChunk */
 
-void InitialMapChunk::read(Common::ReadStream &stream) {
+void InitialMapChunk::read(Common::SeekableReadStream &stream) {
 	version = stream.readUint32();
 	mmapOffset = stream.readUint32();
 	directorVersion = stream.readUint32();
@@ -686,7 +686,7 @@ void InitialMapChunk::writeJSON(Common::JSONWriter &json) const {
 
 /* KeyTableChunk */
 
-void KeyTableChunk::read(Common::ReadStream &stream) {
+void KeyTableChunk::read(Common::SeekableReadStream &stream) {
 	entrySize = stream.readUint16();
 	entrySize2 = stream.readUint16();
 	entryCount = stream.readUint32();
@@ -717,17 +717,17 @@ void KeyTableChunk::writeJSON(Common::JSONWriter &json) const {
 
 // read stuff
 
-void ListChunk::read(Common::ReadStream &stream) {
+void ListChunk::read(Common::SeekableReadStream &stream) {
 	readHeader(stream);
 	readOffsetTable(stream);
 	readItems(stream);
 }
 
-void ListChunk::readHeader(Common::ReadStream &stream) {
+void ListChunk::readHeader(Common::SeekableReadStream &stream) {
 	dataOffset = stream.readUint32();
 }
 
-void ListChunk::readOffsetTable(Common::ReadStream &stream) {
+void ListChunk::readOffsetTable(Common::SeekableReadStream &stream) {
 	stream.seek(dataOffset);
 	offsetTableLen = stream.readUint16();
 	offsetTable.resize(offsetTableLen);
@@ -736,7 +736,7 @@ void ListChunk::readOffsetTable(Common::ReadStream &stream) {
 	}
 }
 
-void ListChunk::readItems(Common::ReadStream &stream) {
+void ListChunk::readItems(Common::SeekableReadStream &stream) {
 	itemsLen = stream.readUint32();
 
 	itemEndianness = stream.endianness;
@@ -755,7 +755,7 @@ std::string ListChunk::readString(uint16_t index) {
 	if (index >= offsetTableLen)
 		return "";
 
-	Common::ReadStream stream(items[index], itemEndianness);
+	Common::SeekableReadStream stream(items[index], itemEndianness);
 	return stream.readString(stream.size());
 }
 
@@ -763,7 +763,7 @@ std::string ListChunk::readPascalString(uint16_t index) {
 	if (index >= offsetTableLen)
 		return "";
 
-	Common::ReadStream stream(items[index], itemEndianness);
+	Common::SeekableReadStream stream(items[index], itemEndianness);
 	if (stream.size() == 0)
 		return "";
 
@@ -774,7 +774,7 @@ uint16_t ListChunk::readUint16(uint16_t index) {
 	if (index >= offsetTableLen)
 		return 0;
 
-	Common::ReadStream stream(items[index], itemEndianness);
+	Common::SeekableReadStream stream(items[index], itemEndianness);
 	return stream.readUint16();
 }
 
@@ -782,7 +782,7 @@ uint32_t ListChunk::readUint32(uint16_t index) {
 	if (index >= offsetTableLen)
 		return 0;
 
-	Common::ReadStream stream(items[index], itemEndianness);
+	Common::SeekableReadStream stream(items[index], itemEndianness);
 	return stream.readUint32();
 }
 
@@ -863,7 +863,7 @@ void ListChunk::writeItem(Common::WriteStream &stream, uint16_t index) {
 
 /* MemoryMapChunk */
 
-void MemoryMapChunk::read(Common::ReadStream &stream) {
+void MemoryMapChunk::read(Common::SeekableReadStream &stream) {
 	headerLength = stream.readInt16();
 	entryLength = stream.readInt16();
 	chunkCountMax = stream.readInt32();
@@ -919,7 +919,7 @@ ScriptChunk::ScriptChunk(DirectorFile *m) :
 	LingoDec::Script(m->version),
 	member(nullptr) {}
 
-void ScriptChunk::read(Common::ReadStream &stream) {
+void ScriptChunk::read(Common::SeekableReadStream &stream) {
 	LingoDec::Script::read(stream);
 }
 
@@ -1029,7 +1029,7 @@ ScriptContextChunk::ScriptContextChunk(DirectorFile *m) :
 		Chunk(m, kScriptContextChunk),
 		LingoDec::ScriptContext(m->version, m) {}
 
-void ScriptContextChunk::read(Common::ReadStream &stream) {
+void ScriptContextChunk::read(Common::SeekableReadStream &stream) {
 	LingoDec::ScriptContext::read(stream);
 }
 
@@ -1072,7 +1072,7 @@ ScriptNamesChunk::ScriptNamesChunk(DirectorFile *m) :
 		Chunk(m, kScriptNamesChunk),
 		LingoDec::ScriptNames(m->version) {}
 
-void ScriptNamesChunk::read(Common::ReadStream &stream) {
+void ScriptNamesChunk::read(Common::SeekableReadStream &stream) {
 	LingoDec::ScriptNames::read(stream);
 }
 

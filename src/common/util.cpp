@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include "common/util.h"
+#include "common/log.h"
 
 namespace Common {
 
@@ -80,7 +81,7 @@ std::string escapeString(const char *str, size_t size) {
 	return res;
 }
 
-std::string escapeString(std::string str) {
+std::string escapeString(Common::String str) {
 	return escapeString(str.c_str(), str.size());
 }
 
@@ -98,3 +99,7 @@ int compareIgnoreCase(const std::string &a, const std::string &b) {
 }
 
 } // namespace Common
+
+void warning(const Common::String &msg) {
+	Common::warning(msg);
+}

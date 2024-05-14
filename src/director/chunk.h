@@ -22,7 +22,7 @@
 namespace Common {
 class CodeWriter;
 class JSONWriter;
-class ReadStream;
+class SeekableReadStream;
 class WriteStream;
 }
 
@@ -64,7 +64,7 @@ struct Chunk {
 
 	Chunk(DirectorFile *d, ChunkType t) : dir(d), chunkType(t), writable(false) {}
 	virtual ~Chunk() = default;
-	virtual void read(Common::ReadStream &stream) = 0;
+	virtual void read(Common::SeekableReadStream &stream) = 0;
 	virtual size_t size() { return 0; }
 	virtual void write(Common::WriteStream&) {}
 	virtual void writeJSON(Common::JSONWriter &json) const;
@@ -79,10 +79,10 @@ struct ListChunk : Chunk {
 	std::vector<Common::BufferView> items;
 
 	ListChunk(DirectorFile *m, ChunkType t) : Chunk(m, t) {}
-	virtual void read(Common::ReadStream &stream);
-	virtual void readHeader(Common::ReadStream &stream);
-	void readOffsetTable(Common::ReadStream &stream);
-	void readItems(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
+	virtual void readHeader(Common::SeekableReadStream &stream);
+	void readOffsetTable(Common::SeekableReadStream &stream);
+	void readItems(Common::SeekableReadStream &stream);
 
 	std::string readString(uint16_t index);
 	std::string readPascalString(uint16_t index);
@@ -112,7 +112,7 @@ struct CastChunk : Chunk {
 
 	CastChunk(DirectorFile *m) : Chunk(m, kCastChunk), lctx(nullptr) {}
 	virtual ~CastChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	void populate(const std::string &castName, int32_t id, uint16_t minMember);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
@@ -126,8 +126,8 @@ struct CastListChunk : ListChunk {
 
 	CastListChunk(DirectorFile *m) : ListChunk(m, kCastListChunk) {}
 	virtual ~CastListChunk() = default;
-	virtual void read(Common::ReadStream &stream);
-	virtual void readHeader(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
+	virtual void readHeader(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 
@@ -148,7 +148,7 @@ struct CastMemberChunk : Chunk {
 		writable = true;
 	}
 	virtual ~CastMemberChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
@@ -192,8 +192,8 @@ struct CastInfoChunk : ListChunk {
 		writable = true;
 	}
 	virtual ~CastInfoChunk() = default;
-	virtual void read(Common::ReadStream &stream);
-	virtual void readHeader(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
+	virtual void readHeader(Common::SeekableReadStream &stream);
 	virtual size_t headerSize();
 	virtual void writeHeader(Common::WriteStream &stream);
 	virtual size_t itemSize(uint16_t index);
@@ -251,7 +251,7 @@ struct ConfigChunk : Chunk {
 		writable = true;
 	}
 	virtual ~ConfigChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
 	uint32_t computeChecksum();
@@ -271,7 +271,7 @@ struct InitialMapChunk : Chunk {
 		writable = true;
 	}
 	virtual ~InitialMapChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
@@ -286,7 +286,7 @@ struct KeyTableChunk : Chunk {
 
 	KeyTableChunk(DirectorFile *m) : Chunk(m, kKeyTableChunk) {}
 	virtual ~KeyTableChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 
@@ -304,7 +304,7 @@ struct MemoryMapChunk : Chunk {
 		writable = true;
 	}
 	virtual ~MemoryMapChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual size_t size();
 	virtual void write(Common::WriteStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
@@ -315,7 +315,7 @@ struct ScriptChunk : Chunk, LingoDec::Script {
 
 	ScriptChunk(DirectorFile *m);
 	virtual ~ScriptChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 	void writeHandlerJSON(const LingoDec::Handler &handler, Common::JSONWriter &json) const;
 	void writeLiteralStoreJSON(const LingoDec::LiteralStore &literalStore, Common::JSONWriter &json) const;
@@ -325,7 +325,7 @@ struct ScriptChunk : Chunk, LingoDec::Script {
 struct ScriptContextChunk : Chunk, LingoDec::ScriptContext {
 	ScriptContextChunk(DirectorFile *m);
 	virtual ~ScriptContextChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 	void writeScriptContextMapEntryJSON(const LingoDec::ScriptContextMapEntry &mapEntry, Common::JSONWriter &json) const;
 };
@@ -341,7 +341,7 @@ struct ScriptNamesChunk : Chunk, LingoDec::ScriptNames {
 
 	ScriptNamesChunk(DirectorFile *m);
 	virtual ~ScriptNamesChunk() = default;
-	virtual void read(Common::ReadStream &stream);
+	virtual void read(Common::SeekableReadStream &stream);
 	virtual void writeJSON(Common::JSONWriter &json) const;
 };
 

@@ -10,13 +10,13 @@
 #include <sys/types.h> // for ssize_t. not portable...
 
 namespace Common {
-class ReadStream;
+class SeekableReadStream;
 class WriteStream;
 }
 
 namespace Director {
 
-ssize_t decompressSnd(Common::ReadStream &in, Common::WriteStream &out, int32_t castID);
+ssize_t decompressSnd(Common::SeekableReadStream &in, Common::WriteStream &out, int32_t castID);
 
 } // namespace Director
 

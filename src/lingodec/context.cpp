@@ -17,7 +17,7 @@ struct ScriptContextMapEntry;
 
 /* ScriptContext */
 
-void ScriptContext::read(Common::ReadStream &stream) {
+void ScriptContext::read(Common::SeekableReadStream &stream) {
 	// Lingo scripts are always big endian regardless of file endianness
 	unknown0 = stream.readSint32BE();
 	unknown1 = stream.readSint32BE();
@@ -74,7 +74,7 @@ void ScriptContext::parseScripts() {
 
 /* ScriptContextMapEntry */
 
-void ScriptContextMapEntry::read(Common::ReadStream &stream) {
+void ScriptContextMapEntry::read(Common::SeekableReadStream &stream) {
 	unknown0 = stream.readSint32BE();
 	sectionID = stream.readSint32BE();
 	unknown1 = stream.readUint16BE();

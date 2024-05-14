@@ -9,11 +9,15 @@
 
 #include <cstdint>
 #include <string>
+#include "common/str.h"
+#include "common/log.h"
 
 #define FOURCC(a0, a1, a2, a3) ((uint32_t)((a3) | ((a2) << 8) | ((a1) << 16) | ((a0) << 24)))
 
 #define STR_INNER(x) #x
 #define STR(x) STR_INNER(x)
+
+#define toPrintable(s) escapeString(s)
 
 namespace Common {
 
@@ -21,7 +25,7 @@ std::string fourCCToString(uint32_t fourcc);
 std::string floatToString(double f);
 std::string byteToString(uint8_t byte);
 std::string escapeString(const char *str, size_t size);
-std::string escapeString(std::string str);
+std::string escapeString(Common::String str);
 int stricmp(const char *a, const char *b);
 int compareIgnoreCase(const std::string &a, const std::string &b);
 
@@ -41,5 +45,8 @@ struct Pair {
 };
 
 } // namespace Common
+
+void warning(const Common::String &msg);
+
 
 #endif // COMMON_UTIL_H

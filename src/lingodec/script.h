@@ -29,8 +29,8 @@ struct LiteralStore {
 	uint32_t offset;
 	Common::SharedPtr<Datum> value;
 
-	void readRecord(Common::ReadStream &stream, int version);
-	void readData(Common::ReadStream &stream, uint32_t startOffset);
+	void readRecord(Common::SeekableReadStream &stream, int version);
+	void readData(Common::SeekableReadStream &stream, uint32_t startOffset);
 };
 
 /* Script */
@@ -76,8 +76,8 @@ struct Script {
 
 	Script(unsigned int version);
 	~Script();
-	void read(Common::ReadStream &stream);
-	Common::Array<int16_t> readVarnamesTable(Common::ReadStream &stream, uint16_t count, uint32_t offset);
+	void read(Common::SeekableReadStream &stream);
+	Common::Array<int16_t> readVarnamesTable(Common::SeekableReadStream &stream, uint16_t count, uint32_t offset);
 	bool validName(int id) const;
 	Common::String getName(int id) const;
 	void setContext(ScriptContext *ctx);

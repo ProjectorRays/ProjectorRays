@@ -12,7 +12,7 @@ namespace Director {
 
 /* CastMember */
 
-void CastMember::read(Common::ReadStream&) {}
+void CastMember::read(Common::SeekableReadStream&) {}
 
 void CastMember::writeJSON(Common::JSONWriter &json) const {
 	json.startObject();
@@ -21,7 +21,7 @@ void CastMember::writeJSON(Common::JSONWriter &json) const {
 
 /* ScriptMember */
 
-void ScriptMember::read(Common::ReadStream &stream) {
+void ScriptMember::read(Common::SeekableReadStream &stream) {
 	scriptType = static_cast<ScriptType>(stream.readUint16());
 }
 

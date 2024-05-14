@@ -300,7 +300,7 @@ Common::String StandardNames::getOpcodeName(uint8_t id) {
 		id = 0x40 + id % 0x40;
 	auto it = opcodeNames.find(id);
 	if (it == opcodeNames.end()){
-		return "unk" + Common::byteToString(id);
+		return Common::String::format("unk%02X" , id);
 	}
 	return it->second;
 }
@@ -314,7 +314,7 @@ Common::String StandardNames::getName(const Common::StableMap<unsigned int, Comm
 
 /* ScriptNames */
 
-void ScriptNames::read(Common::ReadStream &stream) {
+void ScriptNames::read(Common::SeekableReadStream &stream) {
 	// Lingo scripts are always big endian regardless of file endianness
 	unknown0 = stream.readSint32BE();
 	unknown1 = stream.readSint32BE();

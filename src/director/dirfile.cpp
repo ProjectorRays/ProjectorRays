@@ -43,7 +43,7 @@ DirectorFile::~DirectorFile() = default;
 
 // read stuff
 
-bool DirectorFile::read(Common::ReadStream *s) {
+bool DirectorFile::read(Common::SeekableReadStream *s) {
 	stream = s;
 	stream->endianness = Common::kBigEndian; // we set this properly when we create the RIFX chunk
 
@@ -155,7 +155,7 @@ bool DirectorFile::readAfterburnerMap() {
 		return false;
 	}
 
-	Common::ReadStream fcdrStream(fcdrBuf.data(), (unsigned)fcdrUncompLength, endianness);
+	Common::SeekableReadStream fcdrStream(fcdrBuf.data(), (unsigned)fcdrUncompLength, endianness);
 
 	uint16_t compressionTypeCount = fcdrStream.readUint16();
 	std::vector<MoaID> compressionIDs(compressionTypeCount);
@@ -199,7 +199,7 @@ bool DirectorFile::readAfterburnerMap() {
 		Common::warning(Common::String::format("ABMP: Expected uncompressed length %u but got length %zu",
 						abmpUncompLength, (unsigned)abmpActualUncompLength));
 	}
-	Common::ReadStream abmpStream(abmpBuf.data(), abmpBuf.size(), endianness);
+	Common::SeekableReadStream abmpStream(abmpBuf.data(), abmpBuf.size(), endianness);
 
 	uint32_t abmpUnk1 = abmpStream.readVarInt();
 	uint32_t abmpUnk2 = abmpStream.readVarInt();
@@ -254,7 +254,7 @@ bool DirectorFile::readAfterburnerMap() {
 		Common::warning(Common::String::format("ILS: Expected uncompressed length %u but got length %zu",
 						ilsInfo.uncompressedLen, (unsigned)ilsActualUncompLength));
 	}
-	Common::ReadStream ilsStream(_ilsBuf.data(), ilsInfo.uncompressedLen, endianness);
+	Common::SeekableReadStream ilsStream(_ilsBuf.data(), ilsInfo.uncompressedLen, endianness);
 
 	while (!ilsStream.eof()) {
 		int32_t resId = ilsStream.readVarInt();
@@ -401,7 +401,7 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 				actualUncompLength = stream->readZlibBytes(info.len, _cachedChunkBufs[id].data(), _cachedChunkBufs[id].size());
 			} else if (info.compressionID == SND_COMPRESSION_GUID) {
 				Common::BufferView chunkView = stream->readByteView(info.len);
-				Common::ReadStream chunkStream(chunkView, endianness);
+				Common::SeekableReadStream chunkStream(chunkView, endianness);
 				Common::WriteStream uncompStream(_cachedChunkBufs[id].data(), _cachedChunkBufs[id].size(), endianness);
 				actualUncompLength = decompressSnd(chunkStream, uncompStream, id);
 			}
@@ -433,7 +433,7 @@ Common::BufferView DirectorFile::getChunkData(uint32_t fourCC, int32_t id) {
 
 std::shared_ptr<Chunk> DirectorFile::readChunk(uint32_t fourCC, uint32_t len) {
 	Common::BufferView chunkView = readChunkData(fourCC, len);
-	Common::ReadStream chunkStream(chunkView, endianness);
+	Common::SeekableReadStream chunkStream(chunkView, endianness);
 	return makeChunk(fourCC, chunkStream);
 }
 
@@ -504,7 +504,7 @@ std::shared_ptr<Chunk> DirectorFile::makeChunk(uint32_t fourCC, const Common::Bu
 		break;
 	}
 
-	Common::ReadStream chunkStream(view, endianness);
+	Common::SeekableReadStream chunkStream(view, endianness);
 	res->read(chunkStream);
 
 	return res;

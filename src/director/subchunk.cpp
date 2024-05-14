@@ -28,7 +28,7 @@ void CastListEntry::writeJSON(Common::JSONWriter &json) const {
 
 /* MemoryMapEntry */
 
-void MemoryMapEntry::read(Common::ReadStream &stream) {
+void MemoryMapEntry::read(Common::SeekableReadStream &stream) {
 	fourCC = stream.readUint32();
 	len = stream.readUint32();
 	offset = stream.readUint32();
@@ -59,7 +59,7 @@ void MemoryMapEntry::writeJSON(Common::JSONWriter &json) const {
 
 /* KeyTableEntry */
 
-void KeyTableEntry::read(Common::ReadStream &stream) {
+void KeyTableEntry::read(Common::SeekableReadStream &stream) {
 	sectionID = stream.readInt32();
 	castID = stream.readInt32();
 	fourCC = stream.readUint32();

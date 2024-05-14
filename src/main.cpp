@@ -29,7 +29,7 @@ bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
 		return false;
 	}
 
-	Common::ReadStream stream(buf.data(), buf.size());
+	Common::SeekableReadStream stream(buf.data(), buf.size());
 	auto dir = std::make_unique<DirectorFile>();
 	if (!dir->read(&stream))
 		return false;

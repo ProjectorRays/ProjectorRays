@@ -11,7 +11,7 @@ namespace Director {
 
 /* MoaID */
 
-void MoaID::read(Common::ReadStream &stream) {
+void MoaID::read(Common::SeekableReadStream &stream) {
 	data1 = stream.readUint32();
 	data2 = stream.readUint16();
 	data3 = stream.readUint16();

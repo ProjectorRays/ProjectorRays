@@ -46,7 +46,7 @@ private:
 	std::map<int32_t, Common::BufferView> _cachedChunkViews;
 
 public:
-	Common::ReadStream *stream;
+	Common::SeekableReadStream *stream;
 	KeyTableChunk *keyTable;
 	ConfigChunk *config;
 
@@ -69,7 +69,7 @@ public:
 	DirectorFile();
 	virtual ~DirectorFile();
 
-	bool read(Common::ReadStream *s);
+	bool read(Common::SeekableReadStream *s);
 	void readMemoryMap();
 	bool readAfterburnerMap();
 	bool readKeyTable();
