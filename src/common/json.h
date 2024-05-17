@@ -7,7 +7,7 @@
 #ifndef COMMON_JSON_H
 #define COMMON_JSON_H
 
-#include "lingodec/codewriter.h"
+#include "common/codewriter.h"
 #include "common/util.h"
 
 namespace Common {
@@ -24,7 +24,7 @@ namespace Common {
  * - The non-standard hex code escape sequence \xXX
  */
 
-class JSONWriter : protected LingoDec::CodeWriter {
+class JSONWriter : protected Common::CodeWriter {
 protected:
 	enum Context {
 		kContextStart,

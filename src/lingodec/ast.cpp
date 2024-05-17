@@ -6,7 +6,6 @@
 
 #include "common/util.h"
 #include "./ast.h"
-#include "./codewriter.h"
 #include "./handler.h"
 #include "./names.h"
 #include "./script.h"

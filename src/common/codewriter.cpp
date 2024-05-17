@@ -6,7 +6,7 @@
 
 #include "./codewriter.h"
 
-namespace LingoDec {
+namespace Common {
 
 void CodeWriter::write(Common::String str) {
 	if (str.empty())
