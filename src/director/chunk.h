@@ -20,7 +20,6 @@
 #include "lingodec/script.h"
 
 namespace Common {
-class CodeWriter;
 class JSONWriter;
 class SeekableReadStream;
 class WriteStream;

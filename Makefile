@@ -43,6 +43,7 @@ OBJS = \
 	src/io/options.o \
 	src/lingodec/ast.o \
 	src/lingodec/codewriter.o \
+	src/lingodec/codewritervisitor.o \
 	src/lingodec/context.o \
 	src/lingodec/handler.o \
 	src/lingodec/names.o \
