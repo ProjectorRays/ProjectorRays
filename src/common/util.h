@@ -47,7 +47,6 @@ struct Pair {
 
 } // namespace Common
 
-void warning(const Common::String &msg);
-
+void warning(const char *fmt, ...);
 
 #endif // COMMON_UTIL_H

@@ -4,6 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <format>
+#include <stdarg.h>
 #include <iostream>
 
 #include "common/log.h"
@@ -22,8 +24,15 @@ void debug(const Common::String &msg) {
 		log(msg);
 }
 
-void warning(const Common::String &msg) {
-	std::cerr << msg._str << "\n";
-}
-
 } // namespace Common
+
+void warning(const char *fmt, ...) {
+	va_list va;
+	va_start(va, fmt);
+	int size_s = vsnprintf(nullptr, 0, fmt, va) + 1; // Extra space for '\0'
+	auto size = static_cast<size_t>(size_s);
+	std::unique_ptr<char[]> buf(new char[size]);
+	vsnprintf(buf.get(), size, fmt, va);
+	va_end(va);
+	std::cerr << buf << "\n";
+}

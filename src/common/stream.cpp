@@ -93,7 +93,7 @@ ssize_t SeekableReadStream::readZlibBytes(size_t len, uint8_t *dest, size_t dest
 	unsigned long outLen = destLen;
 	int ret = uncompress(dest, &outLen, &_data[p], len);
 	if (ret != Z_OK) {
-		Common::warning(Common::String::format("zlib decompression error %d!", ret));
+		warning("zlib decompression error %d!", ret);
 		return -1;
 	}
 

@@ -137,7 +137,7 @@ void Options::parse(int argc, char *argv[]) {
 		std::string cmdString = argv[1];
 		_cmd = getCommand(cmdString);
 		if (_cmd == kCmdNone) {
-			Common::warning("WARNING: Expect `" + _programName + " <input path>` to break in a future release. Use `" + _programName + " decompile <input path>` instead!");
+			warning("WARNING: Expect `%s <input path>` to break in a future release. Use `%s decompile <input path>` instead!", _programName.c_str(), _programName.c_str());
 			_cmd = kCmdDecompile;
 			argsStart = 1;
 		}
@@ -155,7 +155,7 @@ void Options::parse(int argc, char *argv[]) {
 		std::string arg = argv[i];
 		if (arg.size() > 0 && arg[0] == '-') {
 			if (arg.size() == 1) {
-				Common::warning("Unknown option: -\n");
+				warning("Unknown option: -\n");
 				printUsage();
 				return;
 			}
@@ -179,7 +179,7 @@ void Options::parse(int argc, char *argv[]) {
 				optionString = "--" + option;
 				info = getOptionInfo(option);
 				if (!info || !(info->cmd & _cmd)) {
-					Common::warning("Unknown option: " + optionString + "\n");
+					warning("Unknown option: %s\n", optionString.c_str());
 					printUsage();
 					return;
 				}
@@ -191,7 +191,7 @@ void Options::parse(int argc, char *argv[]) {
 					optionString += option;
 					info = getOptionInfo(option);
 					if (!info || !(info->cmd & _cmd)) {
-						Common::warning("Unknown option: " + optionString + "\n");
+						warning("Unknown option: %s\n", optionString.c_str());
 						printUsage();
 						return;
 					}
@@ -212,7 +212,7 @@ void Options::parse(int argc, char *argv[]) {
 						optionArg = argv[i + 1];
 						i++;
 					} else {
-						Common::warning("Argument not found for " + optionString + "\n");
+						warning("Argument not found for %s\n", optionString.c_str());
 						printUsage();
 						return;
 					}
@@ -228,7 +228,7 @@ void Options::parse(int argc, char *argv[]) {
 						}
 					}
 					if (!enumFound) {
-						Common::warning("Invalid argument for " + optionString + ": " + optionArg + "\n");
+						warning("Invalid argument for %s: %s\n", optionString.c_str(), optionArg.c_str());
 						printUsage();
 						return;
 					}
@@ -237,7 +237,7 @@ void Options::parse(int argc, char *argv[]) {
 					_stringOptions[info->longName] = optionArg;
 				}
 			} else if (optionArgFound) {
-				Common::warning("Extra argument for " + optionString + "\": " + optionArg + "\n");
+				warning("Extra argument for %s: %s", optionString.c_str(), optionArg.c_str());
 				printUsage();
 				return;
 			} else {
@@ -247,14 +247,14 @@ void Options::parse(int argc, char *argv[]) {
 			_inputFile = arg;
 			inputFileFound = true;
 		} else {
-			Common::warning("Stray argument: " + arg + "\n");
+			warning("Stray argument: %s\n", arg.c_str());
 			printUsage();
 			return;
 		}
 	}
 
 	if (!inputFileFound) {
-		Common::warning("Input file not specified\n");
+		warning("Input file not specified\n");
 		printUsage();
 		return;
 	}

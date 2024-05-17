@@ -248,7 +248,7 @@ std::string CastMemberChunk::getScriptText() const {
 
 void CastMemberChunk::setScriptText(std::string val) {
 	if (!info) {
-		Common::warning("Tried to set scriptText on member with no info!");
+		warning("Tried to set scriptText on member with no info!");
 		return;
 	}
 	info->scriptSrcText = val;
@@ -432,7 +432,7 @@ void ConfigChunk::read(Common::SeekableReadStream &stream) {
 
 	uint32_t computedChecksum = computeChecksum();
 	if (checksum != computedChecksum) {
-		Common::warning(Common::String::format("Checksums don't match! Stored: %u Computed: %u", checksum, computedChecksum));
+		warning("Checksums don't match! Stored: %u Computed: %u", checksum, computedChecksum);
 	}
 }
 

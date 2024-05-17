@@ -99,7 +99,3 @@ int compareIgnoreCase(const std::string &a, const std::string &b) {
 }
 
 } // namespace Common
-
-void warning(const Common::String &msg) {
-	Common::warning(msg);
-}

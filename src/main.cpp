@@ -25,7 +25,7 @@ using namespace Director;
 bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
 	std::vector<uint8_t> buf;
 	if (!IO::readFile(input, buf)) {
-		Common::warning(Common::String::format("Could not read %s!", input.c_str()));
+		warning("Could not read %s!", input.c_str());
 		return false;
 	}
 
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 			fs::path output = options.stringValue("output");
 			if (fs::exists(output)) {
 				if (!fs::is_directory(output)) {
-					Common::warning("Output must be a directory when input is a directory!");
+					warning("Output must be a directory when input is a directory!");
 					return EXIT_FAILURE;
 				}
 			} else {
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
 			if (fs::is_directory(output)) {
 				outputIsDirectory = true;
 			} else if (options.hasDumpOptions()) {
-				Common::warning("Output must be a directory when a --dump- option is used!");
+				warning("Output must be a directory when a --dump- option is used!");
 				return EXIT_FAILURE;
 			}
 		}

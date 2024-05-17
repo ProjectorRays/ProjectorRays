@@ -17,8 +17,9 @@ extern bool g_verbose;
 
 void log(const String &msg);
 void debug(const String &msg);
-void warning(const String &msg);
 
 } // namespace Common
+
+void warning(const char *fmt, ...);
 
 #endif // COMMON_LOG_H
