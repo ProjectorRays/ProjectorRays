@@ -364,13 +364,35 @@ unsigned int BinaryOpNode::getPrecedence() const {
 void ChunkExprNode::writeScriptText(Common::CodeWriter &code, bool dot, bool sum) const {
 	code.write(StandardNames::getName(StandardNames::chunkTypeNames, type));
 	code.write(" ");
+	bool parenFirst = first->hasSpaces(dot);
+	if (parenFirst) {
+		code.write("(");
+	}
 	first->writeScriptText(code, dot, sum);
+	if (parenFirst) {
+		code.write(")");
+	}
 	if (!(last->type == kLiteralNode && last->getValue()->type == kDatumInt && last->getValue()->i == 0)) {
 		code.write(" to ");
+		bool parenLast = last->hasSpaces(dot);
+		if (parenLast) {
+			code.write("(");
+		}
 		last->writeScriptText(code, dot, sum);
+		if (parenLast) {
+			code.write(")");
+		}
 	}
 	code.write(" of ");
+	bool stringIsBiggerChunk = string->type == kChunkExprNode && static_cast<ChunkExprNode *>(string.get())->type > this->type;
+	bool parenString = !stringIsBiggerChunk && string->hasSpaces(dot);
+	if (parenString) {
+		code.write("(");
+	}
 	string->writeScriptText(code, false, sum); // we want the string to always be verbose
+	if (parenString) {
+		code.write(")");
+	}
 }
 
 /* ChunkHiliteStmtNode */
