@@ -272,7 +272,11 @@ void CastMemberChunk::writeJSON(Common::JSONWriter &json) const {
 		}
 		JSON_WRITE_FIELD(specificDataLen);
 		json.writeKey("info");
-		info->writeJSON(json);
+		if (info) {
+			info->writeJSON(json);
+		} else {
+			json.writeNull();
+		}
 		json.writeKey("member");
 		member->writeJSON(json);
 	json.endObject();
