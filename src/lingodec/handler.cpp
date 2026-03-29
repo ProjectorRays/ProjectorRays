@@ -389,7 +389,7 @@ bool Handler::isRepeatWithIn(uint32_t startIndex, uint32_t endIndex) {
 		return false;
 	if (!(bytecodeArray[startIndex - 6].opcode == kOpPushArgList && bytecodeArray[startIndex - 6].obj == 1))
 		return false;
-	if (!(bytecodeArray[startIndex - 5].opcode == kOpExtCall && getName(bytecodeArray[startIndex - 5].obj) == "count"))
+	if (!((bytecodeArray[startIndex - 5].opcode == kOpExtCall || bytecodeArray[startIndex - 5].opcode == kOpTellCall) && getName(bytecodeArray[startIndex - 5].obj) == "count"))
 		return false;
 	if (!(bytecodeArray[startIndex - 4].opcode == kOpPushInt8 && bytecodeArray[startIndex - 4].obj == 1))
 		return false;
@@ -407,7 +407,7 @@ bool Handler::isRepeatWithIn(uint32_t startIndex, uint32_t endIndex) {
 		return false;
 	if (!(bytecodeArray[startIndex + 3].opcode == kOpPushArgList && bytecodeArray[startIndex + 3].obj == 2))
 		return false;
-	if (!(bytecodeArray[startIndex + 4].opcode == kOpExtCall && getName(bytecodeArray[startIndex + 4].obj) == "getAt"))
+	if (!((bytecodeArray[startIndex + 4].opcode == kOpExtCall || bytecodeArray[startIndex + 4].opcode == kOpTellCall) && getName(bytecodeArray[startIndex + 4].obj) == "getAt"))
 		return false;
 	if (!(bytecodeArray[startIndex + 5].opcode == kOpSetGlobal || bytecodeArray[startIndex + 5].opcode == kOpSetProp
 			|| bytecodeArray[startIndex + 5].opcode == kOpSetParam || bytecodeArray[startIndex + 5].opcode == kOpSetLocal))
@@ -1024,10 +1024,12 @@ uint32_t Handler::translateBytecode(Bytecode &bytecode, uint32_t index) {
 			do {
 				translateBytecode(*currBytecode, currIndex);
 				currIndex += 1;
+				if (currIndex >= bytecodeArray.size()) {
+					break;
+				}
 				currBytecode = &bytecodeArray[currIndex];
 			} while (
-				currIndex < bytecodeArray.size()
-				&& !(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq))
+				!(stack.size() == originalStackSize + 1 && (currBytecode->opcode == kOpEq || currBytecode->opcode == kOpNtEq))
 			);
 			if (currIndex >= bytecodeArray.size()) {
 				bytecode.translation = std::make_shared<CommentNode>("ERROR: Expected eq or nteq!");
