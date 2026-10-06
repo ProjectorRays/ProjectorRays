@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <iostream>
 #include <vector>
+#include <string>
 
 namespace fs = std::filesystem;
 
@@ -29,7 +30,22 @@ bool processFile(fs::path input, IO::Options &options, bool outputIsDirectory) {
 		return false;
 	}
 
-	Common::ReadStream stream(buf.data(), buf.size());
+	size_t offset = 0;
+	if (options.hasOption("offset")) {
+		try {
+			offset = std::stoull(options.stringValue("offset"), nullptr, 0);
+		} catch (std::exception &e) {
+			Common::warning("Value passed to --offset is not a valid integer!");
+			return false;
+		}
+	}
+
+	if (offset >= buf.size()) {
+		Common::warning("Value passed to --offset points past the end of the file!");
+		return false;
+	}
+
+	Common::ReadStream stream(buf.data(), buf.size(), Common::kBigEndian, offset);
 	auto dir = std::make_unique<DirectorFile>();
 	if (!dir->read(&stream))
 		return false;

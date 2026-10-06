@@ -29,6 +29,7 @@ Options::Options() {
 		{ "internal",	kVersionStyleInternal,	"Director's internal version number, e.g. \"1600\" for 8.0"}
 	};
 	addEnumOption(false, kCmdVersion, "style", "Style in which to print the version. Options are:", "name", versionStyles, '\0', "long");
+	addStringOption(false, kCmdDecompile, "offset", "Offset to start reading from. Useful for files embedded into executables.", "offset", 's');
 
 	addOption(true, kCmdAll, "verbose", "Verbose logging", 'v');
 	addOption(true, kCmdAll, "dump-chunks", "Dump chunk data.");
