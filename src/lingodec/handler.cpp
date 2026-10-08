@@ -72,7 +72,8 @@ void Handler::readData(Common::ReadStream &stream) {
 				obj = stream.readUint8();
 			}
 		}
-		Bytecode bytecode(op, obj, pos);
+		size_t end = stream.pos();
+		Bytecode bytecode(op, obj, pos, { stream.data() + pos + compiledOffset, stream.data() + end });
 		bytecodeArray.push_back(bytecode);
 		bytecodePosMap[pos] = bytecodeArray.size() - 1;
 	}
@@ -1264,6 +1265,12 @@ void Handler::writeBytecodeText(Common::CodeWriter &code, bool dotSyntax) {
 		code.indent();
 	}
 	for (auto &bytecode : bytecodeArray) {
+		code.write("<");
+		for (auto byte : bytecode.bytes) {
+			code.write((boost::format(" %02X") % (int)byte).str());
+		}
+		code.write(std::string(3 * (5 - bytecode.bytes.size()), ' '));
+		code.write(" > ");
 		code.write(posToString(bytecode.pos));
 		code.write(" ");
 		code.write(StandardNames::getOpcodeName(bytecode.opID));

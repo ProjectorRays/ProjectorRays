@@ -99,9 +99,10 @@ struct Bytecode {
 	BytecodeTag tag;
 	uint32_t ownerLoop;
 	std::shared_ptr<Node> translation;
+	std::vector<uint8_t> bytes;
 
-	Bytecode(uint8_t op, int32_t o, uint32_t p)
-		: opID(op), obj(o), pos(p), tag(kTagNone), ownerLoop(UINT32_MAX) {
+	Bytecode(uint8_t op, int32_t o, uint32_t p, std::vector<uint8_t> bytes)
+		: opID(op), obj(o), pos(p), tag(kTagNone), ownerLoop(UINT32_MAX), bytes(std::move(bytes)) {
 		opcode = static_cast<OpCode>(op >= 0x40 ? 0x40 + op % 0x40 : op);
 	}
 };
