@@ -167,11 +167,17 @@ int main(int argc, char *argv[]) {
 		bool outputIsDirectory = false;
 		if (options.hasOption("output")) {
 			fs::path output = options.stringValue("output");
+
 			if (fs::is_directory(output)) {
 				outputIsDirectory = true;
 			} else if (options.hasDumpOptions()) {
-				Common::warning(boost::format("Output must be a directory when a --dump- option is used!"));
-				return EXIT_FAILURE;
+				if (!fs::exists(output)) {
+					fs::create_directory(output);
+					outputIsDirectory = true;
+				} else {
+					Common::warning(boost::format("Output must be a directory when a --dump- option is used!"));
+					return EXIT_FAILURE;
+				}
 			}
 		}
 		if (!processFile(input, options, outputIsDirectory))
